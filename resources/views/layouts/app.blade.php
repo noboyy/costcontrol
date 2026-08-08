@@ -614,6 +614,7 @@
             font-size: 13.5px;
         }
         tfoot tr:hover { background: #f9fafb; }
+        #confirmOverlay.show { display: flex !important; }
         .text-end { text-align: right; }
         .text-center { text-align: center; }
         .money { font-variant-numeric: tabular-nums; font-weight: 600; font-feature-settings: "tnum"; }
@@ -1117,14 +1118,60 @@
             setTimeout(() => flash?.remove(), 300);
         }, 4000);
 
+        // Custom confirm dialog
+        let _confirmResolve = null;
+        function showConfirm(msg, opts = {}) {
+            return new Promise(resolve => {
+                _confirmResolve = resolve;
+                document.getElementById('confirmMsg').textContent = msg;
+                document.getElementById('confirmTitle').textContent = opts.title || 'Konfirmasi';
+                const btn = document.getElementById('confirmOk');
+                btn.textContent = opts.ok || 'Hapus';
+                btn.className = 'btn ' + (opts.okClass || 'btn-danger');
+                document.getElementById('confirmOverlay').classList.add('show');
+                document.getElementById('confirmOk').focus();
+            });
+        }
+        document.getElementById('confirmOk').addEventListener('click', () => {
+            document.getElementById('confirmOverlay').classList.remove('show');
+            _confirmResolve && _confirmResolve(true);
+        });
+        document.getElementById('confirmCancel').addEventListener('click', () => {
+            document.getElementById('confirmOverlay').classList.remove('show');
+            _confirmResolve && _confirmResolve(false);
+        });
+        document.getElementById('confirmOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('show');
+                _confirmResolve && _confirmResolve(false);
+            }
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('confirmOverlay').classList.contains('show')) {
+                document.getElementById('confirmOverlay').classList.remove('show');
+                _confirmResolve && _confirmResolve(false);
+            }
+        });
+
         // Confirm helper for destructive actions
         document.querySelectorAll('[data-confirm]').forEach(el => {
             el.addEventListener('submit', function(e) {
-                if (!confirm(this.dataset.confirm)) e.preventDefault();
+                e.preventDefault();
+                const form = this;
+                showConfirm(form.dataset.confirm, {
+                    title: form.dataset.confirmTitle || 'Konfirmasi',
+                    ok: form.dataset.confirmOk || 'Ya, lanjutkan',
+                    okClass: form.dataset.confirmClass || 'btn-danger',
+                }).then(ok => { if (ok) form.submit(); });
             });
             if (el.tagName === 'BUTTON' || el.tagName === 'A') {
                 el.addEventListener('click', function(e) {
-                    if (!confirm(this.dataset.confirm)) e.preventDefault();
+                    e.preventDefault();
+                    const target = this;
+                    showConfirm(target.dataset.confirm, {
+                        ok: target.dataset.confirmOk || 'Ya, lanjutkan',
+                        okClass: target.dataset.confirmClass || 'btn-danger',
+                    }).then(ok => { if (ok) target.closest('form')?.submit(); });
                 });
             }
         });
@@ -1159,5 +1206,21 @@
         }
     </script>
     @stack('scripts')
+    {{-- Custom confirm dialog --}}
+    <div id="confirmOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,.18);padding:28px 28px 22px;min-width:320px;max-width:420px;width:90%;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <span style="width:36px;height:36px;background:#fff1f2;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-exclamation-triangle-fill" style="color:#e11d48;font-size:16px;"></i>
+                </span>
+                <strong id="confirmTitle" style="font-size:15px;color:#111827;">Konfirmasi</strong>
+            </div>
+            <p id="confirmMsg" style="font-size:13.5px;color:#4b5563;margin:0 0 22px;line-height:1.5;padding-left:46px;"></p>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button id="confirmCancel" class="btn btn-outline" style="min-width:80px;">Batal</button>
+                <button id="confirmOk" class="btn btn-danger" style="min-width:90px;">Hapus</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

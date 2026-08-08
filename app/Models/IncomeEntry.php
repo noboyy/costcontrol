@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class IncomeEntry extends Model
+{
+    use HasFactory;
+
+    protected $table = 'income_entry';
+    protected $primaryKey = 'id_income';
+
+    protected $fillable = [
+        'id_perusahaan',
+        'id_project',
+        'id_income_type',
+        'tanggal',
+        'keterangan',
+        'qty',
+        'unit',
+        'harga_satuan',
+        'total',
+        'catatan',
+        'file_bukti',
+    ];
+
+    protected $casts = [
+        'tanggal' => 'date',
+        'qty' => 'decimal:2',
+        'harga_satuan' => 'decimal:2',
+        'total' => 'decimal:2',
+    ];
+
+    public function perusahaan()
+    {
+        return $this->belongsTo(Perusahaan::class, 'id_perusahaan', 'id_perusahaan');
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'id_project', 'id_project');
+    }
+
+    public function incomeType()
+    {
+        return $this->belongsTo(IncomeType::class, 'id_income_type', 'id_income_type');
+    }
+}

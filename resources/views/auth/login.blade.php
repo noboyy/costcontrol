@@ -265,10 +265,10 @@
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <div class="form-group">
-                        <label class="form-label">Username</label>
+                        <label class="form-label">Email</label>
                         <div class="input-wrap">
-                            <i class="bi bi-person"></i>
-                            <input type="text" class="form-input" name="username" value="{{ old('username') }}" required autofocus autocomplete="username" placeholder="username">
+                            <i class="bi bi-envelope"></i>
+                            <input type="email" class="form-input" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="nama@email.com">
                         </div>
                     </div>
                     <div class="form-group">
@@ -281,12 +281,17 @@
                             </button>
                         </div>
                     </div>
+                    <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+                        <a href="{{ route('password.request') }}" style="font-size:12.5px;color:#2563eb;text-decoration:none;">Lupa password?</a>
+                    </div>
                     <button type="submit" class="btn">
                         Masuk <i class="bi bi-arrow-right"></i>
                     </button>
                 </form>
             </div>
-            <div class="footer-note">Gunakan akun yang diberikan administrator</div>
+            <div class="footer-note">
+                Belum punya akun? <a href="{{ route('register') }}" style="color:#2563eb;text-decoration:none;font-weight:600;">Coba gratis 14 hari</a>
+            </div>
         </div>
     </div>
 

@@ -949,6 +949,11 @@
                         <i class="bi bi-people"></i> Pengguna
                     </a>
                 </div>
+                <div class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('super-admin.*') ? 'active' : '' }}" href="{{ route('super-admin.stats') }}">
+                        <i class="bi bi-graph-up"></i> Statistik Pengguna
+                    </a>
+                </div>
                 @endif
             </div>
             @endif

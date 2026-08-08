@@ -2,7 +2,7 @@
 
 namespace App\Actions\Fortify;
 
-use App\Models\User;
+use App\Models\Akun;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -19,7 +19,7 @@ class UpdateUserPassword implements UpdatesUserPasswords
      *
      * @throws ValidationException
      */
-    public function update(User $user, array $input): void
+    public function update(Akun $user, array $input): void
     {
         Validator::make($input, [
             'current_password' => ['required', 'string', 'current_password:web'],

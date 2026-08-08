@@ -83,8 +83,8 @@
 
                 <div class="section-title" style="margin-top:24px;">Account</div>
                 <div class="form-group">
-                    <label class="form-label">Username *</label>
-                    <input type="text" class="form-input" name="username" value="{{ old('username') }}" required>
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-input" name="email" value="{{ old('email') }}" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -97,7 +97,10 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn" style="margin-top:8px;">Create Account</button>
+                <button type="submit" class="btn" style="margin-top:8px;">Start 14-Day Free Trial</button>
+                <p style="font-size:12px;color:#6b7280;text-align:center;margin-top:12px;">
+                    Gratis 14 hari. Verifikasi email untuk mengaktifkan akun.
+                </p>
             </form>
         </div>
     </div>

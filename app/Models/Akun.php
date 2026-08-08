@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,7 +11,7 @@ use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
 
-class Akun extends Authenticatable
+class Akun extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
     use HasFactory;
@@ -25,10 +26,12 @@ class Akun extends Authenticatable
     protected $fillable = [
         'id_pengguna',
         'username',
+        'email',
         'role',
         'password',
         'is_active',
         'change_password',
+        'trial_ends_at',
         'email_verified_at',
     ];
 
@@ -41,6 +44,7 @@ class Akun extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'trial_ends_at' => 'datetime',
         'password' => 'hashed',
     ];
 
@@ -55,7 +59,7 @@ class Akun extends Authenticatable
 
     public function getEmailForPasswordReset()
     {
-        return $this->username;
+        return $this->email ?: $this->username;
     }
 
     public function pengguna()
@@ -81,5 +85,34 @@ class Akun extends Authenticatable
     public function getIdPerusahaanAttribute(): ?int
     {
         return $this->pengguna?->id_perusahaan;
+    }
+
+    public function hasTrial(): bool
+    {
+        return $this->trial_ends_at !== null;
+    }
+
+    public function isTrialExpired(): bool
+    {
+        if (! $this->trial_ends_at) {
+            return false;
+        }
+
+        return now()->greaterThan($this->trial_ends_at);
+    }
+
+    public function trialDaysLeft(): int
+    {
+        if (! $this->trial_ends_at) {
+            return 0;
+        }
+        $days = (int) \Carbon\Carbon::now()->diffInDays($this->trial_ends_at, false);
+
+        return max(0, $days);
+    }
+
+    public function isActiveUser(): bool
+    {
+        return $this->is_active === '1' && ! $this->isTrialExpired();
     }
 }

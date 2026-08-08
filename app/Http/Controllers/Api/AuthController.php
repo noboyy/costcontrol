@@ -13,21 +13,27 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'username' => 'required|string',
+            'email' => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $user = Akun::where('username', $request->username)->first();
+        $user = Akun::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'Username atau kata sandi salah.',
+                'message' => 'Email atau kata sandi salah.',
             ], 401);
         }
 
         if ($user->is_active !== '1') {
             return response()->json([
                 'message' => 'Akun Anda tidak aktif. Silakan hubungi administrator.',
+            ], 403);
+        }
+
+        if ($user->isTrialExpired()) {
+            return response()->json([
+                'message' => 'Masa trial Anda telah berakhir. Silakan hubungi administrator untuk perpanjang.',
             ], 403);
         }
 

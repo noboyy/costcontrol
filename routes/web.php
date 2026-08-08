@@ -13,6 +13,7 @@ use App\Http\Controllers\PerusahaanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UnitController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,6 +28,8 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'active',
+    'trial',
+    'verified.user',
 ])->group(function () {
     Route::get('/beranda', [DashboardController::class, 'index'])->name('beranda');
 
@@ -126,5 +129,7 @@ Route::middleware([
         Route::post('/pengguna', [PenggunaController::class, 'store'])->name('pengguna.store');
         Route::post('/pengguna/{id}/update', [PenggunaController::class, 'update'])->name('pengguna.update');
         Route::post('/pengguna/{id}/delete', [PenggunaController::class, 'delete'])->name('pengguna.delete');
+
+        Route::get('/super-admin/stats', [SuperAdminController::class, 'stats'])->name('super-admin.stats');
     });
 });

@@ -1138,6 +1138,7 @@ function showTab(tab, el) {
         btnIncome.style.display = tab === 'incomes' ? '' : 'none';
     }
     if (tab === 'costs' || tab === 'incomes') filterEntries();
+    history.replaceState(null, '', location.pathname + '#' + tab);
 }
 
 function parseMoney(v) {
@@ -1172,5 +1173,15 @@ function filterEntries() {
     });
 }
 document.getElementById('entrySearch')?.addEventListener('input', filterEntries);
+
+// Restore tab from URL hash (e.g. after form submit redirect)
+(function() {
+    const hash = location.hash.replace('#', '');
+    const valid = ['costs','incomes','plans','admins'];
+    if (valid.includes(hash)) {
+        const btn = document.querySelector(`.tab[data-tab="${hash}"]`);
+        if (btn) showTab(hash, btn);
+    }
+})();
 </script>
 @endpush

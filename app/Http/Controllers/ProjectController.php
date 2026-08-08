@@ -299,7 +299,7 @@ class ProjectController extends Controller
             }
         }
 
-        return back()->with('success', $msg);
+        return redirect(route('projects.show', $id) . '#plans')->with('success', $msg);
     }
 
     private function removePlan($id, $planId, string $kind)
@@ -317,7 +317,7 @@ class ProjectController extends Controller
             \App\Models\ProjectIncomePlan::where('id', $planId)->where('id_project', $id)->delete();
         }
 
-        return back()->with('success', 'Rencana dihapus.');
+        return redirect(route('projects.show', $id) . '#plans')->with('success', 'Rencana dihapus.');
     }
 
     public function store(Request $request)

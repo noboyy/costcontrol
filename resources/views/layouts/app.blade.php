@@ -1153,28 +1153,21 @@
             }
         });
 
-        // Confirm helper for destructive actions
-        document.querySelectorAll('[data-confirm]').forEach(el => {
-            el.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const form = this;
-                showConfirm(form.dataset.confirm, {
-                    title: form.dataset.confirmTitle || 'Konfirmasi',
-                    ok: form.dataset.confirmOk || 'Ya, lanjutkan',
-                    okClass: form.dataset.confirmClass || 'btn-danger',
-                }).then(ok => { if (ok) form.submit(); });
+        // Confirm helper for destructive actions — event delegation so works on all forms incl. @foreach
+        document.addEventListener('submit', function(e) {
+            const form = e.target.closest('form[data-confirm]');
+            if (!form) return;
+            if (form._confirmPassed) { form._confirmPassed = false; return; }
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            showConfirm(form.dataset.confirm, {
+                title: form.dataset.confirmTitle || 'Konfirmasi',
+                ok: form.dataset.confirmOk || 'Ya, lanjutkan',
+                okClass: form.dataset.confirmClass || 'btn-danger',
+            }).then(ok => {
+                if (ok) { form._confirmPassed = true; form.submit(); }
             });
-            if (el.tagName === 'BUTTON' || el.tagName === 'A') {
-                el.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const target = this;
-                    showConfirm(target.dataset.confirm, {
-                        ok: target.dataset.confirmOk || 'Ya, lanjutkan',
-                        okClass: target.dataset.confirmClass || 'btn-danger',
-                    }).then(ok => { if (ok) target.closest('form')?.submit(); });
-                });
-            }
-        });
+        }, true); // capture phase ensures we intercept before other handlers
 
         // Money input formatting (Indonesian)
         function formatMoneyInput(el) {

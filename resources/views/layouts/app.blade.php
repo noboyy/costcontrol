@@ -865,21 +865,74 @@
     </style>
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.min.css" rel="stylesheet">
     <style>
-        .ts-wrapper.form-select { padding: 0; border: none; }
+        .ts-wrapper.form-select { padding: 0; border: none; box-shadow: none; }
         .ts-wrapper .ts-control {
-            border: 1px solid var(--border-color, #d1d5db);
+            border: 1px solid #d1d5db;
             border-radius: 8px;
             min-height: 38px;
-            padding: 0 10px;
+            padding: 4px 10px;
             font-size: 14px;
+            font-family: inherit;
             box-shadow: none;
             background: #fff;
+            cursor: text;
         }
-        .ts-wrapper.focus .ts-control { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
-        .ts-dropdown { font-size: 14px; border-radius: 8px; border-color: #d1d5db; }
-        .ts-dropdown .option { padding: 8px 12px; }
-        .ts-dropdown .option.active { background: #eff6ff; color: #1d4ed8; }
-        .ts-dropdown .option:hover { background: #f1f5f9; }
+        .ts-wrapper.focus .ts-control,
+        .ts-wrapper.input-active .ts-control {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+            outline: none;
+        }
+        .ts-wrapper .ts-control input {
+            font-size: 14px;
+            font-family: inherit;
+            color: #111827;
+        }
+        .ts-wrapper .ts-control input::placeholder { color: #9ca3af; }
+        .ts-wrapper:not(.has-items) .ts-control::after {
+            content: attr(data-placeholder);
+            color: #9ca3af;
+            font-size: 14px;
+            pointer-events: none;
+        }
+        .ts-dropdown {
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 16px rgba(0,0,0,.08);
+            margin-top: 4px;
+        }
+        .ts-dropdown .ts-dropdown-content { max-height: 260px; }
+        .ts-dropdown .option {
+            padding: 8px 12px;
+            color: #374151;
+            transition: background .1s;
+        }
+        .ts-dropdown .option.active,
+        .ts-dropdown .option:hover { background: #eff6ff; color: #1d4ed8; }
+        .ts-dropdown .option.selected { background: #dbeafe; color: #1d4ed8; font-weight: 500; }
+        .ts-dropdown .optgroup-header {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #9ca3af;
+            padding: 8px 12px 4px;
+            background: #f9fafb;
+            border-top: 1px solid #f3f4f6;
+            cursor: default;
+        }
+        .ts-dropdown .optgroup:first-child .optgroup-header { border-top: none; }
+        .ts-dropdown .no-results {
+            padding: 10px 12px;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+        /* hide original caret, ts-select draws its own */
+        .ts-wrapper .ts-control::before { display: none; }
+        .ts-wrapper .ts-control .caret { display: none; }
+        .ts-wrapper:not(.multi) .ts-control { padding-right: 28px; }
+        .ts-wrapper:not(.multi):not(.focus) .ts-control::after { display: none; }
     </style>
     @stack('styles')
 </head>
@@ -1168,28 +1221,30 @@
             setTimeout(() => t.remove(), 3200);
         }
     </script>
-    @stack('scripts')
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    @stack('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('select.ts-select').forEach(function(el) {
-                new TomSelect(el, {
-                    maxOptions: 500,
-                    placeholder: el.dataset.placeholder || 'Pilih...',
-                    allowEmptyOption: true,
-                });
-            });
-        });
-        // Re-init for dynamically added selects (called after modal/section shown)
-        window.initTomSelect = function(scope) {
+        function initTomSelects(scope) {
             (scope || document).querySelectorAll('select.ts-select:not(.tomselected)').forEach(function(el) {
+                var placeholder = el.dataset.placeholder || el.querySelector('option[value=""]')?.textContent?.trim() || 'Cari atau pilih...';
+                // Remove placeholder option text (will be shown via Tom Select placeholder)
+                var emptyOpt = el.querySelector('option[value=""]');
+                if (emptyOpt && !emptyOpt.disabled) emptyOpt.textContent = '';
                 new TomSelect(el, {
-                    maxOptions: 500,
-                    placeholder: el.dataset.placeholder || 'Pilih...',
+                    maxOptions: 1000,
+                    placeholder: placeholder,
                     allowEmptyOption: true,
+                    plugins: ['dropdown_input'],
+                    render: {
+                        no_results: function() {
+                            return '<div class="no-results">Tidak ditemukan</div>';
+                        }
+                    }
                 });
             });
-        };
+        }
+        document.addEventListener('DOMContentLoaded', function() { initTomSelects(); });
+        window.initTomSelect = initTomSelects;
     </script>
 </body>
 </html>

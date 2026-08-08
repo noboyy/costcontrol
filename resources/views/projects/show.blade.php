@@ -675,9 +675,13 @@
                     <div class="form-group">
                         <label class="form-label">Tipe Biaya <span class="req">*</span></label>
                         <select class="form-select ts-select" name="id_cost_type" required>
-                            <option value="">Pilih tipe</option>
-                            @foreach($costTypes as $type)
-                                <option value="{{ $type->id_cost_type }}" data-unit="{{ $type->default_unit }}">{{ $type->nama }}@if($type->kode) ({{ $type->kode }})@endif</option>
+                            <option value="" disabled selected>Cari atau pilih tipe biaya...</option>
+                            @foreach($costTypesByKategori as $kat => $types)
+                                <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
+                                    @foreach($types as $type)
+                                        <option value="{{ $type->id_cost_type }}" data-unit="{{ $type->default_unit }}">{{ $type->nama }}@if($type->kode) ({{ $type->kode }})@endif</option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>
@@ -752,9 +756,13 @@
                     <div class="form-group">
                         <label class="form-label">Tipe Pendapatan <span class="req">*</span></label>
                         <select class="form-select ts-select" name="id_income_type" required>
-                            <option value="">Pilih tipe</option>
-                            @foreach($incomeTypes as $type)
-                                <option value="{{ $type->id_income_type }}">{{ $type->nama }}@if($type->kode) ({{ $type->kode }})@endif</option>
+                            <option value="" disabled selected>Cari atau pilih tipe pendapatan...</option>
+                            @foreach($incomeTypesByKategori as $kat => $types)
+                                <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
+                                    @foreach($types as $type)
+                                        <option value="{{ $type->id_income_type }}">{{ $type->nama }}@if($type->kode) ({{ $type->kode }})@endif</option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>
@@ -831,8 +839,12 @@
                     <div class="form-group">
                         <label class="form-label">Tipe Biaya <span class="req">*</span></label>
                         <select class="form-select ts-select" name="id_cost_type" required>
-                            @foreach($costTypes as $type)
-                                <option value="{{ $type->id_cost_type }}" @selected($cost->id_cost_type == $type->id_cost_type)>{{ $type->nama }}</option>
+                            @foreach($costTypesByKategori as $kat => $types)
+                                <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
+                                    @foreach($types as $type)
+                                        <option value="{{ $type->id_cost_type }}" @selected($cost->id_cost_type == $type->id_cost_type)>{{ $type->nama }}</option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>
@@ -904,8 +916,12 @@
                     <div class="form-group">
                         <label class="form-label">Tipe <span class="req">*</span></label>
                         <select class="form-select ts-select" name="id_income_type" required>
-                            @foreach($incomeTypes as $type)
-                                <option value="{{ $type->id_income_type }}" @selected($income->id_income_type == $type->id_income_type)>{{ $type->nama }}</option>
+                            @foreach($incomeTypesByKategori as $kat => $types)
+                                <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
+                                    @foreach($types as $type)
+                                        <option value="{{ $type->id_income_type }}" @selected($income->id_income_type == $type->id_income_type)>{{ $type->nama }}</option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                         </select>
                     </div>
@@ -975,8 +991,12 @@
                 <div class="form-group">
                     <label class="form-label">Tipe Biaya <span class="req">*</span></label>
                     <select class="form-select ts-select" name="id_cost_type" required>
-                        @foreach($costTypes as $type)
-                            <option value="{{ $type->id_cost_type }}">{{ $type->nama }}</option>
+                        @foreach($costTypesByKategori as $kat => $types)
+                            <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
+                                @foreach($types as $type)
+                                    <option value="{{ $type->id_cost_type }}">{{ $type->nama }}</option>
+                                @endforeach
+                            </optgroup>
                         @endforeach
                     </select>
                 </div>
@@ -1007,8 +1027,12 @@
                 <div class="form-group">
                     <label class="form-label">Tipe Pendapatan <span class="req">*</span></label>
                     <select class="form-select ts-select" name="id_income_type" required>
-                        @foreach($incomeTypes as $type)
-                            <option value="{{ $type->id_income_type }}">{{ $type->nama }}</option>
+                        @foreach($incomeTypesByKategori as $kat => $types)
+                            <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
+                                @foreach($types as $type)
+                                    <option value="{{ $type->id_income_type }}">{{ $type->nama }}</option>
+                                @endforeach
+                            </optgroup>
                         @endforeach
                     </select>
                 </div>
@@ -1056,8 +1080,12 @@
                     <label class="form-label">Tipe biaya (opsional)</label>
                     <select class="form-select ts-select" name="id_cost_type">
                         <option value="">—</option>
-                        @foreach($costTypes as $type)
-                            <option value="{{ $type->id_cost_type }}">{{ $type->nama }}</option>
+                        @foreach($costTypesByKategori as $kat => $types)
+                            <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
+                                @foreach($types as $type)
+                                    <option value="{{ $type->id_cost_type }}">{{ $type->nama }}</option>
+                                @endforeach
+                            </optgroup>
                         @endforeach
                     </select>
                 </div>

@@ -84,8 +84,10 @@ class ProjectController extends Controller
             })
             ->firstOrFail();
 
-        $costTypes = CostType::where('id_perusahaan', $companyId ?: null)->orderBy('nama')->get();
-        $incomeTypes = IncomeType::where('id_perusahaan', $companyId ?: null)->orderBy('nama')->get();
+        $costTypes = CostType::where('id_perusahaan', $companyId ?: null)->orderBy('kategori')->orderBy('nama')->get();
+        $incomeTypes = IncomeType::where('id_perusahaan', $companyId ?: null)->orderBy('kategori')->orderBy('nama')->get();
+        $costTypesByKategori = $costTypes->groupBy(fn ($t) => $t->kategori ?: 'Lainnya');
+        $incomeTypesByKategori = $incomeTypes->groupBy(fn ($t) => $t->kategori ?: 'Lainnya');
         $units = Unit::where('deleted_at', null)
             ->when($companyId, function ($q) use ($companyId) {
                 $q->where('id_perusahaan', $companyId);
@@ -137,6 +139,8 @@ class ProjectController extends Controller
             'project' => $project,
             'costTypes' => $costTypes,
             'incomeTypes' => $incomeTypes,
+            'costTypesByKategori' => $costTypesByKategori,
+            'incomeTypesByKategori' => $incomeTypesByKategori,
             'units' => $units,
             'isArchived' => $project->isArchived(),
             'todayCost' => $todayCost,

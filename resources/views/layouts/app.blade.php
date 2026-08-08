@@ -377,6 +377,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
+            overflow: hidden;
         }
         .card-header {
             padding: 14px 18px;
@@ -608,10 +609,9 @@
         tbody tr.clickable { cursor: pointer; }
         tfoot tr td {
             border-top: 2px solid #e5e7eb;
-            padding-top: 10px;
-            padding-bottom: 10px;
+            padding: 10px 16px;
             background: #f9fafb;
-            font-size: 13px;
+            font-size: 13.5px;
         }
         tfoot tr:hover { background: #f9fafb; }
         .text-end { text-align: right; }

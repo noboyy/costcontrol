@@ -1234,7 +1234,6 @@
                     maxOptions: 1000,
                     placeholder: placeholder,
                     allowEmptyOption: true,
-                    plugins: ['dropdown_input'],
                     render: {
                         no_results: function() {
                             return '<div class="no-results">Tidak ditemukan</div>';

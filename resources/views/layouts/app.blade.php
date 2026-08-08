@@ -606,6 +606,14 @@
         tbody tr { transition: background 0.1s; }
         tbody tr:hover { background: #f8fafc; }
         tbody tr.clickable { cursor: pointer; }
+        tfoot tr td {
+            border-top: 2px solid #e5e7eb;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            background: #f9fafb;
+            font-size: 13px;
+        }
+        tfoot tr:hover { background: #f9fafb; }
         .text-end { text-align: right; }
         .text-center { text-align: center; }
         .money { font-variant-numeric: tabular-nums; font-weight: 600; font-feature-settings: "tnum"; }

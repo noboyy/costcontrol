@@ -75,7 +75,7 @@
                     <tbody>
                         @forelse($byCostCategory as $cat => $amt)
                             <tr>
-                                <td>{{ $cat }}</td>
+                                <td>{{ ucfirst(str_replace('_', ' ', $cat)) }}</td>
                                 <td class="text-end money negative">Rp {{ number_format($amt, 0, ',', '.') }}</td>
                             </tr>
                         @empty
@@ -95,7 +95,7 @@
                     <tbody>
                         @forelse($byIncomeCategory as $cat => $amt)
                             <tr>
-                                <td>{{ $cat }}</td>
+                                <td>{{ ucfirst(str_replace('_', ' ', $cat)) }}</td>
                                 <td class="text-end money positive">Rp {{ number_format($amt, 0, ',', '.') }}</td>
                             </tr>
                         @empty

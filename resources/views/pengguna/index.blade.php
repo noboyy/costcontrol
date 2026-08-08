@@ -166,6 +166,10 @@
                         <input type="password" class="form-input" name="password" required minlength="6">
                     </div>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Konfirmasi Password <span class="req">*</span></label>
+                    <input type="password" class="form-input" name="password_confirmation" required minlength="6">
+                </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Telepon</label>

@@ -129,20 +129,26 @@
 
             @if(!$isArchived)
                 @if($isClosedToday)
-                    <form action="{{ route('cost-centers.dailyClose.reopen', $project->id_project) }}" method="POST" data-confirm="Buka ulang tutup kas hari ini?">
+                    <form action="{{ route('cost-centers.dailyClose.reopen', $project->id_project) }}" method="POST" data-confirm="Buka ulang tutup kas tanggal ini?">
                         @csrf
-                        <input type="hidden" name="tanggal" value="{{ now()->format('Y-m-d') }}">
-                        <button class="btn btn-outline" style="width:100%;"><i class="bi bi-unlock"></i> Buka Ulang Kas Hari Ini</button>
+                        <div class="form-group">
+                            <label class="form-label">Tanggal</label>
+                            <input type="date" class="form-input" name="tanggal" value="{{ now()->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
+                        </div>
+                        <button class="btn btn-outline" style="width:100%;"><i class="bi bi-unlock"></i> Buka Ulang Kas</button>
                     </form>
                 @else
-                    <form action="{{ route('cost-centers.dailyClose.store', $project->id_project) }}" method="POST" data-confirm="Tutup kas hari ini? Entri tanggal ini akan dikunci.">
+                    <form action="{{ route('cost-centers.dailyClose.store', $project->id_project) }}" method="POST" data-confirm="Tutup kas tanggal ini? Entri akan dikunci.">
                         @csrf
-                        <input type="hidden" name="tanggal" value="{{ now()->format('Y-m-d') }}">
+                        <div class="form-group">
+                            <label class="form-label">Tanggal Tutup Kas</label>
+                            <input type="date" class="form-input" name="tanggal" value="{{ now()->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
+                        </div>
                         <div class="form-group">
                             <label class="form-label">Catatan tutup kas</label>
                             <input type="text" class="form-input" name="notes" placeholder="Opsional">
                         </div>
-                        <button class="btn btn-primary" style="width:100%;"><i class="bi bi-lock"></i> Tutup Kas Hari Ini</button>
+                        <button class="btn btn-primary" style="width:100%;"><i class="bi bi-lock"></i> Tutup Kas</button>
                     </form>
                 @endif
             @endif

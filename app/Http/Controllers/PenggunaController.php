@@ -37,7 +37,7 @@ class PenggunaController extends Controller
             'no_hp' => 'nullable|string|max:20',
             'jabatan' => 'nullable|string|max:100',
             'username' => 'required|string|max:50|unique:akun,username',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         try {

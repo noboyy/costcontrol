@@ -543,11 +543,11 @@
                         <tfoot>
                             <tr>
                                 <td><strong>Total</strong></td>
-                                <td class="text-end money"><strong>Rp {{ number_format($planCostTotal, 0, ',', '.') }}</strong></td>
-                                <td class="text-end money"><strong>Rp {{ number_format($project->total_cost, 0, ',', '.') }}</strong></td>
+                                <td class="text-end money">Rp {{ number_format($planCostTotal, 0, ',', '.') }}</td>
+                                <td class="text-end money">Rp {{ number_format($project->total_cost, 0, ',', '.') }}</td>
                                 <td class="text-end">
                                     @if($planCostTotal > 0)
-                                        <strong>{{ number_format(($project->total_cost / $planCostTotal) * 100, 0) }}%</strong>
+                                        {{ number_format(($project->total_cost / $planCostTotal) * 100, 0) }}%
                                     @endif
                                 </td>
                                 @if(!$isArchived)<td></td>@endif
@@ -609,11 +609,11 @@
                         <tfoot>
                             <tr>
                                 <td><strong>Total</strong></td>
-                                <td class="text-end money"><strong>Rp {{ number_format($planIncomeTotal, 0, ',', '.') }}</strong></td>
-                                <td class="text-end money"><strong>Rp {{ number_format($project->total_income, 0, ',', '.') }}</strong></td>
+                                <td class="text-end money">Rp {{ number_format($planIncomeTotal, 0, ',', '.') }}</td>
+                                <td class="text-end money">Rp {{ number_format($project->total_income, 0, ',', '.') }}</td>
                                 <td class="text-end">
                                     @if($planIncomeTotal > 0)
-                                        <strong>{{ number_format(($project->total_income / $planIncomeTotal) * 100, 0) }}%</strong>
+                                        {{ number_format(($project->total_income / $planIncomeTotal) * 100, 0) }}%
                                     @endif
                                 </td>
                                 @if(!$isArchived)<td></td>@endif

@@ -38,7 +38,7 @@
             </div>
             <div class="form-group" style="margin:0;">
                 <label class="form-label">Unit</label>
-                <select class="form-select ts-select" name="project_id">
+                <select class="form-select" name="project_id">
                     <option value="">Semua unit</option>
                     @foreach($units as $u)
                         <option value="{{ $u->id_project }}" @selected((string)$projectId === (string)$u->id_project)>{{ $u->nama_project }} ({{ $u->mode_label }})</option>

@@ -79,7 +79,7 @@
                                         <div class="form-row">
                                             <div class="form-group">
                                                 <label class="form-label">Kategori</label>
-                                                <select class="form-select ts-select" name="kategori">
+                                                <select class="form-select" name="kategori">
                                                     @foreach($categories as $c)
                                                         <option value="{{ $c->kode }}" @selected($type->kategori === $c->kode)>{{ $c->nama }}</option>
                                                     @endforeach
@@ -90,7 +90,7 @@
                                             </div>
                                             <div class="form-group">
                                                 <label class="form-label">Satuan</label>
-                                                <select class="form-select ts-select" name="default_unit">
+                                                <select class="form-select" name="default_unit">
                                                     <option value="">—</option>
                                                     @foreach($units as $u)
                                                         <option value="{{ $u->nama }}" @selected($type->default_unit === $u->nama)>{{ $u->nama }}</option>
@@ -137,7 +137,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Kategori</label>
-                        <select class="form-select ts-select" name="kategori">
+                        <select class="form-select" name="kategori">
                             @forelse($categories as $c)
                                 <option value="{{ $c->kode }}">{{ $c->nama }}</option>
                             @empty
@@ -148,7 +148,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Satuan</label>
-                        <select class="form-select ts-select" name="default_unit">
+                        <select class="form-select" name="default_unit">
                             <option value="">—</option>
                             @foreach($units as $u)
                                 <option value="{{ $u->nama }}">{{ $u->nama }}</option>

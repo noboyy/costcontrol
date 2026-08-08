@@ -674,7 +674,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Tipe Biaya <span class="req">*</span></label>
-                        <select class="form-select ts-select" name="id_cost_type" required>
+                        <select class="form-select" name="id_cost_type" required>
                             <option value="" disabled selected>Cari atau pilih tipe biaya...</option>
                             @foreach($costTypesByKategori as $kat => $types)
                                 <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
@@ -701,7 +701,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Satuan</label>
-                        <select class="form-select ts-select" name="unit">
+                        <select class="form-select" name="unit">
                             <option value="">Pilih</option>
                             @foreach($units as $unit)
                                 <option value="{{ $unit->nama }}">{{ $unit->nama }}@if($unit->simbol) ({{ $unit->simbol }})@endif</option>
@@ -755,7 +755,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Tipe Pendapatan <span class="req">*</span></label>
-                        <select class="form-select ts-select" name="id_income_type" required>
+                        <select class="form-select" name="id_income_type" required>
                             <option value="" disabled selected>Cari atau pilih tipe pendapatan...</option>
                             @foreach($incomeTypesByKategori as $kat => $types)
                                 <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
@@ -782,7 +782,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Satuan</label>
-                        <select class="form-select ts-select" name="unit">
+                        <select class="form-select" name="unit">
                             <option value="">Pilih</option>
                             @foreach($units as $unit)
                                 <option value="{{ $unit->nama }}">{{ $unit->nama }}@if($unit->simbol) ({{ $unit->simbol }})@endif</option>
@@ -838,7 +838,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Tipe Biaya <span class="req">*</span></label>
-                        <select class="form-select ts-select" name="id_cost_type" required>
+                        <select class="form-select" name="id_cost_type" required>
                             @foreach($costTypesByKategori as $kat => $types)
                                 <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
                                     @foreach($types as $type)
@@ -864,7 +864,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Satuan</label>
-                        <select class="form-select ts-select" name="unit">
+                        <select class="form-select" name="unit">
                             <option value="">Pilih</option>
                             @foreach($units as $unit)
                                 <option value="{{ $unit->nama }}" @selected($cost->unit === $unit->nama)>{{ $unit->nama }}</option>
@@ -915,7 +915,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Tipe <span class="req">*</span></label>
-                        <select class="form-select ts-select" name="id_income_type" required>
+                        <select class="form-select" name="id_income_type" required>
                             @foreach($incomeTypesByKategori as $kat => $types)
                                 <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
                                     @foreach($types as $type)
@@ -941,7 +941,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Satuan</label>
-                        <select class="form-select ts-select" name="unit">
+                        <select class="form-select" name="unit">
                             <option value="">Pilih</option>
                             @foreach($units as $unit)
                                 <option value="{{ $unit->nama }}" @selected($income->unit === $unit->nama)>{{ $unit->nama }}</option>
@@ -990,7 +990,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">Tipe Biaya <span class="req">*</span></label>
-                    <select class="form-select ts-select" name="id_cost_type" required>
+                    <select class="form-select" name="id_cost_type" required>
                         @foreach($costTypesByKategori as $kat => $types)
                             <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
                                 @foreach($types as $type)
@@ -1026,7 +1026,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">Tipe Pendapatan <span class="req">*</span></label>
-                    <select class="form-select ts-select" name="id_income_type" required>
+                    <select class="form-select" name="id_income_type" required>
                         @foreach($incomeTypesByKategori as $kat => $types)
                             <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
                                 @foreach($types as $type)
@@ -1078,7 +1078,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Tipe biaya (opsional)</label>
-                    <select class="form-select ts-select" name="id_cost_type">
+                    <select class="form-select" name="id_cost_type">
                         <option value="">—</option>
                         @foreach($costTypesByKategori as $kat => $types)
                             <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">

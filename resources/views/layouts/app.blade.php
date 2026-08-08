@@ -863,6 +863,24 @@
             .page-actions .btn { flex: 1; }
         }
     </style>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.min.css" rel="stylesheet">
+    <style>
+        .ts-wrapper.form-select { padding: 0; border: none; }
+        .ts-wrapper .ts-control {
+            border: 1px solid var(--border-color, #d1d5db);
+            border-radius: 8px;
+            min-height: 38px;
+            padding: 0 10px;
+            font-size: 14px;
+            box-shadow: none;
+            background: #fff;
+        }
+        .ts-wrapper.focus .ts-control { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+        .ts-dropdown { font-size: 14px; border-radius: 8px; border-color: #d1d5db; }
+        .ts-dropdown .option { padding: 8px 12px; }
+        .ts-dropdown .option.active { background: #eff6ff; color: #1d4ed8; }
+        .ts-dropdown .option:hover { background: #f1f5f9; }
+    </style>
     @stack('styles')
 </head>
 <body>
@@ -1151,5 +1169,27 @@
         }
     </script>
     @stack('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('select.ts-select').forEach(function(el) {
+                new TomSelect(el, {
+                    maxOptions: 500,
+                    placeholder: el.dataset.placeholder || 'Pilih...',
+                    allowEmptyOption: true,
+                });
+            });
+        });
+        // Re-init for dynamically added selects (called after modal/section shown)
+        window.initTomSelect = function(scope) {
+            (scope || document).querySelectorAll('select.ts-select:not(.tomselected)').forEach(function(el) {
+                new TomSelect(el, {
+                    maxOptions: 500,
+                    placeholder: el.dataset.placeholder || 'Pilih...',
+                    allowEmptyOption: true,
+                });
+            });
+        };
+    </script>
 </body>
 </html>

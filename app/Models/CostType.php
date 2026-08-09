@@ -10,6 +10,7 @@ class CostType extends Model
     use HasFactory;
 
     protected $table = 'cost_type';
+
     protected $primaryKey = 'id_cost_type';
 
     protected $fillable = [

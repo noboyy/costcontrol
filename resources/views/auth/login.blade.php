@@ -212,7 +212,7 @@
             <div class="brand-mark">CC</div>
             <div>
                 <h1>CostControl</h1>
-                <p>Manajemen Keuangan Project</p>
+                <p>Manajemen Keuangan Proyek</p>
             </div>
         </div>
         <div class="hero">
@@ -222,14 +222,14 @@
                 <div class="feature">
                     <i class="bi bi-graph-up-arrow"></i>
                     <div>
-                        <strong>Dashboard real-time</strong>
+                        <strong>Dashboard waktu nyata</strong>
                         <span>KPI biaya, pendapatan, dan tren mingguan</span>
                     </div>
                 </div>
                 <div class="feature">
                     <i class="bi bi-folder2-open"></i>
                     <div>
-                        <strong>Project-centric</strong>
+                        <strong>Berbasis Proyek</strong>
                         <span>Semua transaksi terikat ke project</span>
                     </div>
                 </div>
@@ -272,7 +272,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Password</label>
+                        <label class="form-label">Kata Sandi</label>
                         <div class="input-wrap">
                             <i class="bi bi-lock"></i>
                             <input type="password" class="form-input" name="password" id="password" required autocomplete="current-password" placeholder="••••••••" style="padding-right:40px;">

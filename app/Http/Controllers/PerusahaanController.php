@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Perusahaan;
+use App\Services\MasterDataModuleService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PerusahaanController extends Controller
 {
@@ -27,7 +29,7 @@ class PerusahaanController extends Controller
 
     public function store(Request $request)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 
@@ -35,9 +37,15 @@ class PerusahaanController extends Controller
             'nama_perusahaan' => 'required|string|max:255',
             'alamat_lengkap' => 'nullable|string',
             'owner' => 'nullable|string|max:255',
+            'module' => ['nullable', Rule::in([Perusahaan::MODULE_ALL, Perusahaan::MODULE_PROJECT, Perusahaan::MODULE_UMKM])],
         ]);
 
-        Perusahaan::create($request->only('nama_perusahaan', 'alamat_lengkap', 'owner'));
+        $perusahaan = Perusahaan::create(array_merge(
+            $request->only('nama_perusahaan', 'alamat_lengkap', 'owner'),
+            ['module' => $request->module ?: Perusahaan::MODULE_ALL]
+        ));
+
+        app(MasterDataModuleService::class)->copyModulesToCompany($perusahaan->id_perusahaan);
 
         return redirect()->route('perusahaan.index')->with('success', 'Perusahaan ditambahkan.');
     }
@@ -47,7 +55,7 @@ class PerusahaanController extends Controller
         $user = auth()->user();
         $company = Perusahaan::findOrFail($id);
 
-        if (!$user->isSuperAdmin() && (int) $user->id_perusahaan !== (int) $company->id_perusahaan) {
+        if (! $user->isSuperAdmin() && (int) $user->id_perusahaan !== (int) $company->id_perusahaan) {
             abort(403);
         }
 
@@ -55,16 +63,20 @@ class PerusahaanController extends Controller
             'nama_perusahaan' => 'required|string|max:255',
             'alamat_lengkap' => 'nullable|string',
             'owner' => 'nullable|string|max:255',
+            'module' => ['nullable', Rule::in([Perusahaan::MODULE_ALL, Perusahaan::MODULE_PROJECT, Perusahaan::MODULE_UMKM])],
         ]);
 
-        $company->update($request->only('nama_perusahaan', 'alamat_lengkap', 'owner'));
+        $company->update(array_merge(
+            $request->only('nama_perusahaan', 'alamat_lengkap', 'owner'),
+            ['module' => $request->module ?: Perusahaan::MODULE_ALL]
+        ));
 
         return redirect()->route('perusahaan.index')->with('success', 'Perusahaan diperbarui.');
     }
 
     public function delete($id)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 

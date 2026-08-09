@@ -64,21 +64,24 @@ class PenggunaController extends Controller
             return redirect()->route('pengguna.index')->with('success', 'Pengguna berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Gagal menambah pengguna: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Gagal menambah pengguna: '.$e->getMessage());
         }
     }
 
     public function update(Request $request, $id)
     {
         $user = auth()->user();
+        $companyId = $user->id_perusahaan;
 
-        $pengguna = Pengguna::findOrFail($id);
+        $pengguna = Pengguna::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->findOrFail($id);
 
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
             'no_hp' => 'nullable|string|max:20',
             'jabatan' => 'nullable|string|max:100',
-            'username' => 'nullable|string|max:50|unique:akun,username,' . $pengguna->akun?->id_akun . ',id_akun',
+            'username' => 'nullable|string|max:50|unique:akun,username,'.$pengguna->akun?->id_akun.',id_akun',
             'password' => 'nullable|string|min:6',
             'is_active' => 'nullable|in:0,1',
         ]);
@@ -108,7 +111,7 @@ class PenggunaController extends Controller
                     $updateData['change_password'] = ($pengguna->akun->change_password ?? 0) + 1;
                 }
 
-                if (!empty($updateData)) {
+                if (! empty($updateData)) {
                     $pengguna->akun->update($updateData);
                 }
             }
@@ -118,15 +121,23 @@ class PenggunaController extends Controller
             return redirect()->route('pengguna.index')->with('success', 'Pengguna berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Gagal mengubah pengguna: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Gagal mengubah pengguna: '.$e->getMessage());
         }
     }
 
     public function delete($id)
     {
         $user = auth()->user();
+        $companyId = $user->id_perusahaan;
 
-        $pengguna = Pengguna::findOrFail($id);
+        $pengguna = Pengguna::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->findOrFail($id);
+
+        // Cannot delete self
+        if ($pengguna->id_pengguna === $user->pengguna?->id_pengguna) {
+            return back()->with('error', 'Tidak bisa menghapus akun sendiri.');
+        }
 
         // Cannot delete SUPER ADMIN
         if ($pengguna->akun && $pengguna->akun->role === 'SUPER ADMIN') {
@@ -146,7 +157,8 @@ class PenggunaController extends Controller
             return redirect()->route('pengguna.index')->with('success', 'Pengguna berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal menghapus pengguna: ' . $e->getMessage());
+
+            return back()->with('error', 'Gagal menghapus pengguna: '.$e->getMessage());
         }
     }
 }

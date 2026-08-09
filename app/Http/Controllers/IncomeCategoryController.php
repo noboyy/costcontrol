@@ -13,7 +13,7 @@ class IncomeCategoryController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $categories = IncomeCategory::forCompany($companyId)->ordered()->get();
         $typeCounts = IncomeType::where('id_perusahaan', $companyId ?: null)
@@ -33,7 +33,7 @@ class IncomeCategoryController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $request->validate([
             'nama' => 'required|string|max:100',
@@ -69,7 +69,7 @@ class IncomeCategoryController extends Controller
     public function update(Request $request, $id)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $category = IncomeCategory::forCompany($companyId)->where('id_income_category', $id)->firstOrFail();
 
@@ -111,7 +111,7 @@ class IncomeCategoryController extends Controller
     public function delete($id)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $category = IncomeCategory::forCompany($companyId)->where('id_income_category', $id)->firstOrFail();
         $used = IncomeType::where('id_perusahaan', $companyId ?: null)->where('kategori', $category->kode)->count();

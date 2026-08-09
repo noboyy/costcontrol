@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -21,6 +22,7 @@ class Akun extends Authenticatable implements MustVerifyEmail
     use TwoFactorAuthenticatable;
 
     protected $table = 'akun';
+
     protected $primaryKey = 'id_akun';
 
     protected $fillable = [
@@ -77,6 +79,25 @@ class Akun extends Authenticatable implements MustVerifyEmail
         return in_array($this->role, ['SUPER ADMIN', 'ADMIN']);
     }
 
+    public function isInvestor(): bool
+    {
+        return $this->role === 'INVESTOR';
+    }
+
+    public function investorProject()
+    {
+        return $this->hasOne(ProjectInvestor::class, 'id_akun', 'id_akun');
+    }
+
+    public function companyModule(): string
+    {
+        if (! $this->pengguna || ! $this->pengguna->perusahaan) {
+            return Perusahaan::MODULE_ALL;
+        }
+
+        return $this->pengguna->perusahaan->module();
+    }
+
     public function getNamaLengkapAttribute(): string
     {
         return $this->pengguna?->nama_lengkap ?? $this->username;
@@ -85,6 +106,15 @@ class Akun extends Authenticatable implements MustVerifyEmail
     public function getIdPerusahaanAttribute(): ?int
     {
         return $this->pengguna?->id_perusahaan;
+    }
+
+    public function masterDataCompanyId(): ?int
+    {
+        if ($this->isSuperAdmin()) {
+            return null;
+        }
+
+        return $this->id_perusahaan;
     }
 
     public function hasTrial(): bool
@@ -106,7 +136,7 @@ class Akun extends Authenticatable implements MustVerifyEmail
         if (! $this->trial_ends_at) {
             return 0;
         }
-        $days = (int) \Carbon\Carbon::now()->diffInDays($this->trial_ends_at, false);
+        $days = (int) Carbon::now()->diffInDays($this->trial_ends_at, false);
 
         return max(0, $days);
     }

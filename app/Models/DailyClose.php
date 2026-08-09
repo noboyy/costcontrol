@@ -10,6 +10,7 @@ class DailyClose extends Model
     use HasFactory;
 
     protected $table = 'daily_close';
+
     protected $primaryKey = 'id_daily_close';
 
     protected $fillable = [

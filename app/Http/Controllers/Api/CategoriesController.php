@@ -19,11 +19,9 @@ class CategoriesController extends Controller
         if ($kind === 'cost') {
             $types = CostType::where('id_perusahaan', $companyId ?: null)->orderBy('nama')->get();
             $categories = CostCategory::forCompany($companyId)->active()->ordered()->get();
-            $typeModel = CostType::class;
         } else {
             $types = IncomeType::where('id_perusahaan', $companyId ?: null)->orderBy('nama')->get();
             $categories = IncomeCategory::forCompany($companyId)->active()->ordered()->get();
-            $typeModel = IncomeType::class;
         }
 
         $categoryMeta = $categories->mapWithKeys(fn ($c) => [
@@ -32,6 +30,7 @@ class CategoriesController extends Controller
 
         $grouped = $types->groupBy(function ($t) {
             $key = strtolower(trim((string) ($t->kategori ?: 'other')));
+
             return $key !== '' ? $key : 'other';
         });
 

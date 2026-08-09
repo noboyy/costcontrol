@@ -167,7 +167,7 @@
                             <td class="text-end money {{ $day['margin_economic'] >= 0 ? 'positive' : 'negative' }}">Rp {{ number_format($day['margin_economic'], 0, ',', '.') }}</td>
                             <td class="text-end">{{ $day['cogs_ratio_pct'] !== null ? number_format($day['cogs_ratio_pct'], 1).'%' : '—' }}</td>
                             <td>
-                                @if($day['is_closed']) <span class="badge badge-green">Closed</span>
+                                @if($day['is_closed']) <span class="badge badge-green">Tutup</span>
                                 @elseif($day['leak_alert'] || $day['over_budget']) <span class="badge badge-red">Alert</span>
                                 @else <span class="badge badge-gray">Open</span> @endif
                             </td>

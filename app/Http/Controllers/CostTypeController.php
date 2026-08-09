@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CostCategory;
+use App\Models\CostEntry;
 use App\Models\CostType;
 use App\Models\Unit;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ class CostTypeController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $types = CostType::where('id_perusahaan', $companyId ?: null)
             ->orderBy('kategori')
@@ -39,21 +40,23 @@ class CostTypeController extends Controller
 
         $grouped = $types->groupBy(function ($type) {
             $key = strtolower(trim((string) ($type->kategori ?: 'other')));
+
             return $key !== '' ? $key : 'other';
         });
 
         $sortedKeys = $grouped->keys()->sortBy(function ($key) use ($categoryOrder) {
             $idx = array_search($key, $categoryOrder, true);
+
             return $idx === false ? 1000 + ord($key[0] ?? 'z') : $idx;
         })->values();
 
         $typesByCategory = collect();
         foreach ($sortedKeys as $key) {
             $typesByCategory->put($key, $grouped->get($key)->sortBy('nama')->values());
-            if (!isset($categoryLabels[$key])) {
+            if (! isset($categoryLabels[$key])) {
                 $categoryLabels[$key] = ucfirst(str_replace('_', ' ', $key));
             }
-            if (!isset($categoryMeta[$key])) {
+            if (! isset($categoryMeta[$key])) {
                 $categoryMeta[$key] = [
                     'icon' => 'bi-folder',
                     'color' => 'gray',
@@ -65,7 +68,7 @@ class CostTypeController extends Controller
 
         // Include empty active categories so user sees structure
         foreach ($categories as $cat) {
-            if (!$typesByCategory->has($cat->kode)) {
+            if (! $typesByCategory->has($cat->kode)) {
                 $typesByCategory->put($cat->kode, collect());
             }
         }
@@ -73,6 +76,7 @@ class CostTypeController extends Controller
         // Re-sort by category order including empty ones
         $typesByCategory = $typesByCategory->sortBy(function ($items, $key) use ($categoryOrder) {
             $idx = array_search($key, $categoryOrder, true);
+
             return $idx === false ? 1000 : $idx;
         });
 
@@ -97,7 +101,7 @@ class CostTypeController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $request->validate([
             'kode' => 'required|string|max:50',
@@ -123,7 +127,7 @@ class CostTypeController extends Controller
     public function update(Request $request, $id)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $type = CostType::where('id_cost_type', $id)
             ->where('id_perusahaan', $companyId ?: null)
@@ -152,11 +156,15 @@ class CostTypeController extends Controller
     public function delete($id)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $type = CostType::where('id_cost_type', $id)
             ->where('id_perusahaan', $companyId ?: null)
             ->firstOrFail();
+
+        if (CostEntry::where('id_cost_type', $id)->exists()) {
+            return back()->with('error', 'Tipe biaya masih digunakan oleh entri biaya. Hapus entri terkait dulu.');
+        }
 
         $type->delete();
 

@@ -11,6 +11,7 @@ class AssetMaintenance extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'asset_maintenance';
+
     protected $primaryKey = 'id_maintenance';
 
     protected $fillable = [

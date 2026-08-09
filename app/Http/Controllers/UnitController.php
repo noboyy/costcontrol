@@ -10,7 +10,7 @@ class UnitController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $units = Unit::where('deleted_at', null)
             ->when($companyId, function ($q) use ($companyId) {
@@ -28,7 +28,7 @@ class UnitController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $request->validate([
             'nama' => 'required|string|max:255',
@@ -47,7 +47,7 @@ class UnitController extends Controller
     public function update(Request $request, $id)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $unit = Unit::where('id_unit', $id)
             ->where('deleted_at', null)
@@ -72,7 +72,7 @@ class UnitController extends Controller
     public function delete($id)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $unit = Unit::where('id_unit', $id)
             ->where('deleted_at', null)

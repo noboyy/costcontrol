@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AkunResource;
 use App\Models\Akun;
+use App\Models\ProjectInvestor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,7 +18,11 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = Akun::where('email', $request->email)->first();
+        $account = trim($request->email);
+
+        $user = Akun::where('email', $account)
+            ->orWhere('username', $account)
+            ->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -39,10 +44,16 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-        return response()->json([
+        $extra = [];
+        if ($user->isInvestor()) {
+            $relation = ProjectInvestor::where('id_akun', $user->id_akun)->first();
+            $extra['project_id'] = $relation?->id_project;
+        }
+
+        return response()->json(array_merge([
             'token' => $token,
             'user' => new AkunResource($user),
-        ]);
+        ], $extra));
     }
 
     public function logout(Request $request)

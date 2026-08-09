@@ -10,16 +10,21 @@ class CheckRole
 {
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthenticated.'], 401);
             }
+
             return redirect('/');
         }
 
         $user = auth()->user();
-        
-        if (!in_array($user->role, $roles)) {
+
+        if ($user->isSuperAdmin()) {
+            return $next($request);
+        }
+
+        if (! in_array($user->role, $roles)) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Forbidden.'], 403);
             }

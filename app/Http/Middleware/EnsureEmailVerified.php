@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\Request;
 use Laravel\Fortify\Features;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +19,7 @@ class EnsureEmailVerified
             return $next($request);
         }
 
-        if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail &&
+        if ($user instanceof MustVerifyEmail &&
             ! $user->hasVerifiedEmail()) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Email belum diverifikasi.'], 403);

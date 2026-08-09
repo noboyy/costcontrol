@@ -4,13 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Services\DailyControlService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DailyCloseController extends Controller
 {
-    public function __construct(private DailyControlService $daily)
-    {
-    }
+    public function __construct(private DailyControlService $daily) {}
 
     public function store(Request $request, $projectId)
     {
@@ -21,7 +20,7 @@ class DailyCloseController extends Controller
             ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
-        if (!$project->isUmkm()) {
+        if (! $project->isUmkm()) {
             return back()->with('error', 'Tutup kas harian hanya untuk unit UMKM.');
         }
 
@@ -41,7 +40,7 @@ class DailyCloseController extends Controller
             $request->notes
         );
 
-        return back()->with('success', 'Kas harian ' . \Carbon\Carbon::parse($request->tanggal)->format('d M Y') . ' ditutup.');
+        return back()->with('success', 'Kas harian '.Carbon::parse($request->tanggal)->format('d M Y').' ditutup.');
     }
 
     public function destroy(Request $request, $projectId)

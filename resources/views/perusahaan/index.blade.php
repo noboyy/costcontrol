@@ -26,7 +26,8 @@
                 <thead>
                     <tr>
                         <th>Nama</th>
-                        <th>Owner</th>
+                        <th>Pemilik</th>
+                        <th>Modul</th>
                         <th>Alamat</th>
                         <th class="text-end">Aksi</th>
                     </tr>
@@ -36,6 +37,15 @@
                         <tr>
                             <td class="cell-title">{{ $p->nama_perusahaan }}</td>
                             <td>{{ $p->owner ?? '—' }}</td>
+                            <td>
+                                @if($p->isModuleProject())
+                                    <span class="badge badge-blue">Proyek</span>
+                                @elseif($p->isModuleUmkm())
+                                    <span class="badge badge-yellow">UMKM</span>
+                                @else
+                                    <span class="badge badge-gray">Keduanya</span>
+                                @endif
+                            </td>
                             <td>{{ $p->alamat_lengkap ?? '—' }}</td>
                             <td class="text-end">
                                 <div class="btn-group">
@@ -63,12 +73,21 @@
                                             <input type="text" class="form-input" name="nama_perusahaan" value="{{ $p->nama_perusahaan }}" required>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">Owner</label>
+<label class="form-label">Pemilik</label>
                                             <input type="text" class="form-input" name="owner" value="{{ $p->owner }}">
                                         </div>
                                         <div class="form-group">
                                             <label class="form-label">Alamat</label>
                                             <textarea class="form-textarea" name="alamat_lengkap">{{ $p->alamat_lengkap }}</textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Modul Aplikasi</label>
+                                            <select class="form-input" name="module">
+                                                <option value="all" {{ $p->isModuleAll() ? 'selected' : '' }}>Keduanya (Proyek + UMKM)</option>
+                                                <option value="project" {{ $p->isModuleProject() ? 'selected' : '' }}>Hanya Proyek</option>
+                                                <option value="umkm" {{ $p->isModuleUmkm() ? 'selected' : '' }}>Hanya UMKM</option>
+                                            </select>
+                                            <small style="color:var(--text-secondary)">UI tenant hanya menampilkan modul yang dipilih.</small>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -79,7 +98,7 @@
                             </div>
                         </div>
                     @empty
-                        <tr><td colspan="4"><div class="empty-state">Belum ada perusahaan</div></td></tr>
+                        <tr><td colspan="5"><div class="empty-state">Belum ada perusahaan</div></td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -102,12 +121,20 @@
                     <input type="text" class="form-input" name="nama_perusahaan" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Owner</label>
+                    <label class="form-label">Pemilik</label>
                     <input type="text" class="form-input" name="owner">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Alamat</label>
                     <textarea class="form-textarea" name="alamat_lengkap"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Modul Aplikasi</label>
+                    <select class="form-input" name="module">
+                        <option value="all">Keduanya (Proyek + UMKM)</option>
+                        <option value="project">Hanya Proyek</option>
+                        <option value="umkm">Hanya UMKM</option>
+                    </select>
                 </div>
             </div>
             <div class="modal-footer">

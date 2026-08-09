@@ -21,8 +21,12 @@
     <div class="toolbar-left">
         <div class="seg">
             <a href="{{ route('cost-centers.index', array_filter(['status' => $statusFilter])) }}" class="{{ !$modeFilter ? 'active' : '' }}">Semua ({{ $counts['all'] }})</a>
+            @if($module !== 'umkm')
             <a href="{{ route('cost-centers.index', array_filter(['status' => $statusFilter, 'mode' => 'project'])) }}" class="{{ $modeFilter === 'project' ? 'active' : '' }}">Proyek ({{ $counts['project'] }})</a>
+            @endif
+            @if($module !== 'project')
             <a href="{{ route('cost-centers.index', array_filter(['status' => $statusFilter, 'mode' => 'umkm'])) }}" class="{{ $modeFilter === 'umkm' ? 'active' : '' }}">UMKM ({{ $counts['umkm'] }})</a>
+            @endif
         </div>
         <div class="seg">
             <a href="{{ route('cost-centers.index', array_filter(['mode' => $modeFilter])) }}" class="{{ !$statusFilter ? 'active' : '' }}">Aktif</a>
@@ -217,16 +221,20 @@
                 <div class="form-group">
                     <label class="form-label">Mode Bisnis <span class="req">*</span></label>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        @if($module !== 'umkm')
                         <label class="mode-card" style="border:1px solid var(--border-strong);border-radius:12px;padding:14px;cursor:pointer;display:block;">
-                            <input type="radio" name="mode" value="project" checked onchange="toggleModeFields()" style="margin-right:8px;">
+                            <input type="radio" name="mode" value="project" {{ $module === 'project' ? 'checked' : '' }} onchange="toggleModeFields()" style="margin-right:8px;">
                             <strong><i class="bi bi-building"></i> Proyek</strong>
                             <div class="cell-sub" style="margin-top:4px;">RAB, kontrak, timeline konstruksi</div>
                         </label>
+                        @endif
+                        @if($module !== 'project')
                         <label class="mode-card" style="border:1px solid var(--border-strong);border-radius:12px;padding:14px;cursor:pointer;display:block;">
-                            <input type="radio" name="mode" value="umkm" onchange="toggleModeFields()" style="margin-right:8px;">
+                            <input type="radio" name="mode" value="umkm" {{ $module === 'umkm' ? 'checked' : '' }} onchange="toggleModeFields()" style="margin-right:8px;">
                             <strong><i class="bi bi-shop"></i> UMKM</strong>
                             <div class="cell-sub" style="margin-top:4px;">Outlet, pagu harian/bulanan, kontrol ops</div>
                         </label>
+                        @endif
                     </div>
                 </div>
 
@@ -301,6 +309,10 @@
                     <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;">
                         <input type="checkbox" name="seed_template" value="1" checked>
                         Seed master kategori UMKM (bahan baku, ops harian, biaya tetap, SDM)
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;">
+                        <input type="checkbox" name="generate_investor" value="1">
+                        Buat akun investor otomatis (kredensial tampil sekali setelah dibuat)
                     </label>
                 </div>
             </div>

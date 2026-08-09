@@ -11,6 +11,7 @@ class Asset extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'asset';
+
     protected $primaryKey = 'id_asset';
 
     protected $fillable = [

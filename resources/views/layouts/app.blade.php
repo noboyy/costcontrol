@@ -112,6 +112,28 @@
             padding: 0 10px;
             margin-bottom: 6px;
         }
+        .sidebar-acc {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: space-between;
+            background: none;
+            border: 0;
+            color: rgba(148,163,184,0.55);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: var(--radius-xs);
+            transition: color 0.15s ease;
+        }
+        .sidebar-acc:hover { color: #cbd5e1; }
+        .sidebar-acc .chev { transition: transform 0.18s ease; font-size: 11px; }
+        .sidebar-section.open .sidebar-acc .chev { transform: rotate(90deg); }
+        .sidebar-section-body { display: none; }
+        .sidebar-section.open .sidebar-section-body { display: block; }
         .nav-item { margin-bottom: 2px; }
         .nav-link {
             display: flex;
@@ -887,64 +909,85 @@
         </div>
 
         <div class="sidebar-nav">
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Utama</div>
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('beranda') ? 'active' : '' }}" href="{{ route('beranda') }}">
-                        <i class="bi bi-grid-1x2"></i> Dashboard
-                    </a>
+            <div class="sidebar-section open">
+                <button type="button" class="sidebar-acc" onclick="toggleAcc(this)">
+                    Fitur Aplikasi <i class="bi bi-chevron-right chev"></i>
+                </button>
+                <div class="sidebar-section-body">
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('beranda') ? 'active' : '' }}" href="{{ route('beranda') }}">
+                            <i class="bi bi-grid-1x2"></i> Dashboard
+                        </a>
+                    </div>
+                    @if(auth()->user()->isSuperAdmin())
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('super-admin.*') ? 'active' : '' }}" href="{{ route('super-admin.stats') }}">
+                            <i class="bi bi-graph-up"></i> Dashboard Super Admin
+                        </a>
+                    </div>
+                    @endif
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('projects.*') || request()->routeIs('cost-centers.*') ? 'active' : '' }}" href="{{ route('cost-centers.index') }}">
+                            <i class="bi bi-building"></i> @if(auth()->user()->companyModule() === 'project')
+                            Unit Proyek
+                        @elseif(auth()->user()->companyModule() === 'umkm')
+                            Unit UMKM
+                        @else
+                            Unit Bisnis
+                        @endif
+                        </a>
+                    </div>
+                    @if(auth()->user()->isAdmin())
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
+                            <i class="bi bi-file-earmark-bar-graph"></i> Laporan
+                        </a>
+                    </div>
+                    @endif
                 </div>
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('projects.*') || request()->routeIs('cost-centers.*') ? 'active' : '' }}" href="{{ route('cost-centers.index') }}">
-                        <i class="bi bi-building"></i> Unit Bisnis
-                    </a>
-                </div>
-                @if(auth()->user()->isAdmin())
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
-                        <i class="bi bi-file-earmark-bar-graph"></i> Laporan
-                    </a>
-                </div>
-                @endif
             </div>
 
             @if(auth()->user()->isAdmin())
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">Master Data</div>
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('cost-categories.*') ? 'active' : '' }}" href="{{ route('cost-categories.index') }}">
-                        <i class="bi bi-folder2"></i> Kategori Biaya
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('cost-types.*') ? 'active' : '' }}" href="{{ route('cost-types.index') }}">
-                        <i class="bi bi-arrow-down-circle"></i> Tipe Biaya
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('income-categories.*') ? 'active' : '' }}" href="{{ route('income-categories.index') }}">
-                        <i class="bi bi-folder2-open"></i> Kategori Pendapatan
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('income-types.*') ? 'active' : '' }}" href="{{ route('income-types.index') }}">
-                        <i class="bi bi-arrow-up-circle"></i> Tipe Pendapatan
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('units.*') ? 'active' : '' }}" href="{{ route('units.index') }}">
-                        <i class="bi bi-rulers"></i> Satuan
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('asset.*') ? 'active' : '' }}" href="{{ route('asset.index') }}">
-                        <i class="bi bi-box-seam"></i> Aset
-                    </a>
+            <div class="sidebar-section open">
+                <button type="button" class="sidebar-acc" onclick="toggleAcc(this)">
+                    Master data <i class="bi bi-chevron-right chev"></i>
+                </button>
+                <div class="sidebar-section-body">
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('cost-categories.*') ? 'active' : '' }}" href="{{ route('cost-categories.index') }}">
+                            <i class="bi bi-folder2"></i> Kategori Biaya
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('cost-types.*') ? 'active' : '' }}" href="{{ route('cost-types.index') }}">
+                            <i class="bi bi-arrow-down-circle"></i> Tipe Biaya
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('income-categories.*') ? 'active' : '' }}" href="{{ route('income-categories.index') }}">
+                            <i class="bi bi-folder2-open"></i> Kategori Pendapatan
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('income-types.*') ? 'active' : '' }}" href="{{ route('income-types.index') }}">
+                            <i class="bi bi-arrow-up-circle"></i> Tipe Pendapatan
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('units.*') ? 'active' : '' }}" href="{{ route('units.index') }}">
+                            <i class="bi bi-rulers"></i> Satuan
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('asset.*') ? 'active' : '' }}" href="{{ route('asset.index') }}">
+                            <i class="bi bi-box-seam"></i> Aset
+                        </a>
+                    </div>
                 </div>
             </div>
             @endif
 
-            @if(auth()->user()->isAdmin())
+            @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin())
             <div class="sidebar-section">
                 <div class="sidebar-section-title">Pengaturan</div>
                 <div class="nav-item">
@@ -952,18 +995,6 @@
                         <i class="bi bi-buildings"></i> Perusahaan
                     </a>
                 </div>
-                @if(auth()->user()->isSuperAdmin())
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('pengguna.*') ? 'active' : '' }}" href="{{ route('pengguna.index') }}">
-                        <i class="bi bi-people"></i> Pengguna
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('super-admin.*') ? 'active' : '' }}" href="{{ route('super-admin.stats') }}">
-                        <i class="bi bi-graph-up"></i> Statistik Pengguna
-                    </a>
-                </div>
-                @endif
             </div>
             @endif
         </div>
@@ -1005,6 +1036,11 @@
                     <i class="bi bi-search"></i>
                     <input type="search" id="globalSearchHint" placeholder="Cari di halaman... (/)" autocomplete="off">
                 </div>
+                @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin())
+                <button type="button" class="btn btn-sm btn-outline" onclick="openModal('downloadModuleModal')" title="Import modul master data dari CostControl">
+                    <i class="bi bi-download"></i> Import Modul
+                </button>
+                @endif
                 @yield('topbar-actions')
             </div>
         </div>
@@ -1042,6 +1078,64 @@
 
     <div class="toast-wrap" id="toastWrap"></div>
 
+    @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin())
+    <div class="modal-backdrop" id="downloadModuleModal">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h3>Import Modul</h3>
+                <button type="button" class="modal-close" onclick="closeModal('downloadModuleModal')">×</button>
+            </div>
+            <form method="POST" action="{{ route('modules.download') }}">
+                @csrf
+                <div class="modal-body">
+                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Pilih data master yang ingin diimport dari CostControl:</p>
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
+                        @foreach(\App\Services\MasterDataModuleService::MODULES as $key => $label)
+                        <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;">
+                            <input type="checkbox" name="modules[]" value="{{ $key }}" checked>
+                            <span style="flex:1;">{{ $label }}</span>
+                            <span style="font-size:12px;color:var(--text-muted);">{{ $moduleCounts[$key] ?? 0 }} item</span>
+                        </label>
+                        @endforeach
+                    </div>
+                    <div style="border-top:1px solid var(--border);padding-top:14px;">
+                        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;">Mode import:</p>
+                        <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;margin-bottom:6px;">
+                            <input type="radio" name="mode" value="add" checked>
+                            <span><strong>Tambah saja</strong> — hanya menambah data yang belum ada, tidak mengubah atau menghapus.</span>
+                        </label>
+                        <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;">
+                            <input type="radio" name="mode" value="update">
+                            <span><strong>Perbarui &amp; selaras</strong> — perbarui data yang sudah ada dan hapus yang tidak ada di modul (hanya yang tidak terpakai).</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('downloadModuleModal')">Batal</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-download"></i> Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
+
+    {{-- Custom confirm dialog (must be before script) --}}
+    <div id="confirmOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,.18);padding:28px 28px 22px;min-width:320px;max-width:420px;width:90%;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <span style="width:36px;height:36px;background:#fff1f2;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-exclamation-triangle-fill" style="color:#e11d48;font-size:16px;"></i>
+                </span>
+                <strong id="confirmTitle" style="font-size:15px;color:#111827;">Konfirmasi</strong>
+            </div>
+            <p id="confirmMsg" style="font-size:13.5px;color:#4b5563;margin:0 0 22px;line-height:1.5;padding-left:46px;"></p>
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button id="confirmCancel" class="btn btn-outline" style="min-width:80px;">Batal</button>
+                <button id="confirmOk" class="btn btn-danger" style="min-width:90px;">Hapus</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -1052,6 +1146,10 @@
         function closeSidebar() {
             document.getElementById('sidebar').classList.remove('open');
             document.getElementById('sidebarOverlay').classList.remove('show');
+        }
+
+        function toggleAcc(btn) {
+            btn.closest('.sidebar-section').classList.toggle('open');
         }
 
         function openModal(id) {
@@ -1120,6 +1218,7 @@
 
         // Custom confirm dialog
         let _confirmResolve = null;
+        const _confirmOverlay = document.getElementById('confirmOverlay');
         function showConfirm(msg, opts = {}) {
             return new Promise(resolve => {
                 _confirmResolve = resolve;
@@ -1128,32 +1227,27 @@
                 const btn = document.getElementById('confirmOk');
                 btn.textContent = opts.ok || 'Hapus';
                 btn.className = 'btn ' + (opts.okClass || 'btn-danger');
-                document.getElementById('confirmOverlay').classList.add('show');
+                _confirmOverlay.style.display = 'flex';
                 document.getElementById('confirmOk').focus();
             });
         }
-        document.getElementById('confirmOk').addEventListener('click', () => {
-            document.getElementById('confirmOverlay').classList.remove('show');
-            _confirmResolve && _confirmResolve(true);
-        });
-        document.getElementById('confirmCancel').addEventListener('click', () => {
-            document.getElementById('confirmOverlay').classList.remove('show');
-            _confirmResolve && _confirmResolve(false);
-        });
-        document.getElementById('confirmOverlay').addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.remove('show');
-                _confirmResolve && _confirmResolve(false);
-            }
+        function hideConfirm(result) {
+            _confirmOverlay.style.display = 'none';
+            _confirmResolve && _confirmResolve(result);
+            _confirmResolve = null;
+        }
+        document.getElementById('confirmOk').addEventListener('click', () => hideConfirm(true));
+        document.getElementById('confirmCancel').addEventListener('click', () => hideConfirm(false));
+        _confirmOverlay.addEventListener('click', function(e) {
+            if (e.target === this) hideConfirm(false);
         });
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('confirmOverlay').classList.contains('show')) {
-                document.getElementById('confirmOverlay').classList.remove('show');
-                _confirmResolve && _confirmResolve(false);
+            if (e.key === 'Escape' && _confirmOverlay.style.display === 'flex') {
+                hideConfirm(false);
             }
         });
 
-        // Confirm helper for destructive actions — event delegation so works on all forms incl. @foreach
+        // Confirm helper for destructive actions — event delegation so works on all forms incl. @@foreach
         document.addEventListener('submit', function(e) {
             const form = e.target.closest('form[data-confirm]');
             if (!form) return;
@@ -1199,21 +1293,5 @@
         }
     </script>
     @stack('scripts')
-    {{-- Custom confirm dialog --}}
-    <div id="confirmOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
-        <div style="background:#fff;border-radius:14px;box-shadow:0 8px 40px rgba(0,0,0,.18);padding:28px 28px 22px;min-width:320px;max-width:420px;width:90%;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                <span style="width:36px;height:36px;background:#fff1f2;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <i class="bi bi-exclamation-triangle-fill" style="color:#e11d48;font-size:16px;"></i>
-                </span>
-                <strong id="confirmTitle" style="font-size:15px;color:#111827;">Konfirmasi</strong>
-            </div>
-            <p id="confirmMsg" style="font-size:13.5px;color:#4b5563;margin:0 0 22px;line-height:1.5;padding-left:46px;"></p>
-            <div style="display:flex;gap:8px;justify-content:flex-end;">
-                <button id="confirmCancel" class="btn btn-outline" style="min-width:80px;">Batal</button>
-                <button id="confirmOk" class="btn btn-danger" style="min-width:90px;">Hapus</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

@@ -63,6 +63,7 @@ class ReportController extends Controller
         $byUnit = $selected->map(function ($p) use ($from, $to) {
             $c = (float) $p->costEntries()->whereBetween('tanggal', [$from, $to])->sum('total');
             $i = (float) $p->incomeEntries()->whereBetween('tanggal', [$from, $to])->sum('total');
+
             return [
                 'id' => $p->id_project,
                 'nama' => $p->nama_project,
@@ -139,10 +140,11 @@ class ReportController extends Controller
             ->pluck('id_project')
             ->all();
 
-        $filename = 'laporan_' . $from . '_' . $to . '.csv';
+        $filename = 'laporan_'.$from.'_'.$to.'.csv';
 
         return response()->streamDownload(function () use ($ids, $from, $to, $type) {
             $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, ['jenis', 'tanggal', 'unit', 'tipe', 'keterangan', 'qty', 'satuan', 'harga_satuan', 'total']);
 
             if ($type === 'all' || $type === 'cost') {

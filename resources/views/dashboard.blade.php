@@ -9,13 +9,19 @@
     <div>
         <h2>Halo, {{ explode(' ', auth()->user()->nama_lengkap ?? 'Admin')[0] }}</h2>
         <p>Ringkasan multi-bisnis · {{ now()->translatedFormat('l, d F Y') }}
+            @if($module !== 'umkm')
             · <strong>{{ $countProject ?? 0 }}</strong> proyek
+            @endif
+            @if($module !== 'project')
             · <strong>{{ $countUmkm ?? 0 }}</strong> UMKM
+            @endif
         </p>
     </div>
     <div class="page-actions">
         <a href="{{ route('cost-centers.index') }}" class="btn btn-outline"><i class="bi bi-building"></i> Unit Bisnis</a>
+        @if($module !== 'project')
         <button class="btn btn-outline" onclick="location.href='{{ route('cost-centers.index') }}#umkm'"><i class="bi bi-shop"></i> + UMKM</button>
+        @endif
         <button class="btn btn-primary" onclick="location.href='{{ route('cost-centers.index') }}#new'"><i class="bi bi-plus-lg"></i> Unit Baru</button>
     </div>
 </div>
@@ -59,7 +65,7 @@
 </div>
 
 {{-- UMKM Hari Ini --}}
-@if(($umkmTodayTotals['count'] ?? 0) > 0 || ($countUmkm ?? 0) > 0)
+@if($module !== 'project' && (($umkmTodayTotals['count'] ?? 0) > 0 || ($countUmkm ?? 0) > 0))
 <div class="card" style="margin-bottom:18px;">
     <div class="card-header">
         <h3><i class="bi bi-shop"></i> UMKM · Hari Ini</h3>
@@ -102,7 +108,7 @@
                             <td>
                                 <div class="cell-title">
                                     {{ $u['nama_project'] }}
-                                    @if($u['is_closed'] ?? false)<span class="badge badge-green" style="margin-left:4px;">Closed</span>@endif
+                                    @if($u['is_closed'] ?? false)<span class="badge badge-green" style="margin-left:4px;">Tutup</span>@endif
                                     @if(($u['leak_alert'] ?? false) || ($u['over_budget'] ?? false))
                                         <span class="badge badge-red" style="margin-left:4px;">Alert</span>
                                     @endif
@@ -198,6 +204,7 @@
     </div>
 </div>
 
+@if($module !== 'umkm')
 <div class="card">
     <div class="card-header">
         <h3><i class="bi bi-building"></i> Proyek Aktif</h3>
@@ -244,6 +251,7 @@
         </div>
     </div>
 </div>
+@endif
 @endsection
 
 @push('scripts')

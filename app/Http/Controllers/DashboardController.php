@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\CostEntry;
 use App\Models\IncomeEntry;
+use App\Models\Perusahaan;
 use App\Models\Project;
 use App\Services\DailyControlService;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -19,55 +19,40 @@ class DashboardController extends Controller
         $activeProjectIds = Project::where('status', 'active')
             ->when($companyId, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
-            })
-            ->pluck('id_project')
-            ->toArray();
+            });
 
-        // KPI Summary
-        $totalCost = CostEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
-                $query->where('id_perusahaan', $companyId);
-            })
-            ->sum('total');
+        Perusahaan::filterByModule($activeProjectIds, $user->companyModule());
 
-        $totalIncome = IncomeEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
-                $query->where('id_perusahaan', $companyId);
-            })
-            ->sum('total');
+        $activeProjectIds = $activeProjectIds->pluck('id_project')->toArray();
 
-        $countCost = CostEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
-                $query->where('id_perusahaan', $companyId);
-            })
-            ->count();
-
-        $countIncome = IncomeEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
-                $query->where('id_perusahaan', $companyId);
-            })
-            ->count();
-
-        // Monthly comparison
         $startThisMonth = now()->startOfMonth()->format('Y-m-d');
         $startNextMonth = now()->addMonth()->startOfMonth()->format('Y-m-d');
         $startLastMonth = now()->subMonth()->startOfMonth()->format('Y-m-d');
 
-        $thisMonthCost = CostEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
-                $query->where('id_perusahaan', $companyId);
-            })
-            ->where('tanggal', '>=', $startThisMonth)
-            ->where('tanggal', '<', $startNextMonth)
-            ->sum('total');
+        $costAggregates = CostEntry::whereIn('id_project', $activeProjectIds)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->selectRaw('
+                SUM(total) as total_cost,
+                SUM(CASE WHEN tanggal >= ? AND tanggal < ? THEN total ELSE 0 END) as this_month_cost,
+                SUM(CASE WHEN tanggal >= ? AND tanggal < ? THEN total ELSE 0 END) as last_month_cost,
+                COUNT(*) as count_cost
+            ', [$startThisMonth, $startNextMonth, $startLastMonth, $startThisMonth])
+            ->first();
 
-        $lastMonthCost = CostEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
-                $query->where('id_perusahaan', $companyId);
-            })
-            ->where('tanggal', '>=', $startLastMonth)
-            ->where('tanggal', '<', $startThisMonth)
-            ->sum('total');
+        $incomeAggregates = IncomeEntry::whereIn('id_project', $activeProjectIds)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->selectRaw('
+                SUM(total) as total_income,
+                COUNT(*) as count_income
+            ')
+            ->first();
+
+        $totalCost = (float) ($costAggregates->total_cost ?? 0);
+        $totalIncome = (float) ($incomeAggregates->total_income ?? 0);
+        $countCost = (int) ($costAggregates->count_cost ?? 0);
+        $countIncome = (int) ($incomeAggregates->count_income ?? 0);
+        $thisMonthCost = (float) ($costAggregates->this_month_cost ?? 0);
+        $lastMonthCost = (float) ($costAggregates->last_month_cost ?? 0);
 
         $pct = 0.0;
         if ($lastMonthCost > 0) {
@@ -76,7 +61,7 @@ class DashboardController extends Controller
             $pct = 100.0;
         }
         $pctRounded = (int) round($pct, 0);
-        $summaryChangeLabel = $pctRounded === 0 ? '0%' : (($pctRounded > 0 ? '+' : '') . $pctRounded . '%');
+        $summaryChangeLabel = $pctRounded === 0 ? '0%' : (($pctRounded > 0 ? '+' : '').$pctRounded.'%');
 
         // Recent activities
         $recentCosts = CostEntry::with(['costType', 'project'])
@@ -131,13 +116,15 @@ class DashboardController extends Controller
         $projects = Project::where('status', 'active')
             ->when($companyId, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
-            })
-            ->orderBy('created_at', 'desc')
-            ->get();
+            });
+
+        Perusahaan::filterByModule($projects, $user->companyModule());
+
+        $projects = $projects->orderBy('created_at', 'desc')->get();
 
         $today = now()->format('Y-m-d');
 
-        $projectSummaries = $projects->where(fn ($p) => !$p->isUmkm())->take(8)->map(function ($project) {
+        $projectSummaries = $projects->where(fn ($p) => ! $p->isUmkm())->take(8)->map(function ($project) {
             return [
                 'id_project' => $project->id_project,
                 'nama_project' => $project->nama_project,
@@ -187,19 +174,20 @@ class DashboardController extends Controller
 
         return view('dashboard', [
             'title' => 'Dashboard',
-            'summaryTotal' => 'Rp ' . number_format($totalCost, 0, ',', '.'),
-            'summaryBudget' => 'Rp ' . number_format($totalIncome, 0, ',', '.'),
+            'summaryTotal' => 'Rp '.number_format($totalCost, 0, ',', '.'),
+            'summaryBudget' => 'Rp '.number_format($totalIncome, 0, ',', '.'),
             'summaryChangeLabel' => $summaryChangeLabel,
-            'summaryUsed' => 'Rp ' . number_format($totalCost, 0, ',', '.'),
-            'summaryRemaining' => 'Rp ' . number_format($margin, 0, ',', '.'),
+            'summaryUsed' => 'Rp '.number_format($totalCost, 0, ',', '.'),
+            'summaryRemaining' => 'Rp '.number_format($margin, 0, ',', '.'),
             'summaryTxCount' => (string) ($countCost + $countIncome),
             'recentActivities' => $recentActivities,
             'projectSummaries' => $projectSummaries,
             'umkmToday' => $umkmToday,
             'umkmTodayTotals' => $umkmTodayTotals,
             'weeklyCosts' => $weeklyCosts,
-            'countProject' => $projects->where(fn ($p) => !$p->isUmkm())->count(),
+            'countProject' => $projects->where(fn ($p) => ! $p->isUmkm())->count(),
             'countUmkm' => $projects->where(fn ($p) => $p->isUmkm())->count(),
+            'module' => $user->companyModule(),
         ]);
     }
 

@@ -2,26 +2,34 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\HandlesDecimal;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProjectResource;
 use App\Models\CostEntry;
 use App\Models\CostType;
+use App\Models\DailyClose;
+use App\Models\FixedCost;
 use App\Models\IncomeEntry;
 use App\Models\IncomeType;
+use App\Models\Akun;
 use App\Models\Pengguna;
 use App\Models\Project;
 use App\Models\ProjectAdmin;
 use App\Models\ProjectCostPlan;
 use App\Models\ProjectIncomePlan;
+use App\Models\ProjectInvestor;
 use App\Models\Unit;
 use App\Services\BusinessTemplateSeeder;
 use App\Services\DailyControlService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
+    use HandlesDecimal;
+
     public function index(Request $request)
     {
         $user = $request->user();
@@ -241,7 +249,8 @@ class ProjectController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Gagal menyimpan unit: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Gagal menyimpan unit: '.$e->getMessage()], 500);
         }
     }
 
@@ -321,8 +330,8 @@ class ProjectController extends Controller
             'keterangan' => 'nullable|string|max:255',
             'qty' => 'required|numeric|min:0.01',
             'unit' => 'nullable|string|max:50',
-            'harga_satuan' => 'nullable|numeric|min:0',
-            'total' => 'nullable|numeric|min:0',
+            'harga_satuan' => 'nullable|string',
+            'total' => 'nullable|string',
             'catatan' => 'nullable|string',
         ]);
 
@@ -371,10 +380,6 @@ class ProjectController extends Controller
 
         $cost = CostEntry::where('id_cost', $costId)->where('id_project', $id)->firstOrFail();
 
-        if ($msg = $this->guardClosedDay($project, $cost->tanggal)) {
-            return response()->json(['message' => $msg], 422);
-        }
-
         $request->validate([
             'id_cost_type' => 'required|exists:cost_type,id_cost_type',
             'tanggal' => 'required|date',
@@ -385,6 +390,10 @@ class ProjectController extends Controller
             'total' => 'nullable|string',
             'catatan' => 'nullable|string',
         ]);
+
+        if ($msg = $this->guardClosedDay($project, $request->tanggal)) {
+            return response()->json(['message' => $msg], 422);
+        }
 
         $qty = $this->normalizeDecimal($request->qty);
         $hargaSatuan = $this->normalizeDecimal($request->harga_satuan, 0);
@@ -455,8 +464,8 @@ class ProjectController extends Controller
             'keterangan' => 'nullable|string|max:255',
             'qty' => 'required|numeric|min:0.01',
             'unit' => 'nullable|string|max:50',
-            'harga_satuan' => 'nullable|numeric|min:0',
-            'total' => 'nullable|numeric|min:0',
+            'harga_satuan' => 'nullable|string',
+            'total' => 'nullable|string',
             'catatan' => 'nullable|string',
         ]);
 
@@ -505,10 +514,6 @@ class ProjectController extends Controller
 
         $income = IncomeEntry::where('id_income', $incomeId)->where('id_project', $id)->firstOrFail();
 
-        if ($msg = $this->guardClosedDay($project, $income->tanggal)) {
-            return response()->json(['message' => $msg], 422);
-        }
-
         $request->validate([
             'id_income_type' => 'required|exists:income_type,id_income_type',
             'tanggal' => 'required|date',
@@ -519,6 +524,10 @@ class ProjectController extends Controller
             'total' => 'nullable|string',
             'catatan' => 'nullable|string',
         ]);
+
+        if ($msg = $this->guardClosedDay($project, $request->tanggal)) {
+            return response()->json(['message' => $msg], 422);
+        }
 
         $qty = $this->normalizeDecimal($request->qty);
         $hargaSatuan = $this->normalizeDecimal($request->harga_satuan, 0);
@@ -594,14 +603,16 @@ class ProjectController extends Controller
             ->pluck('id_pengguna')
             ->all();
 
-        ProjectAdmin::where('id_project', $project->id_project)->delete();
-        foreach ($validIds as $penggunaId) {
-            ProjectAdmin::create([
-                'id_project' => $project->id_project,
-                'id_pengguna' => $penggunaId,
-                'id_perusahaan' => $companyId,
-            ]);
-        }
+        DB::transaction(function () use ($project, $companyId, $validIds) {
+            ProjectAdmin::where('id_project', $project->id_project)->delete();
+            foreach ($validIds as $penggunaId) {
+                ProjectAdmin::create([
+                    'id_project' => $project->id_project,
+                    'id_pengguna' => $penggunaId,
+                    'id_perusahaan' => $companyId,
+                ]);
+            }
+        });
 
         return response()->json(['message' => 'Admin unit diperbarui.']);
     }
@@ -719,55 +730,193 @@ class ProjectController extends Controller
             DB::beginTransaction();
             CostEntry::where('id_project', $id)->delete();
             IncomeEntry::where('id_project', $id)->delete();
+            ProjectAdmin::where('id_project', $id)->delete();
+            ProjectCostPlan::where('id_project', $id)->delete();
+            ProjectIncomePlan::where('id_project', $id)->delete();
+            FixedCost::where('id_project', $id)->delete();
+            DailyClose::where('id_project', $id)->delete();
+
+            // Hapus akun & pengguna investor sebelum relasi
+            $investorRelations = ProjectInvestor::where('id_project', $id)->get();
+            foreach ($investorRelations as $relation) {
+                $akun = Akun::find($relation->id_akun);
+                if ($akun) {
+                    $akun->pengguna?->delete();
+                    $akun->tokens()->delete();
+                    $akun->delete();
+                }
+            }
+            ProjectInvestor::where('id_project', $id)->delete();
+
             $project->delete();
             DB::commit();
 
             return response()->json(['message' => 'Project dan riwayat biaya/pendapatan telah dihapus.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Gagal menghapus project: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Gagal menghapus project: '.$e->getMessage()], 500);
         }
+    }
+
+    public function assignInvestor(Request $request, $id)
+    {
+        $user = $request->user();
+        $companyId = $user->id_perusahaan;
+
+        $project = Project::where('id_project', $id)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->firstOrFail();
+
+        $request->validate([
+            'nama_lengkap' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:akun,username',
+            'password' => 'nullable|string|min:8',
+        ]);
+
+        $plainPassword = $request->password ?? Str::random(12);
+
+        try {
+            DB::beginTransaction();
+
+            $pengguna = Pengguna::create([
+                'id_perusahaan' => $companyId,
+                'nama_lengkap' => $request->nama_lengkap,
+            ]);
+
+            $akun = Akun::create([
+                'id_pengguna' => $pengguna->id_pengguna,
+                'username' => $request->username,
+                'password' => $plainPassword,
+                'role' => 'INVESTOR',
+                'is_active' => '1',
+            ]);
+
+            ProjectInvestor::create([
+                'id_project' => $project->id_project,
+                'id_akun' => $akun->id_akun,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Akun investor berhasil dibuat.',
+                'username' => $akun->username,
+                'password' => $plainPassword,
+                'nama_lengkap' => $pengguna->nama_lengkap,
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['message' => 'Gagal membuat akun investor: '.$e->getMessage()], 500);
+        }
+    }
+
+    public function revokeInvestor(Request $request, $id)
+    {
+        $user = $request->user();
+        $companyId = $user->id_perusahaan;
+
+        $project = Project::where('id_project', $id)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->firstOrFail();
+
+        $relation = ProjectInvestor::where('id_project', $project->id_project)->first();
+
+        if (! $relation) {
+            return response()->json(['message' => 'Tidak ada investor pada proyek ini.'], 404);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $akun = Akun::find($relation->id_akun);
+            $relation->delete();
+
+            if ($akun) {
+                $akun->pengguna?->delete();
+                $akun->tokens()->delete();
+                $akun->delete();
+            }
+
+            DB::commit();
+
+            return response()->json(['message' => 'Akun investor berhasil dicabut.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json(['message' => 'Gagal mencabut investor: '.$e->getMessage()], 500);
+        }
+    }
+
+    public function resetInvestorPassword(Request $request, $id)
+    {
+        $user = $request->user();
+        $companyId = $user->id_perusahaan;
+
+        $project = Project::where('id_project', $id)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->firstOrFail();
+
+        $relation = ProjectInvestor::where('id_project', $project->id_project)
+            ->with('akun')
+            ->first();
+
+        if (! $relation || ! $relation->akun) {
+            return response()->json(['message' => 'Tidak ada investor pada proyek ini.'], 404);
+        }
+
+        $plainPassword = Str::random(12);
+        $relation->akun->update(['password' => $plainPassword]);
+        $relation->akun->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Password investor berhasil direset.',
+            'username' => $relation->akun->username,
+            'password' => $plainPassword,
+        ]);
+    }
+
+    public function showInvestor(Request $request, $id)
+    {
+        $user = $request->user();
+        $companyId = $user->id_perusahaan;
+
+        $project = Project::where('id_project', $id)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->firstOrFail();
+
+        $relation = ProjectInvestor::where('id_project', $project->id_project)
+            ->with('akun.pengguna')
+            ->first();
+
+        if (! $relation) {
+            return response()->json(['investor' => null]);
+        }
+
+        return response()->json([
+            'investor' => [
+                'id_akun' => $relation->akun->id_akun,
+                'username' => $relation->akun->username,
+                'nama_lengkap' => $relation->akun->pengguna?->nama_lengkap,
+                'is_active' => $relation->akun->is_active,
+            ],
+        ]);
     }
 
     private function storeBukti(Request $request, string $kind): ?string
     {
         $file = $request->file('file_bukti');
-        if (! $file->isValid() || $file->getSize() > 3 * 1024 * 1024) {
+        if (! $file || ! $file->isValid() || $file->getSize() > 3 * 1024 * 1024) {
             return null;
         }
         $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
         if (! in_array($file->getMimeType(), $allowedMime)) {
             return null;
         }
-        $filename = $kind . '_bukti_' . time() . '_' . bin2hex(random_bytes(4)) . '.webp';
-        $file->storeAs('bukti/' . $kind, $filename, 'public');
+        $filename = $kind.'_bukti_'.time().'_'.bin2hex(random_bytes(4)).'.webp';
+        $file->storeAs('bukti/'.$kind, $filename, 'public');
 
         return $filename;
-    }
-
-    private function normalizeDecimal($value, $default = null)
-    {
-        if ($value === null || $value === '') {
-            return $default;
-        }
-        $clean = str_replace(['.', ' '], ['', ''], (string) $value);
-        $clean = str_replace(',', '.', $clean);
-        return (float) $clean;
-    }
-
-    private function guardClosedDay(Project $project, $date): ?string
-    {
-        if (! $project->isUmkm()) {
-            return null;
-        }
-        if ($project->lock_closed_days === false) {
-            return null;
-        }
-        if (app(DailyControlService::class)->isDayClosed($project, $date)) {
-            $label = \Carbon\Carbon::parse($date)->format('d M Y');
-            return "Tanggal {$label} sudah ditutup. Buka ulang tutup kas dulu untuk mengubah entri.";
-        }
-
-        return null;
     }
 }

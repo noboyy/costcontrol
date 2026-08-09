@@ -72,22 +72,27 @@ class UsersController extends Controller
             return response()->json(['message' => 'Pengguna berhasil ditambahkan.'], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Gagal menambah pengguna: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Gagal menambah pengguna: '.$e->getMessage()], 500);
         }
     }
 
     public function update(Request $request, $id)
     {
+        $user = $request->user();
+        $companyId = $user->id_perusahaan;
+
+        $pengguna = Pengguna::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->findOrFail($id);
+
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
             'no_hp' => 'nullable|string|max:20',
             'jabatan' => 'nullable|string|max:100',
-            'username' => 'nullable|string|max:50|unique:akun,username,' . $id . ',id_pengguna',
+            'username' => 'nullable|string|max:50|unique:akun,username,'.$pengguna->akun?->id_akun.',id_akun',
             'password' => 'nullable|string|min:6',
             'is_active' => 'nullable|in:0,1',
         ]);
-
-        $pengguna = Pengguna::findOrFail($id);
 
         try {
             DB::beginTransaction();
@@ -120,13 +125,22 @@ class UsersController extends Controller
             return response()->json(['message' => 'Pengguna berhasil diperbarui.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Gagal mengubah pengguna: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Gagal mengubah pengguna: '.$e->getMessage()], 500);
         }
     }
 
     public function delete(Request $request, $id)
     {
-        $pengguna = Pengguna::findOrFail($id);
+        $user = $request->user();
+        $companyId = $user->id_perusahaan;
+
+        $pengguna = Pengguna::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->findOrFail($id);
+
+        if ($pengguna->id_pengguna === $user->pengguna?->id_pengguna) {
+            return response()->json(['message' => 'Tidak bisa menghapus akun sendiri.'], 422);
+        }
 
         if ($pengguna->akun && $pengguna->akun->role === 'SUPER ADMIN') {
             return response()->json(['message' => 'Pengguna SUPER ADMIN tidak boleh dihapus.'], 422);
@@ -143,7 +157,8 @@ class UsersController extends Controller
             return response()->json(['message' => 'Pengguna berhasil dihapus.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Gagal menghapus pengguna: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Gagal menghapus pengguna: '.$e->getMessage()], 500);
         }
     }
 }

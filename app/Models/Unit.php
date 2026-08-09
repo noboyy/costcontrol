@@ -11,6 +11,7 @@ class Unit extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'unit_master';
+
     protected $primaryKey = 'id_unit';
 
     protected $fillable = [

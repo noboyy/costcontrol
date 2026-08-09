@@ -13,7 +13,7 @@ class CostCategoryController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $categories = CostCategory::forCompany($companyId)
             ->ordered()
@@ -36,7 +36,7 @@ class CostCategoryController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $request->validate([
             'nama' => 'required|string|max:100',
@@ -87,7 +87,7 @@ class CostCategoryController extends Controller
     public function update(Request $request, $id)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $category = CostCategory::forCompany($companyId)
             ->where('id_cost_category', $id)
@@ -138,7 +138,7 @@ class CostCategoryController extends Controller
     public function delete($id)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $category = CostCategory::forCompany($companyId)
             ->where('id_cost_category', $id)

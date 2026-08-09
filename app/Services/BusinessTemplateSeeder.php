@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\CostCategory;
 use App\Models\CostType;
 use App\Models\IncomeType;
-use Illuminate\Support\Facades\DB;
 
 class BusinessTemplateSeeder
 {
@@ -15,7 +14,7 @@ class BusinessTemplateSeeder
      */
     public function seedUmkm(?int $companyId): void
     {
-        if (!$companyId) {
+        if (! $companyId) {
             return;
         }
 

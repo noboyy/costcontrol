@@ -11,6 +11,7 @@ class FixedCost extends Model
     use HasFactory;
 
     protected $table = 'fixed_cost';
+
     protected $primaryKey = 'id_fixed_cost';
 
     protected $fillable = [
@@ -44,7 +45,7 @@ class FixedCost extends Model
 
     public function isActiveOn(Carbon|string $date): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
         $d = $date instanceof Carbon ? $date->copy()->startOfDay() : Carbon::parse($date)->startOfDay();
@@ -60,7 +61,7 @@ class FixedCost extends Model
 
     public function dailyAmountFor(Carbon|string $date): float
     {
-        if (!$this->isActiveOn($date)) {
+        if (! $this->isActiveOn($date)) {
             return 0.0;
         }
         $ref = $date instanceof Carbon ? $date : Carbon::parse($date);

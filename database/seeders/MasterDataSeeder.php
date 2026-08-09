@@ -84,8 +84,8 @@ class MasterDataSeeder extends Seeder
         DB::table('income_type')->insert($incomeTypes);
 
         echo "Master data seeded successfully!\n";
-        echo "- " . count($units) . " units\n";
-        echo "- " . count($costTypes) . " cost types\n";
-        echo "- " . count($incomeTypes) . " income types\n";
+        echo '- '.count($units)." units\n";
+        echo '- '.count($costTypes)." cost types\n";
+        echo '- '.count($incomeTypes)." income types\n";
     }
 }

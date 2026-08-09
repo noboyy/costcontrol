@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CostType;
+use App\Http\Controllers\Concerns\HandlesDecimal;
 use App\Models\FixedCost;
 use App\Models\Project;
 use Illuminate\Http\Request;
 
 class FixedCostController extends Controller
 {
+    use HandlesDecimal;
+
     public function store(Request $request, $projectId)
     {
         $user = auth()->user();
@@ -18,7 +20,7 @@ class FixedCostController extends Controller
             ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
-        if (!$project->isUmkm()) {
+        if (! $project->isUmkm()) {
             return back()->with('error', 'Biaya tetap pro-rate hanya untuk unit UMKM.');
         }
 
@@ -103,16 +105,5 @@ class FixedCostController extends Controller
             ->delete();
 
         return back()->with('success', 'Biaya tetap dihapus.');
-    }
-
-    private function normalizeDecimal($value, $default = 0)
-    {
-        if ($value === null || $value === '') {
-            return $default;
-        }
-        $clean = str_replace(['.', ' '], ['', ''], (string) $value);
-        $clean = str_replace(',', '.', $clean);
-
-        return (float) $clean;
     }
 }

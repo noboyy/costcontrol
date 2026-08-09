@@ -11,13 +11,17 @@ class Project extends Model
     use HasFactory;
 
     public const MODE_PROJECT = 'project';
+
     public const MODE_UMKM = 'umkm';
 
     public const BUDGET_TOTAL = 'total';
+
     public const BUDGET_MONTHLY = 'monthly';
+
     public const BUDGET_DAILY = 'daily';
 
     protected $table = 'project';
+
     protected $primaryKey = 'id_project';
 
     protected $fillable = [

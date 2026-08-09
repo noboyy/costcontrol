@@ -68,7 +68,7 @@
             </div>
             <div class="card-footer" style="display:flex;gap:6px;flex-wrap:wrap;">
                 @if(!$asset->isSold())
-                    <button type="button" class="btn btn-xs btn-outline" onclick="openModal('edit{{ $asset->id_asset }}')"><i class="bi bi-pencil"></i> Edit</button>
+                    <button type="button" class="btn btn-xs btn-outline" onclick="openModal('edit{{ $asset->id_asset }}')"><i class="bi bi-pencil"></i> Ubah</button>
                     <button type="button" class="btn btn-xs btn-outline" onclick="openModal('maint{{ $asset->id_asset }}')"><i class="bi bi-wrench"></i> Perawatan</button>
                     <button type="button" class="btn btn-xs btn-outline" style="color:var(--success)" onclick="openModal('sell{{ $asset->id_asset }}')"><i class="bi bi-cash"></i> Jual</button>
                 @endif

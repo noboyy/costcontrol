@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\IncomeCategory;
+use App\Models\IncomeEntry;
 use App\Models\IncomeType;
 use App\Models\Unit;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ class IncomeTypeController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $types = IncomeType::where('id_perusahaan', $companyId ?: null)
             ->orderBy('kategori')
@@ -39,7 +40,7 @@ class IncomeTypeController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $request->validate([
             'kode' => 'required|string|max:50',
@@ -65,7 +66,7 @@ class IncomeTypeController extends Controller
     public function update(Request $request, $id)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $type = IncomeType::where('id_income_type', $id)
             ->where('id_perusahaan', $companyId ?: null)
@@ -94,11 +95,15 @@ class IncomeTypeController extends Controller
     public function delete($id)
     {
         $user = auth()->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $user->masterDataCompanyId();
 
         $type = IncomeType::where('id_income_type', $id)
             ->where('id_perusahaan', $companyId ?: null)
             ->firstOrFail();
+
+        if (IncomeEntry::where('id_income_type', $id)->exists()) {
+            return back()->with('error', 'Tipe pendapatan masih digunakan oleh entri pendapatan. Hapus entri terkait dulu.');
+        }
 
         $type->delete();
 

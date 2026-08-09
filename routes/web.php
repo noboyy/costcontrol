@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FixedCostController;
 use App\Http\Controllers\IncomeCategoryController;
 use App\Http\Controllers\IncomeTypeController;
+use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\PerusahaanController;
 use App\Http\Controllers\ProfileController;
@@ -21,6 +22,7 @@ Route::get('/', function () {
     if (auth()->check()) {
         return redirect('/beranda');
     }
+
     return redirect('/login');
 });
 
@@ -43,6 +45,8 @@ Route::middleware([
         // Reports
         Route::get('/laporan', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/laporan/export', [ReportController::class, 'export'])->name('reports.export');
+
+        Route::post('/master-data/download-modul', [ModuleController::class, 'download'])->name('modules.download');
 
         foreach (['cost-centers', 'projects'] as $prefix) {
             $name = $prefix === 'projects' ? 'projects' : 'cost-centers';
@@ -71,6 +75,12 @@ Route::middleware([
 
             // Admins
             Route::post("/{$prefix}/{id}/admins", [ProjectController::class, 'syncAdmins'])->name("{$name}.admins.sync");
+
+            // Investor
+            Route::post("/{$prefix}/{id}/investor", [ProjectController::class, 'storeInvestor'])->name("{$name}.investor.store");
+            Route::post("/{$prefix}/{id}/investor/toggle", [ProjectController::class, 'toggleInvestor'])->name("{$name}.investor.toggle");
+            Route::post("/{$prefix}/{id}/investor/delete", [ProjectController::class, 'destroyInvestor'])->name("{$name}.investor.delete");
+            Route::post("/{$prefix}/{id}/investor/reset-password", [ProjectController::class, 'resetInvestorPasswordWeb'])->name("{$name}.investor.resetPassword");
 
             // Fixed cost
             Route::post("/{$prefix}/{id}/fixed-costs", [FixedCostController::class, 'store'])->name("{$name}.fixedCosts.store");
@@ -131,5 +141,8 @@ Route::middleware([
         Route::post('/pengguna/{id}/delete', [PenggunaController::class, 'delete'])->name('pengguna.delete');
 
         Route::get('/super-admin/stats', [SuperAdminController::class, 'stats'])->name('super-admin.stats');
+        Route::post('/super-admin/trial/{id}/extend', [SuperAdminController::class, 'extendTrial'])->name('super-admin.extendTrial');
+        Route::post('/super-admin/user/{id}/delete', [SuperAdminController::class, 'deleteUser'])->name('super-admin.deleteUser');
+        Route::post('/super-admin/tenant/{id}/delete', [SuperAdminController::class, 'deleteTenant'])->name('super-admin.deleteTenant');
     });
 });

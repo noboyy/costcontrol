@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CostEntry;
 use App\Models\IncomeEntry;
+use App\Models\Perusahaan;
 use App\Models\Project;
 use App\Services\DailyControlService;
 use Carbon\Carbon;
@@ -23,9 +24,11 @@ class ReportController extends Controller
         $mode = $request->get('mode');
 
         $units = Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
-            ->where('status', 'active')
-            ->orderBy('nama_project')
-            ->get();
+            ->where('status', 'active');
+
+        Perusahaan::filterByModule($units, $user->companyModule());
+
+        $units = $units->orderBy('nama_project')->get();
 
         $queryProjects = Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->when($projectId, fn ($q) => $q->where('id_project', $projectId))
@@ -33,6 +36,8 @@ class ReportController extends Controller
             ->when($mode === 'project', fn ($q) => $q->where(function ($qq) {
                 $qq->where('mode', 'project')->orWhereNull('mode');
             }));
+
+        Perusahaan::filterByModule($queryProjects, $user->companyModule());
 
         $selected = $queryProjects->get();
         $ids = $selected->pluck('id_project')->all();
@@ -119,14 +124,17 @@ class ReportController extends Controller
         $type = $request->get('type', 'all'); // all|cost|income
 
         $ids = Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
-            ->when($projectId, fn ($q) => $q->where('id_project', $projectId))
-            ->pluck('id_project')
-            ->all();
+            ->when($projectId, fn ($q) => $q->where('id_project', $projectId));
 
-        $filename = 'laporan_' . $from . '_' . $to . '.csv';
+        Perusahaan::filterByModule($ids, $user->companyModule());
+
+        $ids = $ids->pluck('id_project')->all();
+
+        $filename = 'laporan_'.$from.'_'.$to.'.csv';
 
         return response()->streamDownload(function () use ($ids, $from, $to, $type) {
             $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, ['jenis', 'tanggal', 'unit', 'tipe', 'keterangan', 'qty', 'satuan', 'harga_satuan', 'total']);
 
             if ($type === 'all' || $type === 'cost') {

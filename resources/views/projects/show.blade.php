@@ -256,7 +256,7 @@
                             </td>
                             <td>
                                 @if($day['is_closed'])
-                                    <span class="badge badge-green">Closed</span>
+                                    <span class="badge badge-green">Tutup</span>
                                 @elseif($day['over_budget'] || $day['leak_alert'])
                                     <span class="badge badge-red">Alert</span>
                                 @else
@@ -331,6 +331,9 @@
     </button>
     <button type="button" class="tab" data-tab="admins" onclick="showTab('admins', this)">
         Admin <span class="count">{{ $project->admins->count() }}</span>
+    </button>
+    <button type="button" class="tab" data-tab="investor" onclick="showTab('investor', this)">
+        Investor <span class="count">{{ $investor ? 1 : 0 }}</span>
     </button>
 </div>
 
@@ -662,6 +665,95 @@
                     @endforelse
                 </ul>
             @endif
+        </div>
+    </div>
+</div>
+
+{{-- Investor --}}
+<div id="tab-investor" style="display:none;">
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="bi bi-person-badge"></i> Akun Investor</h3>
+        </div>
+        <div class="card-body">
+
+            @if(session('investor_created'))
+            @php $ic = session('investor_created'); @endphp
+            <div class="alert alert-success" style="margin-bottom:16px;padding:14px 16px;border-radius:10px;background:var(--success-light,#ecfdf5);border:1px solid var(--success,#10b981);color:var(--success-dark,#065f46);">
+                <strong><i class="bi bi-check-circle"></i> Akun investor berhasil dibuat / direset.</strong><br>
+                <span>Username: <code>{{ $ic['username'] }}</code></span><br>
+                <span>Password: <code>{{ $ic['password'] }}</code></span><br>
+                <small>Simpan password ini sekarang. Tidak bisa ditampilkan lagi.</small>
+            </div>
+            @endif
+
+            @if($errors->has('investor'))
+            <div class="alert alert-danger" style="margin-bottom:16px;padding:14px 16px;border-radius:10px;background:#fef2f2;border:1px solid #ef4444;color:#991b1b;">
+                <i class="bi bi-exclamation-triangle"></i> {{ $errors->first('investor') }}
+            </div>
+            @endif
+
+            @if($investor)
+            {{-- Investor sudah ada --}}
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:16px;">
+                <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light,#eff6ff);display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-person-badge" style="font-size:18px;color:var(--primary);"></i>
+                </div>
+                <div>
+                    <div style="font-weight:600;">{{ $investor->akun?->pengguna?->nama_lengkap ?? '—' }}
+                        @if($investor->akun->is_active === '1')
+                        <span class="badge badge-green">Aktif</span>
+                        @else
+                        <span class="badge badge-gray">Nonaktif</span>
+                        @endif
+                    </div>
+                    <div class="cell-sub">Username: <code>{{ $investor->akun?->username }}</code></div>
+                </div>
+                <div style="margin-left:auto;display:flex;gap:8px;">
+                    <form action="{{ route('cost-centers.investor.resetPassword', $project->id_project) }}" method="POST" onsubmit="return confirm('Reset password investor?')">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline"><i class="bi bi-key"></i> Reset Password</button>
+                    </form>
+                    <form action="{{ route('cost-centers.investor.toggle', $project->id_project) }}" method="POST" onsubmit="return confirm('{{ $investor->akun->is_active === '1' ? 'Nonaktifkan akun investor ini? Investor tidak bisa login.' : 'Aktifkan kembali akun investor ini?' }}')">
+                        @csrf
+                        @if($investor->akun->is_active === '1')
+                        <button type="submit" class="btn btn-sm btn-outline"><i class="bi bi-pause-circle"></i> Nonaktifkan</button>
+                        @else
+                        <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-play-circle"></i> Aktifkan</button>
+                        @endif
+                    </form>
+                    <form action="{{ route('cost-centers.investor.delete', $project->id_project) }}" method="POST" onsubmit="return confirm('Hapus akun investor ini? Akun tidak dapat dikembalikan.')">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Hapus</button>
+                    </form>
+                </div>
+            </div>
+            @else
+            {{-- Belum ada investor --}}
+            @if(!$isArchived)
+            <p style="color:var(--text-secondary);margin-bottom:16px;">Proyek ini belum memiliki akun investor. Buat akun untuk berbagi akses read-only kepada investor.</p>
+            <form action="{{ route('cost-centers.investor.store', $project->id_project) }}" method="POST">
+                @csrf
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nama Lengkap Investor <span class="req">*</span></label>
+                        <input type="text" class="form-input" name="nama_lengkap" required placeholder="cth. Budi Santoso">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Username Login <span class="req">*</span></label>
+                        <input type="text" class="form-input" name="username" required placeholder="cth. investor.budi" autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <small class="cell-sub"><i class="bi bi-info-circle"></i> Password akan digenerate otomatis dan ditampilkan sekali setelah akun dibuat.</small>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-person-plus"></i> Buat Akun Investor</button>
+            </form>
+            @else
+            <p class="cell-sub">Proyek diarsipkan. Tidak dapat menambah investor.</p>
+            @endif
+            @endif
+
         </div>
     </div>
 </div>
@@ -1123,7 +1215,7 @@
 @push('scripts')
 <script>
 function showTab(tab, el) {
-    ['costs','incomes','plans','admins'].forEach(t => {
+    ['costs','incomes','plans','admins','investor'].forEach(t => {
         const node = document.getElementById('tab-' + t);
         if (node) node.style.display = t === tab ? 'block' : 'none';
     });
@@ -1177,7 +1269,7 @@ document.getElementById('entrySearch')?.addEventListener('input', filterEntries)
 // Restore tab from URL hash (e.g. after form submit redirect)
 (function() {
     const hash = location.hash.replace('#', '');
-    const valid = ['costs','incomes','plans','admins'];
+    const valid = ['costs','incomes','plans','admins','investor'];
     if (valid.includes(hash)) {
         const btn = document.querySelector(`.tab[data-tab="${hash}"]`);
         if (btn) showTab(hash, btn);

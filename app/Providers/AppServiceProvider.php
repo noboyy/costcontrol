@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\MasterDataModuleService;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer('layouts.app', function ($view) {
+            $user = auth()->user();
+
+            if ($user && $user->isAdmin() && ! $user->isSuperAdmin()) {
+                $view->with('moduleCounts', app(MasterDataModuleService::class)->moduleCounts());
+            } else {
+                $view->with('moduleCounts', []);
+            }
+        });
     }
 }

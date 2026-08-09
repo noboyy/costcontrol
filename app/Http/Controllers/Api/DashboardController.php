@@ -113,6 +113,7 @@ class DashboardController extends Controller
 
         $umkmToday = $projects->where(fn ($p) => $p->isUmkm())->map(function ($unit) use ($today, $dailyService) {
             $snap = $dailyService->snapshot($unit, $today);
+
             return [
                 'id_project' => $unit->id_project,
                 'nama_project' => $unit->nama_project,
@@ -158,7 +159,7 @@ class DashboardController extends Controller
             'recentActivities' => $recentActivities,
             'umkmToday' => $umkmToday,
             'umkmTodayTotals' => $umkmTodayTotals,
-            'countProject' => $projects->where(fn ($p) => !$p->isUmkm())->count(),
+            'countProject' => $projects->where(fn ($p) => ! $p->isUmkm())->count(),
             'countUmkm' => $projects->where(fn ($p) => $p->isUmkm())->count(),
         ]);
     }
@@ -168,6 +169,7 @@ class DashboardController extends Controller
         if ($previous <= 0) {
             return $current > 0 ? 100.0 : 0.0;
         }
+
         return (($current - $previous) / $previous) * 100;
     }
 
@@ -181,7 +183,7 @@ class DashboardController extends Controller
                 $query->where('id_perusahaan', $companyId);
             })
             ->where('tanggal', '>=', $fromDate)
-            ->selectRaw('DATE(tanggal) as tgl, SUM(' . $column . ') as total')
+            ->selectRaw('DATE(tanggal) as tgl, SUM('.$column.') as total')
             ->groupBy('tgl')
             ->orderBy('tgl')
             ->pluck('total', 'tgl')

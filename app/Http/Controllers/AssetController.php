@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesDecimal;
 use App\Models\Asset;
 use App\Models\AssetMaintenance;
 use Illuminate\Http\Request;
@@ -9,14 +10,12 @@ use Illuminate\Support\Facades\Storage;
 
 class AssetController extends Controller
 {
+    use HandlesDecimal;
+
     public function index(Request $request)
     {
         $user = auth()->user();
         $companyId = $user->id_perusahaan;
-
-        if ($request->isMethod('post')) {
-            return $this->store($request);
-        }
 
         $assets = Asset::with(['maintenanceRecords'])
             ->where('deleted_at', null)
@@ -40,11 +39,11 @@ class AssetController extends Controller
 
         $request->validate([
             'nama_asset' => 'required|string|max:255',
-            'nilai_asset' => 'nullable|numeric|min:0',
+            'nilai_asset' => 'nullable|string',
             'keterangan' => 'nullable|string',
         ]);
 
-        $nilaiAsset = $request->nilai_asset ? $this->parseIndoMoneyToDecimal($request->nilai_asset) : null;
+        $nilaiAsset = $request->nilai_asset ? $this->parseIndoMoney($request->nilai_asset) : null;
 
         $data = [
             'id_perusahaan' => $companyId,
@@ -59,7 +58,7 @@ class AssetController extends Controller
             if ($file->isValid() && $file->getSize() <= 3 * 1024 * 1024) {
                 $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
                 if (in_array($file->getMimeType(), $allowedMime)) {
-                    $filename = 'asset_' . time() . '_' . bin2hex(random_bytes(4)) . '.webp';
+                    $filename = 'asset_'.time().'_'.bin2hex(random_bytes(4)).'.webp';
                     $path = $file->storeAs('asset', $filename, 'public');
                     $data['gambar'] = $filename;
                 }
@@ -85,11 +84,11 @@ class AssetController extends Controller
 
         $request->validate([
             'nama_asset' => 'required|string|max:255',
-            'nilai_asset' => 'nullable|numeric|min:0',
+            'nilai_asset' => 'nullable|string',
             'keterangan' => 'nullable|string',
         ]);
 
-        $nilaiAsset = $request->nilai_asset ? $this->parseIndoMoneyToDecimal($request->nilai_asset) : null;
+        $nilaiAsset = $request->nilai_asset ? $this->parseIndoMoney($request->nilai_asset) : null;
 
         $data = [
             'nama_asset' => $request->nama_asset,
@@ -105,10 +104,10 @@ class AssetController extends Controller
                 if (in_array($file->getMimeType(), $allowedMime)) {
                     // Delete old image
                     if ($asset->gambar) {
-                        Storage::disk('public')->delete('asset/' . $asset->gambar);
+                        Storage::disk('public')->delete('asset/'.$asset->gambar);
                     }
-                    
-                    $filename = 'asset_' . time() . '_' . bin2hex(random_bytes(4)) . '.webp';
+
+                    $filename = 'asset_'.time().'_'.bin2hex(random_bytes(4)).'.webp';
                     $path = $file->storeAs('asset', $filename, 'public');
                     $data['gambar'] = $filename;
                 }
@@ -134,7 +133,7 @@ class AssetController extends Controller
 
         // Delete image
         if ($asset->gambar) {
-            Storage::disk('public')->delete('asset/' . $asset->gambar);
+            Storage::disk('public')->delete('asset/'.$asset->gambar);
         }
 
         $asset->update(['gambar' => null]);
@@ -160,12 +159,12 @@ class AssetController extends Controller
         }
 
         $request->validate([
-            'nilai_jual' => 'required|numeric|min:0',
+            'nilai_jual' => 'required|string',
             'alasan_jual' => 'nullable|string',
             'tanggal_jual' => 'nullable|date',
         ]);
 
-        $nilaiJual = $this->parseIndoMoneyToDecimal($request->nilai_jual);
+        $nilaiJual = $this->parseIndoMoney($request->nilai_jual);
 
         $asset->update([
             'status' => 'Dijual',
@@ -196,10 +195,10 @@ class AssetController extends Controller
         $request->validate([
             'tanggal' => 'nullable|date',
             'keterangan' => 'nullable|string',
-            'biaya' => 'required|numeric|min:0',
+            'biaya' => 'required|string',
         ]);
 
-        $biaya = $this->parseIndoMoneyToDecimal($request->biaya);
+        $biaya = $this->parseIndoMoney($request->biaya);
 
         AssetMaintenance::create([
             'id_perusahaan' => $companyId,
@@ -249,13 +248,13 @@ class AssetController extends Controller
             })
             ->firstOrFail();
 
-        if (!$asset->gambar) {
+        if (! $asset->gambar) {
             abort(404, 'Gambar tidak ditemukan');
         }
 
-        $path = storage_path('app/public/asset/' . $asset->gambar);
-        
-        if (!file_exists($path)) {
+        $path = storage_path('app/public/asset/'.$asset->gambar);
+
+        if (! file_exists($path)) {
             abort(404, 'Gambar tidak ditemukan');
         }
 
@@ -263,37 +262,5 @@ class AssetController extends Controller
             'Content-Type' => mime_content_type($path),
             'Cache-Control' => 'private, max-age=86400',
         ]);
-    }
-
-    private function parseIndoMoneyToDecimal(?string $raw): ?string
-    {
-        $raw = trim((string) $raw);
-        if ($raw === '') {
-            return null;
-        }
-
-        $raw = preg_replace('/[^0-9\\.,-]/', '', $raw) ?? '';
-        $raw = trim($raw);
-        if ($raw === '' || $raw === '-' || $raw === ',' || $raw === '.') {
-            return null;
-        }
-
-        $raw = str_replace('.', '', $raw);
-        $raw = str_replace(',', '.', $raw);
-
-        if (substr_count($raw, '.') > 1) {
-            $parts = explode('.', $raw);
-            $raw = array_shift($parts) . '.' . implode('', $parts);
-        }
-
-        if (!preg_match('/^-?\\d+(?:\\.\\d{0,2})?$/', $raw)) {
-            $raw = preg_replace('/(\\..{2}).*$/', '$1', $raw) ?? $raw;
-        }
-
-        if ($raw === '' || $raw === '-') {
-            return null;
-        }
-
-        return $raw;
     }
 }

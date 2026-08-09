@@ -2,22 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\HandlesDecimal;
+use App\Models\Akun;
 use App\Models\CostEntry;
 use App\Models\CostType;
+use App\Models\DailyClose;
 use App\Models\FixedCost;
 use App\Models\IncomeEntry;
 use App\Models\IncomeType;
+use App\Models\Pengguna;
+use App\Models\Perusahaan;
 use App\Models\Project;
 use App\Models\ProjectAdmin;
+use App\Models\ProjectCostPlan;
+use App\Models\ProjectIncomePlan;
+use App\Models\ProjectInvestor;
 use App\Models\Unit;
 use App\Services\BusinessTemplateSeeder;
 use App\Services\DailyControlService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
+    use HandlesDecimal;
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -29,6 +40,8 @@ class ProjectController extends Controller
             ->when($companyId, function ($q) use ($companyId) {
                 $q->where('id_perusahaan', $companyId);
             });
+
+        Perusahaan::filterByModule($query, $user->companyModule());
 
         if ($statusFilter === 'archive') {
             $query->where('status', 'archived');
@@ -42,18 +55,17 @@ class ProjectController extends Controller
 
         $projects = $query->orderBy('created_at', 'desc')->get();
 
+        $countsBase = Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($statusFilter === 'archive', fn ($q) => $q->where('status', 'archived'), fn ($q) => $q->where('status', 'active'));
+
+        Perusahaan::filterByModule($countsBase, $user->companyModule());
+
         $counts = [
-            'all' => Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
-                ->when($statusFilter === 'archive', fn ($q) => $q->where('status', 'archived'), fn ($q) => $q->where('status', 'active'))
-                ->count(),
-            'project' => Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
-                ->when($statusFilter === 'archive', fn ($q) => $q->where('status', 'archived'), fn ($q) => $q->where('status', 'active'))
-                ->where(function ($q) {
-                    $q->where('mode', Project::MODE_PROJECT)->orWhereNull('mode');
-                })->count(),
-            'umkm' => Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
-                ->when($statusFilter === 'archive', fn ($q) => $q->where('status', 'archived'), fn ($q) => $q->where('status', 'active'))
-                ->where('mode', Project::MODE_UMKM)->count(),
+            'all' => (clone $countsBase)->count(),
+            'project' => (clone $countsBase)->where(function ($q) {
+                $q->where('mode', Project::MODE_PROJECT)->orWhereNull('mode');
+            })->count(),
+            'umkm' => (clone $countsBase)->where('mode', Project::MODE_UMKM)->count(),
         ];
 
         return view('projects.index', [
@@ -62,6 +74,7 @@ class ProjectController extends Controller
             'statusFilter' => $statusFilter,
             'modeFilter' => $modeFilter,
             'counts' => $counts,
+            'module' => $user->companyModule(),
         ]);
     }
 
@@ -71,13 +84,13 @@ class ProjectController extends Controller
         $companyId = $user->id_perusahaan;
 
         $project = Project::with([
-                'costEntries.costType',
-                'incomeEntries.incomeType',
-                'admins',
-                'fixedCosts',
-                'costPlans.costType',
-                'incomePlans.incomeType',
-            ])
+            'costEntries.costType',
+            'incomeEntries.incomeType',
+            'admins',
+            'fixedCosts',
+            'costPlans.costType',
+            'incomePlans.incomeType',
+        ])
             ->where('id_project', $id)
             ->when($companyId, function ($q) use ($companyId) {
                 $q->where('id_perusahaan', $companyId);
@@ -128,11 +141,14 @@ class ProjectController extends Controller
             ->groupBy('id_income_type')
             ->pluck('total', 'id_income_type');
 
-        $availableAdmins = \App\Models\Pengguna::with('akun')
+        $availableAdmins = Pengguna::with('akun')
             ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->orderBy('nama_lengkap')
             ->get();
         $assignedAdminIds = $project->admins->pluck('id_pengguna')->all();
+        $investor = ProjectInvestor::where('id_project', $project->id_project)
+            ->with('akun.pengguna')
+            ->first();
 
         return view('projects.show', [
             'title' => $project->isUmkm() ? 'Detail UMKM' : 'Detail Proyek',
@@ -163,7 +179,159 @@ class ProjectController extends Controller
             'actualIncomeByType' => $actualIncomeByType,
             'availableAdmins' => $availableAdmins,
             'assignedAdminIds' => $assignedAdminIds,
+            'investor' => $investor,
         ]);
+    }
+
+    public function storeInvestor(Request $request, $id)
+    {
+        $user = auth()->user();
+        $companyId = $user->id_perusahaan;
+
+        $project = Project::where('id_project', $id)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->firstOrFail();
+
+        $request->validate([
+            'nama_lengkap' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:akun,username',
+        ]);
+
+        $plainPassword = Str::random(12);
+
+        try {
+            DB::beginTransaction();
+
+            $pengguna = Pengguna::create([
+                'id_perusahaan' => $companyId,
+                'nama_lengkap' => $request->nama_lengkap,
+            ]);
+
+            $akun = Akun::create([
+                'id_pengguna' => $pengguna->id_pengguna,
+                'username' => $request->username,
+                'password' => $plainPassword,
+                'role' => 'INVESTOR',
+                'is_active' => '1',
+            ]);
+
+            ProjectInvestor::create([
+                'id_project' => $project->id_project,
+                'id_akun' => $akun->id_akun,
+            ]);
+
+            DB::commit();
+
+            $prefix = str_contains(url()->previous(), '/projects/') ? 'projects' : 'cost-centers';
+
+            return redirect()
+                ->back()
+                ->with('investor_created', [
+                    'username' => $akun->username,
+                    'password' => $plainPassword,
+                    'nama_lengkap' => $pengguna->nama_lengkap,
+                ])
+                ->withFragment('investor');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()->back()->withErrors(['investor' => 'Gagal membuat akun investor: '.$e->getMessage()]);
+        }
+    }
+
+    public function destroyInvestor(Request $request, $id)
+    {
+        $user = auth()->user();
+        $companyId = $user->id_perusahaan;
+
+        $project = Project::where('id_project', $id)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->firstOrFail();
+
+        $relation = ProjectInvestor::where('id_project', $project->id_project)->first();
+
+        if ($relation) {
+            try {
+                DB::beginTransaction();
+                $akun = Akun::find($relation->id_akun);
+                $relation->delete();
+                if ($akun) {
+                    $akun->pengguna?->delete();
+                    $akun->tokens()->delete();
+                    $akun->delete();
+                }
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+
+                return redirect()->back()->withErrors(['investor' => 'Gagal menghapus investor: '.$e->getMessage()]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Akun investor berhasil dihapus.')->withFragment('investor');
+    }
+
+    public function resetInvestorPasswordWeb(Request $request, $id)
+    {
+        $user = auth()->user();
+        $companyId = $user->id_perusahaan;
+
+        $project = Project::where('id_project', $id)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->firstOrFail();
+
+        $relation = ProjectInvestor::where('id_project', $project->id_project)
+            ->with('akun')
+            ->first();
+
+        if (! $relation || ! $relation->akun) {
+            return redirect()->back()->withErrors(['investor' => 'Tidak ada investor pada proyek ini.']);
+        }
+
+        $plainPassword = Str::random(12);
+        $relation->akun->update(['password' => $plainPassword]);
+        $relation->akun->tokens()->delete();
+
+        return redirect()
+            ->back()
+            ->with('investor_created', [
+                'username' => $relation->akun->username,
+                'password' => $plainPassword,
+                'nama_lengkap' => $relation->akun->pengguna?->nama_lengkap,
+            ])
+            ->withFragment('investor');
+    }
+
+    public function toggleInvestor(Request $request, $id)
+    {
+        $user = auth()->user();
+        $companyId = $user->id_perusahaan;
+
+        $project = Project::where('id_project', $id)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->firstOrFail();
+
+        $relation = ProjectInvestor::where('id_project', $project->id_project)
+            ->with('akun')
+            ->first();
+
+        if (! $relation || ! $relation->akun) {
+            return redirect()->back()->withErrors(['investor' => 'Tidak ada investor pada proyek ini.']);
+        }
+
+        $akun = $relation->akun;
+        $newStatus = $akun->is_active === '1' ? '0' : '1';
+        $akun->update(['is_active' => $newStatus]);
+
+        if ($newStatus === '0') {
+            $akun->tokens()->delete();
+        }
+
+        $msg = $newStatus === '1'
+            ? 'Akun investor berhasil diaktifkan.'
+            : 'Akun investor berhasil dinonaktifkan. Investor tidak bisa login.';
+
+        return redirect()->back()->with('success', $msg)->withFragment('investor');
     }
 
     public function syncAdmins(Request $request, $id)
@@ -186,20 +354,22 @@ class ProjectController extends Controller
             ->values();
 
         // Only allow users from same company
-        $validIds = \App\Models\Pengguna::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+        $validIds = Pengguna::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->whereIn('id_pengguna', $ids)
             ->pluck('id_pengguna')
             ->all();
 
         // Replace assignments with company-aware pivot rows
-        ProjectAdmin::where('id_project', $project->id_project)->delete();
-        foreach ($validIds as $penggunaId) {
-            ProjectAdmin::create([
-                'id_project' => $project->id_project,
-                'id_pengguna' => $penggunaId,
-                'id_perusahaan' => $companyId,
-            ]);
-        }
+        DB::transaction(function () use ($project, $companyId, $validIds) {
+            ProjectAdmin::where('id_project', $project->id_project)->delete();
+            foreach ($validIds as $penggunaId) {
+                ProjectAdmin::create([
+                    'id_project' => $project->id_project,
+                    'id_pengguna' => $penggunaId,
+                    'id_perusahaan' => $companyId,
+                ]);
+            }
+        });
 
         return back()->with('success', 'Admin unit diperbarui.');
     }
@@ -260,10 +430,10 @@ class ProjectController extends Controller
                 'amount' => $amount,
             ];
             if ($planId) {
-                \App\Models\ProjectCostPlan::where('id', $planId)->where('id_project', $id)->firstOrFail()->update($payload);
+                ProjectCostPlan::where('id', $planId)->where('id_project', $id)->firstOrFail()->update($payload);
                 $msg = 'Rencana biaya diperbarui.';
             } else {
-                \App\Models\ProjectCostPlan::updateOrCreate(
+                ProjectCostPlan::updateOrCreate(
                     [
                         'id_project' => $project->id_project,
                         'id_cost_type' => $request->id_cost_type,
@@ -285,10 +455,10 @@ class ProjectController extends Controller
                 'amount' => $amount,
             ];
             if ($planId) {
-                \App\Models\ProjectIncomePlan::where('id', $planId)->where('id_project', $id)->firstOrFail()->update($payload);
+                ProjectIncomePlan::where('id', $planId)->where('id_project', $id)->firstOrFail()->update($payload);
                 $msg = 'Rencana pendapatan diperbarui.';
             } else {
-                \App\Models\ProjectIncomePlan::updateOrCreate(
+                ProjectIncomePlan::updateOrCreate(
                     [
                         'id_project' => $project->id_project,
                         'id_income_type' => $request->id_income_type,
@@ -299,7 +469,7 @@ class ProjectController extends Controller
             }
         }
 
-        return redirect(route('projects.show', $id) . '#plans')->with('success', $msg);
+        return redirect(route('projects.show', $id).'#plans')->with('success', $msg);
     }
 
     private function removePlan($id, $planId, string $kind)
@@ -312,17 +482,18 @@ class ProjectController extends Controller
             ->firstOrFail();
 
         if ($kind === 'cost') {
-            \App\Models\ProjectCostPlan::where('id', $planId)->where('id_project', $id)->delete();
+            ProjectCostPlan::where('id', $planId)->where('id_project', $id)->delete();
         } else {
-            \App\Models\ProjectIncomePlan::where('id', $planId)->where('id_project', $id)->delete();
+            ProjectIncomePlan::where('id', $planId)->where('id_project', $id)->delete();
         }
 
-        return redirect(route('projects.show', $id) . '#plans')->with('success', 'Rencana dihapus.');
+        return redirect(route('projects.show', $id).'#plans')->with('success', 'Rencana dihapus.');
     }
 
     public function store(Request $request)
     {
         $user = auth()->user();
+        $companyId = $user->id_perusahaan;
         $companyId = $user->id_perusahaan;
 
         $request->validate([
@@ -338,9 +509,17 @@ class ProjectController extends Controller
             'monthly_budget' => 'nullable|string',
             'business_type' => 'nullable|string|max:50',
             'seed_template' => 'nullable|boolean',
+            'generate_investor' => 'nullable|boolean',
         ]);
 
         $mode = $request->mode;
+        $module = $user->companyModule();
+        if ($module === Perusahaan::MODULE_PROJECT) {
+            $mode = Project::MODE_PROJECT;
+        } elseif ($module === Perusahaan::MODULE_UMKM) {
+            $mode = Project::MODE_UMKM;
+        }
+
         $budgetPeriod = $request->budget_period
             ?: ($mode === Project::MODE_UMKM ? Project::BUDGET_DAILY : Project::BUDGET_TOTAL);
 
@@ -367,19 +546,68 @@ class ProjectController extends Controller
                 app(BusinessTemplateSeeder::class)->seedUmkm($companyId);
             }
 
+            $investorCreds = null;
+            if ($request->boolean('generate_investor')) {
+                $investorCreds = $this->createInvestorForProject($project, $companyId);
+            }
+
             DB::commit();
 
             $msg = $mode === Project::MODE_UMKM
                 ? 'Unit UMKM berhasil dibuat. Siap catat omzet & biaya harian.'
                 : 'Proyek berhasil ditambahkan. Silakan catat biaya/pendapatan.';
 
-            return redirect()->route('projects.show', $project->id_project)
+            $redirect = redirect()->route('projects.show', $project->id_project)
                 ->with('success', $msg);
+
+            if ($investorCreds) {
+                $redirect->with('investor_created', $investorCreds)
+                    ->withFragment('investor');
+            }
+
+            return $redirect;
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withInput()
-                ->with('error', 'Gagal menyimpan unit: ' . $e->getMessage());
+                ->with('error', 'Gagal menyimpan unit: '.$e->getMessage());
         }
+    }
+
+    protected function createInvestorForProject(Project $project, int $companyId): ?array
+    {
+        $plainPassword = Str::random(12);
+        $username = 'investor.'.$project->id_project;
+
+        if (Akun::where('username', $username)->exists()) {
+            return null;
+        }
+
+        $namaLengkap = 'Investor '.$project->nama_project;
+
+        $pengguna = Pengguna::create([
+            'id_perusahaan' => $companyId,
+            'nama_lengkap' => $namaLengkap,
+        ]);
+
+        $akun = Akun::create([
+            'id_pengguna' => $pengguna->id_pengguna,
+            'username' => $username,
+            'password' => $plainPassword,
+            'role' => 'INVESTOR',
+            'is_active' => '1',
+        ]);
+
+        ProjectInvestor::create([
+            'id_project' => $project->id_project,
+            'id_akun' => $akun->id_akun,
+        ]);
+
+        return [
+            'username' => $akun->username,
+            'password' => $plainPassword,
+            'nama_lengkap' => $namaLengkap,
+        ];
     }
 
     public function update(Request $request, $id)
@@ -457,7 +685,7 @@ class ProjectController extends Controller
                 ->with('success', 'Unit bisnis berhasil diperbarui.');
         } catch (\Exception $e) {
             return back()->withInput()
-                ->with('error', 'Gagal mengubah unit: ' . $e->getMessage());
+                ->with('error', 'Gagal mengubah unit: '.$e->getMessage());
         }
     }
 
@@ -482,9 +710,10 @@ class ProjectController extends Controller
             'keterangan' => 'nullable|string|max:255',
             'qty' => 'required|numeric|min:0.01',
             'unit' => 'nullable|string|max:50',
-            'harga_satuan' => 'nullable|numeric|min:0',
-            'total' => 'nullable|numeric|min:0',
+            'harga_satuan' => 'nullable|string',
+            'total' => 'nullable|string',
             'catatan' => 'nullable|string',
+            'file_bukti' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:3072',
         ]);
 
         if ($msg = $this->guardClosedDay($project, $request->tanggal)) {
@@ -509,17 +738,11 @@ class ProjectController extends Controller
                 'catatan' => $request->catatan,
             ];
 
-            // Handle file upload
             if ($request->hasFile('file_bukti')) {
                 $file = $request->file('file_bukti');
-                if ($file->isValid() && $file->getSize() <= 3 * 1024 * 1024) {
-                    $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
-                    if (in_array($file->getMimeType(), $allowedMime)) {
-                        $filename = 'cost_bukti_' . time() . '_' . bin2hex(random_bytes(4)) . '.webp';
-                        $path = $file->storeAs('bukti/cost', $filename, 'public');
-                        $data['file_bukti'] = $filename;
-                    }
-                }
+                $filename = 'cost_bukti_'.time().'_'.bin2hex(random_bytes(4)).'.webp';
+                $file->storeAs('bukti/cost', $filename, 'public');
+                $data['file_bukti'] = $filename;
             }
 
             CostEntry::create($data);
@@ -528,7 +751,7 @@ class ProjectController extends Controller
                 ->with('success', 'Biaya berhasil ditambahkan.');
         } catch (\Exception $e) {
             return back()->withInput()
-                ->with('error', 'Gagal menambah biaya: ' . $e->getMessage());
+                ->with('error', 'Gagal menambah biaya: '.$e->getMessage());
         }
     }
 
@@ -546,10 +769,6 @@ class ProjectController extends Controller
         }
 
         $cost = CostEntry::where('id_cost', $costId)->where('id_project', $id)->firstOrFail();
-
-        if ($msg = $this->guardClosedDay($project, $cost->tanggal)) {
-            return back()->with('error', $msg);
-        }
 
         $request->validate([
             'id_cost_type' => 'required|exists:cost_type,id_cost_type',
@@ -588,7 +807,7 @@ class ProjectController extends Controller
             if ($file->isValid() && $file->getSize() <= 3 * 1024 * 1024) {
                 $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
                 if (in_array($file->getMimeType(), $allowedMime)) {
-                    $filename = 'cost_bukti_' . time() . '_' . bin2hex(random_bytes(4)) . '.webp';
+                    $filename = 'cost_bukti_'.time().'_'.bin2hex(random_bytes(4)).'.webp';
                     $file->storeAs('bukti/cost', $filename, 'public');
                     $data['file_bukti'] = $filename;
                 }
@@ -621,9 +840,10 @@ class ProjectController extends Controller
             'keterangan' => 'nullable|string|max:255',
             'qty' => 'required|numeric|min:0.01',
             'unit' => 'nullable|string|max:50',
-            'harga_satuan' => 'nullable|numeric|min:0',
-            'total' => 'nullable|numeric|min:0',
+            'harga_satuan' => 'nullable|string',
+            'total' => 'nullable|string',
             'catatan' => 'nullable|string',
+            'file_bukti' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:3072',
         ]);
 
         if ($msg = $this->guardClosedDay($project, $request->tanggal)) {
@@ -648,17 +868,11 @@ class ProjectController extends Controller
                 'catatan' => $request->catatan,
             ];
 
-            // Handle file upload
             if ($request->hasFile('file_bukti')) {
                 $file = $request->file('file_bukti');
-                if ($file->isValid() && $file->getSize() <= 3 * 1024 * 1024) {
-                    $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
-                    if (in_array($file->getMimeType(), $allowedMime)) {
-                        $filename = 'income_bukti_' . time() . '_' . bin2hex(random_bytes(4)) . '.webp';
-                        $path = $file->storeAs('bukti/income', $filename, 'public');
-                        $data['file_bukti'] = $filename;
-                    }
-                }
+                $filename = 'income_bukti_'.time().'_'.bin2hex(random_bytes(4)).'.webp';
+                $file->storeAs('bukti/income', $filename, 'public');
+                $data['file_bukti'] = $filename;
             }
 
             IncomeEntry::create($data);
@@ -667,7 +881,7 @@ class ProjectController extends Controller
                 ->with('success', 'Pendapatan berhasil ditambahkan.');
         } catch (\Exception $e) {
             return back()->withInput()
-                ->with('error', 'Gagal menambah pendapatan: ' . $e->getMessage());
+                ->with('error', 'Gagal menambah pendapatan: '.$e->getMessage());
         }
     }
 
@@ -685,10 +899,6 @@ class ProjectController extends Controller
         }
 
         $income = IncomeEntry::where('id_income', $incomeId)->where('id_project', $id)->firstOrFail();
-
-        if ($msg = $this->guardClosedDay($project, $income->tanggal)) {
-            return back()->with('error', $msg);
-        }
 
         $request->validate([
             'id_income_type' => 'required|exists:income_type,id_income_type',
@@ -727,7 +937,7 @@ class ProjectController extends Controller
             if ($file->isValid() && $file->getSize() <= 3 * 1024 * 1024) {
                 $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
                 if (in_array($file->getMimeType(), $allowedMime)) {
-                    $filename = 'income_bukti_' . time() . '_' . bin2hex(random_bytes(4)) . '.webp';
+                    $filename = 'income_bukti_'.time().'_'.bin2hex(random_bytes(4)).'.webp';
                     $file->storeAs('bukti/income', $filename, 'public');
                     $data['file_bukti'] = $filename;
                 }
@@ -838,6 +1048,11 @@ class ProjectController extends Controller
 
             CostEntry::where('id_project', $id)->delete();
             IncomeEntry::where('id_project', $id)->delete();
+            ProjectAdmin::where('id_project', $id)->delete();
+            ProjectCostPlan::where('id_project', $id)->delete();
+            ProjectIncomePlan::where('id_project', $id)->delete();
+            FixedCost::where('id_project', $id)->delete();
+            DailyClose::where('id_project', $id)->delete();
             $project->delete();
 
             DB::commit();
@@ -846,21 +1061,26 @@ class ProjectController extends Controller
                 ->with('success', 'Project dan seluruh riwayat biaya/pendapatan telah dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal menghapus project: ' . $e->getMessage());
+
+            return back()->with('error', 'Gagal menghapus project: '.$e->getMessage());
         }
     }
 
     public function costBukti($id)
     {
-        $cost = CostEntry::findOrFail($id);
-        
-        if (!$cost->file_bukti) {
+        $user = auth()->user();
+        $companyId = $user->id_perusahaan;
+
+        $cost = CostEntry::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->findOrFail($id);
+
+        if (! $cost->file_bukti) {
             abort(404, 'Bukti tidak ditemukan');
         }
 
-        $path = storage_path('app/public/bukti/cost/' . $cost->file_bukti);
-        
-        if (!file_exists($path)) {
+        $path = storage_path('app/public/bukti/cost/'.$cost->file_bukti);
+
+        if (! file_exists($path)) {
             abort(404, 'Bukti tidak ditemukan');
         }
 
@@ -872,15 +1092,19 @@ class ProjectController extends Controller
 
     public function incomeBukti($id)
     {
-        $income = IncomeEntry::findOrFail($id);
-        
-        if (!$income->file_bukti) {
+        $user = auth()->user();
+        $companyId = $user->id_perusahaan;
+
+        $income = IncomeEntry::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->findOrFail($id);
+
+        if (! $income->file_bukti) {
             abort(404, 'Bukti tidak ditemukan');
         }
 
-        $path = storage_path('app/public/bukti/income/' . $income->file_bukti);
-        
-        if (!file_exists($path)) {
+        $path = storage_path('app/public/bukti/income/'.$income->file_bukti);
+
+        if (! file_exists($path)) {
             abort(404, 'Bukti tidak ditemukan');
         }
 
@@ -888,32 +1112,5 @@ class ProjectController extends Controller
             'Content-Type' => mime_content_type($path),
             'Cache-Control' => 'private, max-age=86400',
         ]);
-    }
-
-    private function normalizeDecimal($value, $default = null)
-    {
-        if ($value === null || $value === '') {
-            return $default;
-        }
-        $clean = str_replace(['.', ' '], ['', ''], (string) $value);
-        $clean = str_replace(',', '.', $clean);
-        return (float) $clean;
-    }
-
-    private function guardClosedDay(Project $project, $date): ?string
-    {
-        if (!$project->isUmkm()) {
-            return null;
-        }
-        if ($project->lock_closed_days === false) {
-            return null;
-        }
-        if (app(DailyControlService::class)->isDayClosed($project, $date)) {
-            $label = \Carbon\Carbon::parse($date)->format('d M Y');
-
-            return "Tanggal {$label} sudah ditutup. Buka ulang tutup kas dulu untuk mengubah entri.";
-        }
-
-        return null;
     }
 }

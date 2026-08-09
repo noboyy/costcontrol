@@ -201,7 +201,7 @@ class DailyControlService
                 'type' => 'budget',
                 'level' => 'danger',
                 'title' => 'Over pagu harian',
-                'message' => 'Biaya kas melebihi pagu Rp ' . number_format($dailyBudget, 0, ',', '.') . '.',
+                'message' => 'Biaya kas melebihi pagu Rp '.number_format($dailyBudget, 0, ',', '.').'.',
             ];
         }
 
@@ -219,7 +219,7 @@ class DailyControlService
                 'type' => 'leak',
                 'level' => 'danger',
                 'title' => 'COGS tinggi',
-                'message' => 'Rasio bahan baku ' . number_format($cogsRatio * 100, 1) . '% dari omzet (batas ' . number_format($threshold * 100, 0) . '%). Cek waste/shrinkage.',
+                'message' => 'Rasio bahan baku '.number_format($cogsRatio * 100, 1).'% dari omzet (batas '.number_format($threshold * 100, 0).'%). Cek waste/shrinkage.',
             ];
         }
 

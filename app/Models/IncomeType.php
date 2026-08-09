@@ -10,6 +10,7 @@ class IncomeType extends Model
     use HasFactory;
 
     protected $table = 'income_type';
+
     protected $primaryKey = 'id_income_type';
 
     protected $fillable = [

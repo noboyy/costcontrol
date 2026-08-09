@@ -89,25 +89,25 @@
         </div>
 
         <div class="card">
-            <div class="card-header"><h3><i class="bi bi-shield-lock"></i> Ubah Password</h3></div>
+            <div class="card-header"><h3><i class="bi bi-shield-lock"></i> Ubah Kata Sandi</h3></div>
             <div class="card-body">
                 <form action="{{ route('profil.updatePassword') }}" method="POST">
                     @csrf
                     <div class="form-group">
-                        <label class="form-label">Password Saat Ini <span class="req">*</span></label>
+                        <label class="form-label">Kata Sandi Saat Ini <span class="req">*</span></label>
                         <input type="password" class="form-input" name="current_password" required autocomplete="current-password">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Password Baru <span class="req">*</span></label>
+                            <label class="form-label">Kata Sandi Baru <span class="req">*</span></label>
                             <input type="password" class="form-input" name="new_password" required minlength="6" autocomplete="new-password">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Konfirmasi Password <span class="req">*</span></label>
+                            <label class="form-label">Konfirmasi Kata Sandi <span class="req">*</span></label>
                             <input type="password" class="form-input" name="new_password_confirmation" required minlength="6" autocomplete="new-password">
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-key"></i> Update Password</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-key"></i> Perbarui Kata Sandi</button>
                 </form>
             </div>
         </div>

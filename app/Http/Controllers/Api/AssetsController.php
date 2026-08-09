@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\HandlesDecimal;
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
 use App\Models\AssetMaintenance;
@@ -10,13 +11,14 @@ use Illuminate\Support\Facades\Storage;
 
 class AssetsController extends Controller
 {
+    use HandlesDecimal;
+
     public function index(Request $request)
     {
         $user = $request->user();
         $companyId = $user->id_perusahaan;
 
         $assets = Asset::with(['maintenanceRecords'])
-            ->where('deleted_at', null)
             ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->orderByRaw("CASE WHEN status = 'Dijual' THEN 1 ELSE 0 END")
             ->orderBy('nama_asset')
@@ -60,7 +62,7 @@ class AssetsController extends Controller
         $data = [
             'id_perusahaan' => $companyId,
             'nama_asset' => $request->nama_asset,
-            'nilai_asset' => $request->nilai_asset ? $this->parseMoney($request->nilai_asset) : null,
+            'nilai_asset' => $request->nilai_asset ? $this->parseIndoMoney($request->nilai_asset) : null,
             'keterangan' => $request->keterangan,
         ];
 
@@ -88,13 +90,13 @@ class AssetsController extends Controller
 
         $data = [
             'nama_asset' => $request->nama_asset,
-            'nilai_asset' => $request->nilai_asset ? $this->parseMoney($request->nilai_asset) : null,
+            'nilai_asset' => $request->nilai_asset ? $this->parseIndoMoney($request->nilai_asset) : null,
             'keterangan' => $request->keterangan,
         ];
 
         if ($request->hasFile('gambar')) {
             if ($asset->gambar) {
-                Storage::disk('public')->delete('asset/' . $asset->gambar);
+                Storage::disk('public')->delete('asset/'.$asset->gambar);
             }
             $data['gambar'] = $this->storeImage($request->file('gambar'));
         }
@@ -112,7 +114,7 @@ class AssetsController extends Controller
         $asset = $this->findAsset($id, $companyId);
 
         if ($asset->gambar) {
-            Storage::disk('public')->delete('asset/' . $asset->gambar);
+            Storage::disk('public')->delete('asset/'.$asset->gambar);
         }
         $asset->update(['gambar' => null]);
         $asset->delete();
@@ -139,7 +141,7 @@ class AssetsController extends Controller
 
         $asset->update([
             'status' => 'Dijual',
-            'nilai_jual' => $this->parseMoney($request->nilai_jual),
+            'nilai_jual' => $this->parseIndoMoney($request->nilai_jual),
             'alasan_jual' => $request->alasan_jual,
             'tanggal_jual' => $request->tanggal_jual ?: now(),
         ]);
@@ -169,7 +171,7 @@ class AssetsController extends Controller
             'id_asset' => $id,
             'tanggal' => $request->tanggal ?: now(),
             'keterangan' => $request->keterangan,
-            'biaya' => $this->parseMoney($request->biaya),
+            'biaya' => $this->parseIndoMoney($request->biaya),
         ]);
 
         return response()->json(['message' => 'Maintenance asset berhasil ditambahkan.'], 201);
@@ -205,7 +207,7 @@ class AssetsController extends Controller
         if (! $asset->gambar) {
             abort(404);
         }
-        $path = storage_path('app/public/asset/' . $asset->gambar);
+        $path = storage_path('app/public/asset/'.$asset->gambar);
         if (! file_exists($path)) {
             abort(404);
         }
@@ -226,28 +228,15 @@ class AssetsController extends Controller
 
     private function storeImage($file): ?string
     {
-        if (! $file->isValid() || $file->getSize() > 3 * 1024 * 1024) {
+        if (! $file || ! $file->isValid() || $file->getSize() > 3 * 1024 * 1024) {
             return null;
         }
         $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
         if (! in_array($file->getMimeType(), $allowedMime)) {
             return null;
         }
-        $filename = 'asset_' . time() . '_' . bin2hex(random_bytes(4)) . '.webp';
+        $filename = 'asset_'.time().'_'.bin2hex(random_bytes(4)).'.webp';
 
         return $file->storeAs('asset', $filename, 'public');
-    }
-
-    private function parseMoney($value): ?string
-    {
-        $raw = trim((string) $value);
-        if ($raw === '') {
-            return null;
-        }
-        $raw = preg_replace('/[^0-9\\.,-]/', '', $raw) ?? '';
-        $raw = str_replace('.', '', $raw);
-        $raw = str_replace(',', '.', $raw);
-
-        return $raw;
     }
 }

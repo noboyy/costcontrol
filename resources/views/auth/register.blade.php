@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register — CostControl</title>
+    <title>Daftar — CostControl</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,7 +35,7 @@
         <div class="brand">
             <div class="brand-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
             <h1>CostControl</h1>
-            <p>Create your first admin account</p>
+            <p>Daftar akun admin pertama Anda</p>
         </div>
 
         <div class="card">
@@ -51,53 +51,53 @@
 
             <form method="POST" action="{{ route('register') }}">
                 @csrf
-                <div class="section-title">Company</div>
+                <div class="section-title">Perusahaan</div>
                 <div class="form-group">
-                    <label class="form-label">Company Name *</label>
+                    <label class="form-label">Nama Perusahaan *</label>
                     <input type="text" class="form-input" name="nama_perusahaan" value="{{ old('nama_perusahaan') }}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Company Address</label>
+                    <label class="form-label">Alamat Perusahaan</label>
                     <textarea class="form-textarea" name="alamat_perusahaan" rows="2">{{ old('alamat_perusahaan') }}</textarea>
                 </div>
 
-                <div class="section-title" style="margin-top:24px;">Personal Info</div>
+                <div class="section-title" style="margin-top:24px;">Data Pribadi</div>
                 <div class="form-group">
-                    <label class="form-label">Full Name *</label>
+                    <label class="form-label">Nama Lengkap *</label>
                     <input type="text" class="form-input" name="nama_lengkap" value="{{ old('nama_lengkap') }}" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Phone</label>
+                        <label class="form-label">No. HP</label>
                         <input type="text" class="form-input" name="no_hp" value="{{ old('no_hp') }}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Position</label>
+                        <label class="form-label">Jabatan</label>
                         <input type="text" class="form-input" name="jabatan" value="{{ old('jabatan') }}">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Address</label>
+                    <label class="form-label">Alamat</label>
                     <textarea class="form-textarea" name="alamat" rows="2">{{ old('alamat') }}</textarea>
                 </div>
 
-                <div class="section-title" style="margin-top:24px;">Account</div>
+                <div class="section-title" style="margin-top:24px;">Akun</div>
                 <div class="form-group">
                     <label class="form-label">Email *</label>
                     <input type="email" class="form-input" name="email" value="{{ old('email') }}" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Password *</label>
+                        <label class="form-label">Kata Sandi *</label>
                         <input type="password" class="form-input" name="password" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Confirm Password *</label>
+                        <label class="form-label">Konfirmasi Kata Sandi *</label>
                         <input type="password" class="form-input" name="password_confirmation" required>
                     </div>
                 </div>
 
-                <button type="submit" class="btn" style="margin-top:8px;">Start 14-Day Free Trial</button>
+                <button type="submit" class="btn" style="margin-top:8px;">Mulai Trial Gratis 14 Hari</button>
                 <p style="font-size:12px;color:#6b7280;text-align:center;margin-top:12px;">
                     Gratis 14 hari. Verifikasi email untuk mengaktifkan akun.
                 </p>

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -53,7 +52,7 @@ class ProfileController extends Controller
             'new_password' => 'required|string|min:6|confirmed',
         ]);
 
-        if (!Hash::check($request->current_password, $user->password)) {
+        if (! Hash::check($request->current_password, $user->password)) {
             return back()->with('error', 'Kata sandi saat ini tidak sesuai.');
         }
 
@@ -74,15 +73,15 @@ class ProfileController extends Controller
     public function photo()
     {
         $user = auth()->user();
-        
+
         // Try to find user photo
         $path = $this->getProfilePhotoPath($user->id_akun);
-        
-        if (!$path) {
+
+        if (! $path) {
             $path = public_path('img/icon/user.svg');
         }
 
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             // Return a simple 1x1 transparent PNG as fallback
             return response('', 200, ['Content-Type' => 'image/png']);
         }
@@ -102,14 +101,14 @@ class ProfileController extends Controller
         ]);
 
         $file = $request->file('photo');
-        
+
         // Delete old photos
         $dir = storage_path('app/public/profile');
-        if (!is_dir($dir)) {
+        if (! is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
 
-        foreach (glob($dir . "/profile_{$user->id_akun}.*") ?: [] as $old) {
+        foreach (glob($dir."/profile_{$user->id_akun}.*") ?: [] as $old) {
             @unlink($old);
         }
 
@@ -124,16 +123,16 @@ class ProfileController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Foto profil berhasil diperbarui.',
-            'photoUrl' => route('profil.photo') . '?v=' . time(),
+            'photoUrl' => route('profil.photo').'?v='.time(),
         ]);
     }
 
     private function getProfilePhotoPath(int $userId): ?string
     {
         $dir = storage_path('app/public/profile');
-        $pattern = $dir . "/profile_{$userId}.*";
+        $pattern = $dir."/profile_{$userId}.*";
         $files = glob($pattern);
-        
+
         if ($files) {
             $file = reset($files);
             if ($file && is_file($file)) {

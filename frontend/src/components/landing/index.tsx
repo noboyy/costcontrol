@@ -44,7 +44,7 @@ export default function LandingPage() {
             <a href="#fitur" className="text-sm text-muted-foreground hover:text-foreground">Fitur</a>
             <a href="#cara-kerja" className="text-sm text-muted-foreground hover:text-foreground">Cara Kerja</a>
             <a
-              href={`${APP_URL}/login`}
+              href="/login"
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               Masuk
@@ -81,7 +81,7 @@ export default function LandingPage() {
               Mulai Trial 14 Hari Gratis
             </a>
             <a
-              href={`${APP_URL}/login`}
+              href="/login"
               className="rounded-lg border px-8 py-3 font-semibold hover:bg-accent"
             >
               Sudah punya akun? Masuk
@@ -158,9 +158,9 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t py-10">
         <div className="container flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} CostControl. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} CostControl. Hak cipta dilindungi.</span>
           <div className="flex items-center gap-4">
-            <a href={`${APP_URL}/login`} className="hover:text-foreground">Masuk</a>
+            <a href="/login" className="hover:text-foreground">Masuk</a>
             <a href={`${APP_URL}/register`} className="hover:text-foreground">Daftar</a>
           </div>
         </div>

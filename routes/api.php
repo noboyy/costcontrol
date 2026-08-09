@@ -1,9 +1,10 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AssetsController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriesController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\InvestorController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ReportController;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'active', 'trial'])->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me', [AuthController::class, 'me']);
 
@@ -67,5 +68,21 @@ Route::prefix('v1')->group(function () {
             Route::put('/users/{pengguna}', [UsersController::class, 'update']);
             Route::delete('/users/{pengguna}', [UsersController::class, 'delete']);
         });
+
+        // Investor management — ADMIN only
+        Route::middleware('role:ADMIN')->group(function () {
+            Route::get('/projects/{project}/investor', [ProjectController::class, 'showInvestor']);
+            Route::post('/projects/{project}/investor', [ProjectController::class, 'assignInvestor']);
+            Route::delete('/projects/{project}/investor', [ProjectController::class, 'revokeInvestor']);
+            Route::post('/projects/{project}/investor/reset-password', [ProjectController::class, 'resetInvestorPassword']);
+        });
+    });
+
+    // Investor read-only routes
+    Route::middleware(['auth:sanctum', 'active', 'investor'])->group(function () {
+        Route::get('/investor/project', [InvestorController::class, 'project']);
+        Route::get('/investor/project/costs', [InvestorController::class, 'costs']);
+        Route::get('/investor/project/incomes', [InvestorController::class, 'incomes']);
+        Route::get('/investor/project/report', [InvestorController::class, 'report']);
     });
 });

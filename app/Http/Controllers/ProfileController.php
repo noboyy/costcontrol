@@ -70,7 +70,7 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/')->with('success', 'Kata sandi berhasil diubah. Silakan login kembali.');
+        return redirect()->route('login')->with('success', 'Password Berhasil diganti, silahkan login kembali');
     }
 
     public function photo()

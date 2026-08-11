@@ -193,6 +193,11 @@
             color: #b91c1c;
             border: 1px solid #fecaca;
         }
+        .alert-success {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
         .footer-note {
             text-align: center;
             margin-top: 20px;
@@ -251,6 +256,13 @@
             <p>Masuk untuk melanjutkan ke dashboard</p>
 
             <div class="card">
+                @if (session('success'))
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <div>{{ session('success') }}</div>
+                    </div>
+                @endif
+
                 @if ($errors->any())
                     <div class="alert">
                         <i class="bi bi-exclamation-triangle-fill"></i>

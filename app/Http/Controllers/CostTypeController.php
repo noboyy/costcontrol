@@ -179,6 +179,7 @@ class CostTypeController extends Controller
         }
 
         $maxOrder = (int) CostCategory::forCompany($companyId)->max('urutan');
+        $global = CostCategory::where('id_perusahaan', null)->where('kode', $kode)->first();
 
         CostCategory::create([
             'id_perusahaan' => $companyId,
@@ -188,6 +189,7 @@ class CostTypeController extends Controller
             'warna' => 'gray',
             'urutan' => $maxOrder + 1,
             'is_active' => true,
+            'kelompok' => $global?->kelompok,
         ]);
     }
 }

@@ -319,6 +319,80 @@
 @endif
 @endif
 
+@php
+    $cp = $cashPosition ?? null;
+    $fc = $cashForecast ?? null;
+    $cs = collect($cashSeries ?? []);
+    $maxFlow = max(1, $cs->max('in'), $cs->max('out'));
+@endphp
+@if($cp)
+<div class="card" style="margin-bottom:18px;">
+    <div class="card-header">
+        <h3><i class="bi bi-cash-stack"></i> Kas Berjalan</h3>
+        <span class="cell-sub">Saldo awal + omzet − biaya s/d {{ \Carbon\Carbon::parse($cp['date'])->format('d M Y') }}</span>
+    </div>
+    <div class="card-body">
+        <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="kpi-card">
+                <div class="kpi-top"><div class="kpi-icon blue"><i class="bi bi-wallet2"></i></div></div>
+                <div class="kpi-label">Saldo Kas Hari Ini</div>
+                <div class="kpi-value money {{ $cp['balance'] >= 0 ? 'positive' : 'negative' }}">Rp {{ number_format($cp['balance'], 0, ',', '.') }}</div>
+                <div class="cell-sub">Awal: Rp {{ number_format($cp['opening'], 0, ',', '.') }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-top"><div class="kpi-icon green"><i class="bi bi-arrow-up-circle"></i></div></div>
+                <div class="kpi-label">Pemasukan kumulatif</div>
+                <div class="kpi-value money positive">Rp {{ number_format($cp['income_to_date'], 0, ',', '.') }}</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-top"><div class="kpi-icon red"><i class="bi bi-arrow-down-circle"></i></div></div>
+                <div class="kpi-label">Pengeluaran kumulatif</div>
+                <div class="kpi-value money negative">Rp {{ number_format($cp['cost_to_date'], 0, ',', '.') }}</div>
+            </div>
+            @if($fc)
+            <div class="kpi-card">
+                <div class="kpi-top"><div class="kpi-icon {{ $fc['over_projected'] ? 'yellow' : 'blue' }}"><i class="bi bi-hourglass-split"></i></div></div>
+                <div class="kpi-label">Proyeksi akhir</div>
+                <div class="kpi-value money {{ $fc['over_projected'] ? 'negative' : 'positive' }}">
+                    {{ $fc['projected_end_cost'] !== null ? 'Rp '.number_format($fc['projected_end_cost'], 0, ',', '.') : '—' }}
+                </div>
+                <div class="cell-sub">
+                    @if($fc['days_to_deplete'] !== null)
+                        Budget habis ±{{ $fc['days_to_deplete'] }} hari
+                    @else
+                        Burn rata {{ $fc['window_days'] }} hari: Rp {{ number_format($fc['net_burn_daily'], 0, ',', '.') }}/hari
+                    @endif
+                </div>
+            </div>
+            @endif
+        </div>
+
+        @if($cp['is_negative'])
+            <div class="alert alert-danger" style="margin-top:12px;">
+                <i class="bi bi-exclamation-triangle"></i> Saldo kas negatif. Cek pencatatan omzet atau set saldo awal unit.
+            </div>
+        @endif
+
+        @if($cs->count() > 1)
+        <div style="margin-top:14px;">
+            <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-secondary);margin-bottom:6px;">
+                <span>Arus kas 30 hari terakhir</span>
+                <span><span style="color:var(--success);">■</span> Masuk &nbsp; <span style="color:var(--danger);">■</span> Keluar</span>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:2px;height:70px;">
+                @foreach($cs as $day)
+                    <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;height:100%;" title="{{ $day['label'] }}: masuk Rp {{ number_format($day['in'], 0, ',', '.') }}, keluar Rp {{ number_format($day['out'], 0, ',', '.') }}, saldo Rp {{ number_format($day['balance'], 0, ',', '.') }}">
+                        <div style="background:var(--success);height:{{ round($day['in'] / $maxFlow * 50) }}%;min-height:{{ $day['in'] > 0 ? 2 : 0 }}px;border-radius:1px;"></div>
+                        <div style="background:var(--danger);height:{{ round($day['out'] / $maxFlow * 50) }}%;min-height:{{ $day['out'] > 0 ? 2 : 0 }}px;border-radius:1px;"></div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+    </div>
+</div>
+@endif
+
 <div class="tabs">
     <button type="button" class="tab active" data-tab="costs" onclick="showTab('costs', this)">
         Biaya <span class="count">{{ $project->costEntries->count() }}</span>
@@ -334,6 +408,9 @@
     </button>
     <button type="button" class="tab" data-tab="investor" onclick="showTab('investor', this)">
         Investor <span class="count">{{ $investor ? 1 : 0 }}</span>
+    </button>
+    <button type="button" class="tab" data-tab="delete" onclick="showTab('delete', this)" style="color:var(--danger);">
+        Hapus <i class="bi bi-trash"></i>
     </button>
 </div>
 
@@ -494,6 +571,36 @@
 
 {{-- Plans / RAB --}}
 <div id="tab-plans" style="display:none;">
+    @if(!$isUmkm && !empty($groupSummaries))
+    <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+            <h3><i class="bi bi-diagram-3"></i> Progress per Kelompok</h3>
+            <a href="{{ route('cost-groups.index') }}" class="btn btn-sm btn-outline"><i class="bi bi-sliders"></i> Kelola Kelompok</a>
+        </div>
+        <div class="card-body">
+            <div class="grid-3">
+                @foreach($groupSummaries as $g)
+                    @php
+                        $barColor = $g['pct'] !== null ? ($g['pct'] > 100 ? 'var(--danger)' : ($g['pct'] > 80 ? 'var(--warning)' : 'var(--success)')) : 'var(--border-strong)';
+                    @endphp
+                    <div class="kpi-card" style="padding:14px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <strong style="font-size:13px;">{{ $g['nama'] }}</strong>
+                            <span class="badge {{ $g['pct'] !== null ? ($g['pct'] > 100 ? 'badge-red' : ($g['pct'] > 80 ? 'badge-yellow' : 'badge-green')) : 'badge-gray' }}">
+                                {{ $g['pct'] !== null ? number_format($g['pct']).'%' : '—' }}
+                            </span>
+                        </div>
+                        <div class="cell-sub" style="margin-bottom:8px;">Realisasi Rp {{ number_format($g['actual'], 0, ',', '.') }}</div>
+                        <div class="progress">
+                            <div class="progress-bar" style="width:{{ $g['pct'] !== null ? min($g['pct'], 100) : 0 }}%;background:{{ $barColor }};"></div>
+                        </div>
+                        <div class="cell-sub" style="margin-top:6px;">Rencana Rp {{ number_format($g['plan'], 0, ',', '.') }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
     <div class="grid-2" style="align-items:start;">
         <div class="card">
             <div class="card-header">
@@ -758,6 +865,63 @@
     </div>
 </div>
 
+{{-- Delete this project/umkm --}}
+<div id="tab-delete" style="display:none;">
+    <div class="card">
+        <div class="card-header">
+            <h3 style="color:var(--danger);"><i class="bi bi-exclamation-triangle"></i> Hapus {{ $isUmkm ? 'UMKM' : 'Proyek' }}</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger" style="padding:14px 16px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;margin-bottom:14px;">
+                <i class="bi bi-exclamation-triangle-fill"></i> Zona berbahaya. Tindakan berikut tidak dapat dibatalkan.
+            </div>
+            <p style="margin-bottom:16px;color:var(--text-secondary);">
+                Menghapus unit ini akan menghapus <strong>secara permanen</strong> seluruh data di dalamnya:
+                biaya, {{ $isUmkm ? 'omzet' : 'pendapatan' }}, rencana/RAB, admin, biaya tetap, dan penutupan harian.
+            </p>
+            <button type="button" class="btn btn-danger" onclick="openModal('confirmDeleteStep1')">
+                <i class="bi bi-trash"></i> Hapus {{ $isUmkm ? 'UMKM' : 'Proyek' }} Ini
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- Konfirmasi 1 --}}
+<div class="modal-backdrop" id="confirmDeleteStep1">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h3>Hapus {{ $isUmkm ? 'UMKM' : 'Proyek' }}</h3>
+            <button type="button" class="modal-close" onclick="closeModal('confirmDeleteStep1')">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:14px;line-height:1.6;">Apakah yakin ingin hapus {{ $isUmkm ? 'UMKM' : 'proyek' }} ini?<br>Semua data dihapus permanen.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeModal('confirmDeleteStep1')">Batal</button>
+            <button type="button" class="btn btn-danger" onclick="proceedDeleteStep2()"><i class="bi bi-arrow-right"></i> Lanjut</button>
+        </div>
+    </div>
+</div>
+
+{{-- Konfirmasi 2 (countdown 10 detik) --}}
+<div class="modal-backdrop" id="confirmDeleteStep2">
+    <div class="modal modal-sm">
+        <div class="modal-header">
+            <h3>Konfirmasi Terakhir</h3>
+            <button type="button" class="modal-close" onclick="cancelDeleteCountdown()">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:14px;line-height:1.6;margin-bottom:12px;">Apakah kamu benar-benar yakin?<br><strong>Aksi ini tidak bisa di-undo.</strong></p>
+            <div style="font-size:13px;color:var(--text-secondary);">Tombol hapus aktif otomatis dalam <strong id="deleteCountdown" style="color:var(--danger);">10</strong> detik.</div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="cancelDeleteCountdown()">Batalkan</button>
+            <button type="button" class="btn btn-danger" id="btnConfirmDelete" disabled><i class="bi bi-trash"></i> Hapus Permanen</button>
+        </div>
+        <form id="deleteProjectForm" action="{{ route('cost-centers.delete', $project->id_project) }}" method="POST" style="display:none;">@csrf</form>
+    </div>
+</div>
+
 @if(!$isArchived)
 {{-- Add Cost --}}
 <div class="modal-backdrop" id="addCostModal">
@@ -818,7 +982,7 @@
                     <label class="form-label">Total</label>
                     <div class="input-prefix">
                         <span>Rp</span>
-                        <input type="text" class="form-input calc-total" name="total" data-money placeholder="0">
+                        <input type="text" class="form-input calc-total" name="total" data-money placeholder="0" readonly>
                     </div>
                     <div class="form-hint">Otomatis dihitung dari Qty × Harga. Bisa diubah manual.</div>
                 </div>
@@ -899,7 +1063,7 @@
                     <label class="form-label">Total</label>
                     <div class="input-prefix">
                         <span>Rp</span>
-                        <input type="text" class="form-input calc-total" name="total" data-money placeholder="0">
+                        <input type="text" class="form-input calc-total" name="total" data-money placeholder="0" readonly>
                     </div>
                     <div class="form-hint">Otomatis dihitung dari Qty × Harga. Bisa diubah manual.</div>
                 </div>
@@ -958,7 +1122,7 @@
                 <div class="form-row-3">
                     <div class="form-group">
                         <label class="form-label">Qty <span class="req">*</span></label>
-                        <input type="number" class="form-input" name="qty" step="0.01" min="0.01" value="{{ $cost->qty }}" required>
+                        <input type="number" class="form-input calc-qty" name="qty" step="0.01" min="0.01" value="{{ $cost->qty }}" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Satuan</label>
@@ -972,14 +1136,14 @@
                     <div class="form-group">
                         <label class="form-label">Harga Satuan</label>
                         <div class="input-prefix"><span>Rp</span>
-                            <input type="text" class="form-input" name="harga_satuan" data-money value="{{ $cost->harga_satuan ? number_format($cost->harga_satuan, 0, ',', '.') : '' }}">
+                            <input type="text" class="form-input calc-price" name="harga_satuan" data-money value="{{ $cost->harga_satuan ? number_format($cost->harga_satuan, 0, ',', '.') : '' }}">
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Total</label>
                     <div class="input-prefix"><span>Rp</span>
-                        <input type="text" class="form-input" name="total" data-money value="{{ $cost->total ? number_format($cost->total, 0, ',', '.') : '' }}">
+                        <input type="text" class="form-input calc-total" name="total" data-money value="{{ $cost->total ? number_format($cost->total, 0, ',', '.') : '' }}" readonly>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1035,7 +1199,7 @@
                 <div class="form-row-3">
                     <div class="form-group">
                         <label class="form-label">Qty <span class="req">*</span></label>
-                        <input type="number" class="form-input" name="qty" step="0.01" min="0.01" value="{{ $income->qty }}" required>
+                        <input type="number" class="form-input calc-qty" name="qty" step="0.01" min="0.01" value="{{ $income->qty }}" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Satuan</label>
@@ -1049,14 +1213,14 @@
                     <div class="form-group">
                         <label class="form-label">Harga Satuan</label>
                         <div class="input-prefix"><span>Rp</span>
-                            <input type="text" class="form-input" name="harga_satuan" data-money value="{{ $income->harga_satuan ? number_format($income->harga_satuan, 0, ',', '.') : '' }}">
+                            <input type="text" class="form-input calc-price" name="harga_satuan" data-money value="{{ $income->harga_satuan ? number_format($income->harga_satuan, 0, ',', '.') : '' }}">
                         </div>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Total</label>
                     <div class="input-prefix"><span>Rp</span>
-                        <input type="text" class="form-input" name="total" data-money value="{{ $income->total ? number_format($income->total, 0, ',', '.') : '' }}">
+                        <input type="text" class="form-input calc-total" name="total" data-money value="{{ $income->total ? number_format($income->total, 0, ',', '.') : '' }}" readonly>
                     </div>
                 </div>
                 <div class="form-group">
@@ -1215,7 +1379,7 @@
 @push('scripts')
 <script>
 function showTab(tab, el) {
-    ['costs','incomes','plans','admins','investor'].forEach(t => {
+    ['costs','incomes','plans','admins','investor','delete'].forEach(t => {
         const node = document.getElementById('tab-' + t);
         if (node) node.style.display = t === tab ? 'block' : 'none';
     });
@@ -1255,6 +1419,12 @@ function bindCalc(form) {
 }
 bindCalc(document.getElementById('costForm'));
 bindCalc(document.getElementById('incomeForm'));
+document.querySelectorAll('form').forEach(f => {
+    if (f.querySelector('.calc-qty') && !f.dataset.calcBound) {
+        f.dataset.calcBound = '1';
+        bindCalc(f);
+    }
+});
 
 function filterEntries() {
     const q = (document.getElementById('entrySearch')?.value || '').toLowerCase().trim();
@@ -1266,10 +1436,39 @@ function filterEntries() {
 }
 document.getElementById('entrySearch')?.addEventListener('input', filterEntries);
 
+let deleteCountdownTimer = null;
+function proceedDeleteStep2() {
+    closeModal('confirmDeleteStep1');
+    const btn = document.getElementById('btnConfirmDelete');
+    if (deleteCountdownTimer) clearInterval(deleteCountdownTimer);
+    btn.disabled = true;
+    let left = 10;
+    const label = document.getElementById('deleteCountdown');
+    if (label) label.textContent = left;
+    deleteCountdownTimer = setInterval(() => {
+        left--;
+        if (label) label.textContent = left;
+        if (left <= 0) {
+            clearInterval(deleteCountdownTimer);
+            deleteCountdownTimer = null;
+            btn.disabled = false;
+        }
+    }, 1000);
+    openModal('confirmDeleteStep2');
+}
+function cancelDeleteCountdown() {
+    if (deleteCountdownTimer) clearInterval(deleteCountdownTimer);
+    deleteCountdownTimer = null;
+    closeModal('confirmDeleteStep2');
+}
+document.getElementById('btnConfirmDelete')?.addEventListener('click', () => {
+    document.getElementById('deleteProjectForm')?.submit();
+});
+
 // Restore tab from URL hash (e.g. after form submit redirect)
 (function() {
     const hash = location.hash.replace('#', '');
-    const valid = ['costs','incomes','plans','admins','investor'];
+    const valid = ['costs','incomes','plans','admins','investor','delete'];
     if (valid.includes(hash)) {
         const btn = document.querySelector(`.tab[data-tab="${hash}"]`);
         if (btn) showTab(hash, btn);

@@ -183,6 +183,12 @@
                                             </div>
                                             <input type="hidden" name="budget_period" value="total">
                                         @endif
+                                        <div class="form-group">
+                                            <label class="form-label">Saldo Awal Kas</label>
+                                            <div class="input-prefix"><span>Rp</span>
+                                                <input type="text" class="form-input" name="opening_balance" data-money value="{{ $project->opening_balance ? number_format($project->opening_balance, 0, ',', '.') : '' }}" placeholder="0">
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-outline" onclick="closeModal('editUnit{{ $project->id_project }}')">Batal</button>
@@ -252,6 +258,14 @@
                         <label class="form-label">Lokasi</label>
                         <input type="text" class="form-input" name="lokasi" placeholder="Kota / alamat">
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Saldo Awal Kas</label>
+                    <div class="input-prefix"><span>Rp</span>
+                        <input type="text" class="form-input" name="opening_balance" data-money placeholder="0">
+                    </div>
+                    <div class="form-hint">Opsional — saldo kas awal unit saat dibuat</div>
                 </div>
 
                 {{-- Project fields --}}

@@ -49,6 +49,7 @@
                         <th style="width:70px;">Urutan</th>
                         <th>Kategori</th>
                         <th>Kode</th>
+                        <th>Kelompok</th>
                         <th>Warna</th>
                         <th class="text-end">Jumlah Tipe</th>
                         <th>Status</th>
@@ -72,6 +73,17 @@
                                 </div>
                             </td>
                             <td><code style="font-size:12px;background:#f1f5f9;padding:2px 8px;border-radius:6px;">{{ $cat->kode }}</code></td>
+                            <td>
+                                @if($cat->kelompok)
+                                    @php
+                                        $group = $groups->firstWhere('kode', $cat->kelompok);
+                                        $groupBadge = $group ? ($badgeMap[$group->warna] ?? 'badge-gray') : 'badge-gray';
+                                    @endphp
+                                    <span class="badge {{ $groupBadge }}">{{ strtoupper($cat->kelompok) }}</span>
+                                @else
+                                    <span class="cell-sub">—</span>
+                                @endif
+                            </td>
                             <td><span class="badge {{ $badge }}">{{ $cat->warna }}</span></td>
                             <td class="text-end">
                                 @if($count > 0)
@@ -138,12 +150,23 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="form-group" style="margin-bottom:0;">
-                                            <label class="form-label">Status</label>
-                                            <select class="form-select" name="is_active">
-                                                <option value="1" @selected($cat->is_active)>Aktif</option>
-                                                <option value="0" @selected(!$cat->is_active)>Nonaktif</option>
-                                            </select>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">Kelompok</label>
+                                                <select class="form-select" name="kelompok">
+                                                    <option value="">—</option>
+                                                    @foreach($groups as $group)
+                                                        <option value="{{ $group->kode }}" @selected($cat->kelompok === $group->kode)>{{ $group->nama }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Status</label>
+                                                <select class="form-select" name="is_active">
+                                                    <option value="1" @selected($cat->is_active)>Aktif</option>
+                                                    <option value="0" @selected(!$cat->is_active)>Nonaktif</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
@@ -155,7 +178,7 @@
                         </div>
                     @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="empty-state">
                                     <i class="bi bi-folder2-open"></i>
                                     <p>Belum ada kategori</p>
@@ -210,6 +233,16 @@
                                 <option value="{{ $val }}" @selected($val === 'gray')>{{ $label }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Kelompok</label>
+                        <select class="form-select" name="kelompok">
+                            <option value="">—</option>
+                            @foreach($groups as $group)
+                                <option value="{{ $group->kode }}">{{ $group->nama }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-hint">Untuk progres per PO/LO/OC di proyek</div>
                     </div>
                 </div>
                 <input type="hidden" name="is_active" value="1">

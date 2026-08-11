@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CostCategory;
+use App\Models\CostGroup;
 use App\Models\CostType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -24,10 +25,15 @@ class CostCategoryController extends Controller
             ->groupBy('kategori')
             ->pluck('total', 'kategori');
 
+        $groups = CostGroup::forCompany($companyId)
+            ->ordered()
+            ->get();
+
         return view('cost-categories.index', [
             'title' => 'Kategori Biaya',
             'categories' => $categories,
             'typeCounts' => $typeCounts,
+            'groups' => $groups,
             'iconOptions' => $this->iconOptions(),
             'colorOptions' => $this->colorOptions(),
         ]);
@@ -37,6 +43,8 @@ class CostCategoryController extends Controller
     {
         $user = auth()->user();
         $companyId = $user->masterDataCompanyId();
+
+        $groupKodes = CostGroup::forCompany($companyId)->pluck('kode')->all();
 
         $request->validate([
             'nama' => 'required|string|max:100',
@@ -51,6 +59,7 @@ class CostCategoryController extends Controller
             'warna' => 'nullable|string|max:20',
             'urutan' => 'nullable|integer|min:0|max:9999',
             'is_active' => 'nullable|boolean',
+            'kelompok' => ['nullable', Rule::in($groupKodes)],
         ], [
             'kode.regex' => 'Kode hanya boleh huruf kecil, angka, underscore, atau strip.',
             'kode.unique' => 'Kode kategori sudah dipakai.',
@@ -79,6 +88,7 @@ class CostCategoryController extends Controller
             'warna' => $request->warna ?: 'gray',
             'urutan' => $request->filled('urutan') ? (int) $request->urutan : $maxOrder + 1,
             'is_active' => $request->boolean('is_active', true),
+            'kelompok' => $request->kelompok ?: null,
         ]);
 
         return redirect()->route('cost-categories.index')->with('success', 'Kategori berhasil ditambahkan.');
@@ -92,6 +102,8 @@ class CostCategoryController extends Controller
         $category = CostCategory::forCompany($companyId)
             ->where('id_cost_category', $id)
             ->firstOrFail();
+
+        $groupKodes = CostGroup::forCompany($companyId)->pluck('kode')->all();
 
         $request->validate([
             'nama' => 'required|string|max:100',
@@ -108,6 +120,7 @@ class CostCategoryController extends Controller
             'warna' => 'nullable|string|max:20',
             'urutan' => 'nullable|integer|min:0|max:9999',
             'is_active' => 'nullable|boolean',
+            'kelompok' => ['nullable', Rule::in($groupKodes)],
         ], [
             'kode.regex' => 'Kode hanya boleh huruf kecil, angka, underscore, atau strip.',
             'kode.unique' => 'Kode kategori sudah dipakai.',
@@ -123,6 +136,7 @@ class CostCategoryController extends Controller
             'warna' => $request->warna ?: 'gray',
             'urutan' => $request->filled('urutan') ? (int) $request->urutan : $category->urutan,
             'is_active' => $request->boolean('is_active', true),
+            'kelompok' => $request->kelompok ?: null,
         ]);
 
         // Sync cost_type.kategori if code changed

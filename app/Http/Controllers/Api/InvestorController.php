@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Akun;
 use App\Models\CostEntry;
+use App\Models\CostType;
 use App\Models\IncomeEntry;
+use App\Models\IncomeType;
 use App\Models\ProjectInvestor;
 use App\Services\DailyControlService;
+use App\Services\CashService;
 use Illuminate\Http\Request;
 
 class InvestorController extends Controller
@@ -47,8 +50,24 @@ class InvestorController extends Controller
             $todayIncome = $dailySnap['income'];
         }
 
+        $cash = app(CashService::class);
         $totalCost = (float) $project->costEntries()->sum('total');
         $totalIncome = (float) $project->incomeEntries()->sum('total');
+
+        $costTypeMap = CostType::where('id_perusahaan', $project->id_perusahaan ?: null)->pluck('kategori', 'id_cost_type');
+        $incomeTypeMap = IncomeType::where('id_perusahaan', $project->id_perusahaan ?: null)->pluck('kategori', 'id_income_type');
+
+        $byCostCategory = $project->costEntries()
+            ->get()
+            ->groupBy(fn ($c) => $costTypeMap[$c->id_cost_type] ?? 'other')
+            ->map(fn ($g) => (float) $g->sum('total'))
+            ->sortDesc();
+
+        $byIncomeCategory = $project->incomeEntries()
+            ->get()
+            ->groupBy(fn ($i) => $incomeTypeMap[$i->id_income_type] ?? 'other')
+            ->map(fn ($g) => (float) $g->sum('total'))
+            ->sortDesc();
 
         return response()->json([
             'project' => [
@@ -72,9 +91,14 @@ class InvestorController extends Controller
                 'monthCost' => $monthCost,
                 'monthIncome' => $monthIncome,
             ],
+            'cashPosition' => $cash->position($project),
             'dailySnap' => $dailySnap,
             'recentDays' => $recentDays,
             'fixedCosts' => $fixedCosts,
+            'categories' => [
+                'byCost' => $byCostCategory,
+                'byIncome' => $byIncomeCategory,
+            ],
         ]);
     }
 

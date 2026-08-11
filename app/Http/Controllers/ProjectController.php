@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\HandlesDecimal;
 use App\Models\Akun;
+use App\Models\CostCategory;
 use App\Models\CostEntry;
+use App\Models\CostGroup;
 use App\Models\CostType;
 use App\Models\DailyClose;
 use App\Models\FixedCost;
@@ -19,6 +21,7 @@ use App\Models\ProjectIncomePlan;
 use App\Models\ProjectInvestor;
 use App\Models\Unit;
 use App\Services\BusinessTemplateSeeder;
+use App\Services\CashService;
 use App\Services\DailyControlService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -141,6 +144,36 @@ class ProjectController extends Controller
             ->groupBy('id_income_type')
             ->pluck('total', 'id_income_type');
 
+        $groupSummaries = [];
+        if (! $project->isUmkm()) {
+            $categoryKelompok = CostCategory::forCompany($companyId)->pluck('kelompok', 'kode');
+            $groups = CostGroup::forCompany($companyId)->ordered()->get();
+            $planByGroup = [];
+            foreach ($costPlans as $plan) {
+                $kel = $categoryKelompok[$plan->costType?->kategori] ?? null;
+                if ($kel) $planByGroup[$kel] = ($planByGroup[$kel] ?? 0) + (float) $plan->amount;
+            }
+            $actualByGroup = [];
+            foreach ($project->costEntries as $entry) {
+                $kel = $entry->costType ? ($categoryKelompok[$entry->costType->kategori] ?? null) : null;
+                if ($kel) $actualByGroup[$kel] = ($actualByGroup[$kel] ?? 0) + (float) $entry->total;
+            }
+            foreach ($groups as $group) {
+                $kel = $group->kode;
+                $plan = (float) ($planByGroup[$kel] ?? 0);
+                $actual = (float) ($actualByGroup[$kel] ?? 0);
+                if ($plan <= 0 && $actual <= 0) continue;
+                $groupSummaries[] = [
+                    'kelompok' => $kel,
+                    'nama' => $group->nama,
+                    'warna' => $group->warna,
+                    'plan' => $plan,
+                    'actual' => $actual,
+                    'pct' => $plan > 0 ? round($actual / $plan * 100) : null,
+                ];
+            }
+        }
+
         $availableAdmins = Pengguna::with('akun')
             ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->orderBy('nama_lengkap')
@@ -149,6 +182,11 @@ class ProjectController extends Controller
         $investor = ProjectInvestor::where('id_project', $project->id_project)
             ->with('akun.pengguna')
             ->first();
+
+        $cash = app(CashService::class);
+        $cashPosition = $cash->position($project);
+        $cashSeries = $cash->series($project, now()->subDays(29), now());
+        $cashForecast = $cash->forecast($project);
 
         return view('projects.show', [
             'title' => $project->isUmkm() ? 'Detail UMKM' : 'Detail Proyek',
@@ -177,9 +215,13 @@ class ProjectController extends Controller
             'planIncomeTotal' => $planIncomeTotal,
             'actualCostByType' => $actualCostByType,
             'actualIncomeByType' => $actualIncomeByType,
+            'groupSummaries' => $groupSummaries,
             'availableAdmins' => $availableAdmins,
             'assignedAdminIds' => $assignedAdminIds,
             'investor' => $investor,
+            'cashPosition' => $cashPosition,
+            'cashSeries' => $cashSeries,
+            'cashForecast' => $cashForecast,
         ]);
     }
 
@@ -510,6 +552,7 @@ class ProjectController extends Controller
             'business_type' => 'nullable|string|max:50',
             'seed_template' => 'nullable|boolean',
             'generate_investor' => 'nullable|boolean',
+            'opening_balance' => 'nullable|string',
         ]);
 
         $mode = $request->mode;
@@ -540,6 +583,7 @@ class ProjectController extends Controller
                 'daily_budget' => $request->daily_budget ? $this->normalizeDecimal($request->daily_budget) : null,
                 'monthly_budget' => $request->monthly_budget ? $this->normalizeDecimal($request->monthly_budget) : null,
                 'business_type' => $request->business_type,
+                'opening_balance' => $request->opening_balance ? $this->normalizeDecimal($request->opening_balance) : null,
             ]);
 
             if ($mode === Project::MODE_UMKM && $request->boolean('seed_template', true)) {
@@ -638,6 +682,7 @@ class ProjectController extends Controller
             'business_type' => 'nullable|string|max:50',
             'cogs_ratio_alert' => 'nullable|numeric|min:0|max:100',
             'lock_closed_days' => 'nullable|boolean',
+            'opening_balance' => 'nullable|string',
         ]);
 
         try {
@@ -656,6 +701,9 @@ class ProjectController extends Controller
                     ? $this->normalizeDecimal($request->monthly_budget)
                     : $project->monthly_budget,
                 'business_type' => $request->business_type,
+                'opening_balance' => $request->opening_balance !== null && $request->opening_balance !== ''
+                    ? $this->normalizeDecimal($request->opening_balance)
+                    : $project->opening_balance,
             ];
 
             if ($request->has('cogs_ratio_alert')) {
@@ -677,6 +725,9 @@ class ProjectController extends Controller
             }
             if ($request->has('project_value') && $request->project_value === '') {
                 $data['project_value'] = null;
+            }
+            if ($request->has('opening_balance') && $request->opening_balance === '') {
+                $data['opening_balance'] = null;
             }
 
             $project->update($data);
@@ -722,8 +773,8 @@ class ProjectController extends Controller
 
         try {
             $qty = $this->normalizeDecimal($request->qty);
-            $hargaSatuan = $this->normalizeDecimal($request->harga_satuan);
-            $total = $request->total ? $this->normalizeDecimal($request->total) : ($qty * $hargaSatuan);
+            $hargaSatuan = $this->normalizeMoney($request->harga_satuan);
+            $total = $request->total ? $this->normalizeMoney($request->total) : ($qty * $hargaSatuan);
 
             $data = [
                 'id_perusahaan' => $companyId,
@@ -786,9 +837,9 @@ class ProjectController extends Controller
         }
 
         $qty = $this->normalizeDecimal($request->qty);
-        $hargaSatuan = $this->normalizeDecimal($request->harga_satuan, 0);
+        $hargaSatuan = $this->normalizeMoney($request->harga_satuan);
         $total = $request->total !== null && $request->total !== ''
-            ? $this->normalizeDecimal($request->total)
+            ? $this->normalizeMoney($request->total)
             : ($qty * $hargaSatuan);
 
         $data = [
@@ -852,8 +903,8 @@ class ProjectController extends Controller
 
         try {
             $qty = $this->normalizeDecimal($request->qty);
-            $hargaSatuan = $this->normalizeDecimal($request->harga_satuan);
-            $total = $request->total ? $this->normalizeDecimal($request->total) : ($qty * $hargaSatuan);
+            $hargaSatuan = $this->normalizeMoney($request->harga_satuan);
+            $total = $request->total ? $this->normalizeMoney($request->total) : ($qty * $hargaSatuan);
 
             $data = [
                 'id_perusahaan' => $companyId,
@@ -916,9 +967,9 @@ class ProjectController extends Controller
         }
 
         $qty = $this->normalizeDecimal($request->qty);
-        $hargaSatuan = $this->normalizeDecimal($request->harga_satuan, 0);
+        $hargaSatuan = $this->normalizeMoney($request->harga_satuan);
         $total = $request->total !== null && $request->total !== ''
-            ? $this->normalizeDecimal($request->total)
+            ? $this->normalizeMoney($request->total)
             : ($qty * $hargaSatuan);
 
         $data = [

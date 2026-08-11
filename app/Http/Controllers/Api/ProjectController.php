@@ -20,6 +20,7 @@ use App\Models\ProjectIncomePlan;
 use App\Models\ProjectInvestor;
 use App\Models\Unit;
 use App\Services\BusinessTemplateSeeder;
+use App\Services\CashService;
 use App\Services\DailyControlService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -274,6 +275,7 @@ class ProjectController extends Controller
             'date_start' => 'nullable|date',
             'date_end' => 'nullable|date|after_or_equal:date_start',
             'project_value' => 'nullable|string',
+            'opening_balance' => 'nullable|string',
             'budget_period' => ['nullable', Rule::in([Project::BUDGET_TOTAL, Project::BUDGET_MONTHLY, Project::BUDGET_DAILY])],
             'daily_budget' => 'nullable|string',
             'monthly_budget' => 'nullable|string',
@@ -289,6 +291,7 @@ class ProjectController extends Controller
             'date_start' => $request->date_start,
             'date_end' => $request->date_end,
             'project_value' => $request->has('project_value') && $request->project_value !== '' ? $this->normalizeDecimal($request->project_value) : $project->project_value,
+            'opening_balance' => $request->has('opening_balance') && $request->opening_balance !== '' ? $this->normalizeDecimal($request->opening_balance) : $project->opening_balance,
             'budget_period' => $request->budget_period ?: $project->budget_period,
             'daily_budget' => $request->has('daily_budget') && $request->daily_budget !== '' ? $this->normalizeDecimal($request->daily_budget) : $project->daily_budget,
             'monthly_budget' => $request->has('monthly_budget') && $request->monthly_budget !== '' ? $this->normalizeDecimal($request->monthly_budget) : $project->monthly_budget,
@@ -900,6 +903,31 @@ class ProjectController extends Controller
                 'username' => $relation->akun->username,
                 'nama_lengkap' => $relation->akun->pengguna?->nama_lengkap,
                 'is_active' => $relation->akun->is_active,
+            ],
+        ]);
+    }
+
+    /**
+     * Kas posisi & forecast per project.
+     */
+    public function cash(Request $request, $id)
+    {
+        $user = $request->user();
+        $companyId = $user->id_perusahaan;
+
+        $project = Project::where('id_project', $id)
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->firstOrFail();
+
+        $cash = app(CashService::class);
+        $position = $cash->position($project);
+        $forecast = $cash->forecast($project);
+
+        return response()->json([
+            'message' => 'OK',
+            'data' => [
+                'position' => $position,
+                'forecast' => $forecast,
             ],
         ]);
     }

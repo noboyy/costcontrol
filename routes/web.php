@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CostCategoryController;
+use App\Http\Controllers\CostGroupController;
 use App\Http\Controllers\CostTypeController;
 use App\Http\Controllers\DailyCloseController;
 use App\Http\Controllers\DashboardController;
@@ -20,7 +21,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     if (auth()->check()) {
-        return redirect('/beranda');
+        return auth()->user()->isSuperAdmin()
+            ? redirect('/super-admin/stats')
+            : redirect('/beranda');
     }
 
     return redirect('/login');
@@ -33,7 +36,9 @@ Route::middleware([
     'trial',
     'verified.user',
 ])->group(function () {
-    Route::get('/beranda', [DashboardController::class, 'index'])->name('beranda');
+    Route::middleware('not-super-admin')->group(function () {
+        Route::get('/beranda', [DashboardController::class, 'index'])->name('beranda');
+    });
 
     Route::get('/profil', [ProfileController::class, 'index'])->name('profil');
     Route::post('/profil/data', [ProfileController::class, 'updateData'])->name('profil.updateData');
@@ -42,12 +47,15 @@ Route::middleware([
     Route::post('/profil/foto', [ProfileController::class, 'updatePhoto'])->name('profil.updatePhoto');
 
     Route::middleware(['role:SUPER ADMIN,ADMIN'])->group(function () {
-        // Reports
-        Route::get('/laporan', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('/laporan/export', [ReportController::class, 'export'])->name('reports.export');
+        Route::middleware('not-super-admin')->group(function () {
+            // Reports
+            Route::get('/laporan', [ReportController::class, 'index'])->name('reports.index');
+            Route::get('/laporan/export', [ReportController::class, 'export'])->name('reports.export');
+        });
 
         Route::post('/master-data/download-modul', [ModuleController::class, 'download'])->name('modules.download');
 
+        Route::middleware('not-super-admin')->group(function () {
         foreach (['cost-centers', 'projects'] as $prefix) {
             $name = $prefix === 'projects' ? 'projects' : 'cost-centers';
             Route::get("/{$prefix}", [ProjectController::class, 'index'])->name("{$name}.index");
@@ -91,6 +99,7 @@ Route::middleware([
             Route::post("/{$prefix}/{id}/daily-close", [DailyCloseController::class, 'store'])->name("{$name}.dailyClose.store");
             Route::post("/{$prefix}/{id}/daily-close/reopen", [DailyCloseController::class, 'destroy'])->name("{$name}.dailyClose.reopen");
         }
+        });
 
         // Master data
         Route::get('/units', [UnitController::class, 'index'])->name('units.index');
@@ -102,6 +111,11 @@ Route::middleware([
         Route::post('/cost-categories', [CostCategoryController::class, 'store'])->name('cost-categories.store');
         Route::post('/cost-categories/{id}/update', [CostCategoryController::class, 'update'])->name('cost-categories.update');
         Route::post('/cost-categories/{id}/delete', [CostCategoryController::class, 'delete'])->name('cost-categories.delete');
+
+        Route::get('/cost-groups', [CostGroupController::class, 'index'])->name('cost-groups.index');
+        Route::post('/cost-groups', [CostGroupController::class, 'store'])->name('cost-groups.store');
+        Route::post('/cost-groups/{id}/update', [CostGroupController::class, 'update'])->name('cost-groups.update');
+        Route::post('/cost-groups/{id}/delete', [CostGroupController::class, 'delete'])->name('cost-groups.delete');
 
         Route::get('/cost-types', [CostTypeController::class, 'index'])->name('cost-types.index');
         Route::post('/cost-types', [CostTypeController::class, 'store'])->name('cost-types.store');
@@ -118,14 +132,16 @@ Route::middleware([
         Route::post('/income-types/{id}/update', [IncomeTypeController::class, 'update'])->name('income-types.update');
         Route::post('/income-types/{id}/delete', [IncomeTypeController::class, 'delete'])->name('income-types.delete');
 
-        Route::get('/asset', [AssetController::class, 'index'])->name('asset.index');
-        Route::post('/asset', [AssetController::class, 'store'])->name('asset.store');
-        Route::get('/asset/{id}/image', [AssetController::class, 'image'])->name('asset.image');
-        Route::post('/asset/{id}/update', [AssetController::class, 'update'])->name('asset.update');
-        Route::post('/asset/{id}/delete', [AssetController::class, 'delete'])->name('asset.delete');
-        Route::post('/asset/{id}/sell', [AssetController::class, 'sell'])->name('asset.sell');
-        Route::post('/asset/{id}/maintenance', [AssetController::class, 'addMaintenance'])->name('asset.addMaintenance');
-        Route::post('/asset/maintenance/{id}/delete', [AssetController::class, 'deleteMaintenance'])->name('asset.deleteMaintenance');
+        Route::middleware('not-super-admin')->group(function () {
+            Route::get('/asset', [AssetController::class, 'index'])->name('asset.index');
+            Route::post('/asset', [AssetController::class, 'store'])->name('asset.store');
+            Route::get('/asset/{id}/image', [AssetController::class, 'image'])->name('asset.image');
+            Route::post('/asset/{id}/update', [AssetController::class, 'update'])->name('asset.update');
+            Route::post('/asset/{id}/delete', [AssetController::class, 'delete'])->name('asset.delete');
+            Route::post('/asset/{id}/sell', [AssetController::class, 'sell'])->name('asset.sell');
+            Route::post('/asset/{id}/maintenance', [AssetController::class, 'addMaintenance'])->name('asset.addMaintenance');
+            Route::post('/asset/maintenance/{id}/delete', [AssetController::class, 'deleteMaintenance'])->name('asset.deleteMaintenance');
+        });
 
         // Perusahaan (admin can edit own; super admin all)
         Route::get('/perusahaan', [PerusahaanController::class, 'index'])->name('perusahaan.index');

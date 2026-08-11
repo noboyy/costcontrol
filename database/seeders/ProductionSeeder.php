@@ -39,6 +39,7 @@ class ProductionSeeder extends Seeder
             [
                 'id_pengguna' => $pengguna->id_pengguna,
                 'role' => 'SUPER ADMIN',
+                'email' => 'admin@costcontrol.id',
                 'password' => Hash::make('admin123'),
                 'is_active' => '1',
                 'change_password' => 0,
@@ -48,6 +49,9 @@ class ProductionSeeder extends Seeder
         // Project master + UMKM templates
         $this->call(MasterDataSeeder::class);
         app(BusinessTemplateSeeder::class)->seedUmkm($company->id_perusahaan);
+
+        // Global master data (id_perusahaan = null) untuk SUPER ADMIN
+        $this->call(GlobalMasterDataSeeder::class);
 
         // Income categories defaults
         $incomeCats = [

@@ -5,23 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CostCategory extends Model
+class CostGroup extends Model
 {
     use HasFactory;
 
-    protected $table = 'cost_category';
+    protected $table = 'cost_group';
 
-    protected $primaryKey = 'id_cost_category';
+    protected $primaryKey = 'id_cost_group';
 
     protected $fillable = [
         'id_perusahaan',
         'kode',
         'nama',
-        'icon',
         'warna',
         'urutan',
         'is_active',
-        'kelompok',
     ];
 
     protected $casts = [
@@ -34,9 +32,9 @@ class CostCategory extends Model
         return $this->belongsTo(Perusahaan::class, 'id_perusahaan', 'id_perusahaan');
     }
 
-    public function costTypes()
+    public function costCategories()
     {
-        return $this->hasMany(CostType::class, 'kategori', 'kode');
+        return $this->hasMany(CostCategory::class, 'kelompok', 'kode');
     }
 
     public function scopeForCompany($query, ?int $companyId)

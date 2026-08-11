@@ -914,11 +914,13 @@
                     Fitur Aplikasi <i class="bi bi-chevron-right chev"></i>
                 </button>
                 <div class="sidebar-section-body">
+                    @if(! auth()->user()->isSuperAdmin())
                     <div class="nav-item">
                         <a class="nav-link {{ request()->routeIs('beranda') ? 'active' : '' }}" href="{{ route('beranda') }}">
                             <i class="bi bi-grid-1x2"></i> Dashboard
                         </a>
                     </div>
+                    @endif
                     @if(auth()->user()->isSuperAdmin())
                     <div class="nav-item">
                         <a class="nav-link {{ request()->routeIs('super-admin.*') ? 'active' : '' }}" href="{{ route('super-admin.stats') }}">
@@ -926,6 +928,7 @@
                         </a>
                     </div>
                     @endif
+                    @if(! auth()->user()->isSuperAdmin())
                     <div class="nav-item">
                         <a class="nav-link {{ request()->routeIs('projects.*') || request()->routeIs('cost-centers.*') ? 'active' : '' }}" href="{{ route('cost-centers.index') }}">
                             <i class="bi bi-building"></i> @if(auth()->user()->companyModule() === 'project')
@@ -937,7 +940,8 @@
                         @endif
                         </a>
                     </div>
-                    @if(auth()->user()->isAdmin())
+                    @endif
+                    @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin())
                     <div class="nav-item">
                         <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
                             <i class="bi bi-file-earmark-bar-graph"></i> Laporan
@@ -979,10 +983,17 @@
                         </a>
                     </div>
                     <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('cost-groups.*') ? 'active' : '' }}" href="{{ route('cost-groups.index') }}">
+                            <i class="bi bi-diagram-3"></i> Kelompok Biaya
+                        </a>
+                    </div>
+                    @if(! auth()->user()->isSuperAdmin())
+                    <div class="nav-item">
                         <a class="nav-link {{ request()->routeIs('asset.*') ? 'active' : '' }}" href="{{ route('asset.index') }}">
                             <i class="bi bi-box-seam"></i> Aset
                         </a>
                     </div>
+                    @endif
                 </div>
             </div>
             @endif
@@ -1036,7 +1047,7 @@
                     <i class="bi bi-search"></i>
                     <input type="search" id="globalSearchHint" placeholder="Cari di halaman... (/)" autocomplete="off">
                 </div>
-                @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin())
+                @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin() && ! request()->routeIs('asset.index'))
                 <button type="button" class="btn btn-sm btn-outline" onclick="openModal('downloadModuleModal')" title="Import modul master data dari CostControl">
                     <i class="bi bi-download"></i> Import Modul
                 </button>
@@ -1078,7 +1089,7 @@
 
     <div class="toast-wrap" id="toastWrap"></div>
 
-    @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin())
+    @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin() && ! request()->routeIs('asset.index'))
     <div class="modal-backdrop" id="downloadModuleModal">
         <div class="modal modal-sm">
             <div class="modal-header">

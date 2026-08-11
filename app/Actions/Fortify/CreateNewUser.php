@@ -5,7 +5,6 @@ namespace App\Actions\Fortify;
 use App\Models\Akun;
 use App\Models\Pengguna;
 use App\Models\Perusahaan;
-use App\Services\MasterDataModuleService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -49,7 +48,7 @@ class CreateNewUser implements CreatesNewUsers
                 'jabatan' => $input['jabatan'] ?? null,
             ]);
 
-            return Akun::create([
+            $akun = Akun::create([
                 'id_pengguna' => $pengguna->id_pengguna,
                 'username' => $input['email'],
                 'email' => $input['email'],
@@ -58,9 +57,9 @@ class CreateNewUser implements CreatesNewUsers
                 'is_active' => '1',
                 'change_password' => 0,
                 'trial_ends_at' => now()->addDays(self::TRIAL_DAYS),
-            ])->tap(function () use ($perusahaan) {
-                app(MasterDataModuleService::class)->copyModulesToCompany($perusahaan->id_perusahaan);
-            });
+            ]);
+
+            return $akun;
         });
     }
 }

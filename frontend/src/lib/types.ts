@@ -42,9 +42,23 @@ export interface InvestorSummaries {
 export interface InvestorProjectResponse {
   project: Project
   summaries: InvestorSummaries
+  cashPosition: CashPosition
   dailySnap: Record<string, unknown> | null
   recentDays: RecentDay[]
   fixedCosts: FixedCost[]
+  categories: {
+    byCost: Record<string, number>
+    byIncome: Record<string, number>
+  }
+}
+
+export interface CashPosition {
+  date: string
+  opening: number
+  income_to_date: number
+  cost_to_date: number
+  balance: number
+  is_negative: boolean
 }
 
 export interface RecentDay {

@@ -5,6 +5,8 @@ use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\EnforceTrial;
 use App\Http\Middleware\EnsureEmailVerified;
 use App\Http\Middleware\InvestorOnly;
+use App\Http\Middleware\NoCache;
+use App\Http\Middleware\NotSuperAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -23,7 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'trial' => EnforceTrial::class,
             'verified.user' => EnsureEmailVerified::class,
             'investor' => InvestorOnly::class,
+            'not-super-admin' => NotSuperAdmin::class,
         ]);
+
+        $middleware->appendToGroup('web', NoCache::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

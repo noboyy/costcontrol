@@ -22,29 +22,30 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/projects', [ProjectController::class, 'index']);
         Route::post('/projects', [ProjectController::class, 'store']);
-        Route::get('/projects/{project}', [ProjectController::class, 'show']);
-        Route::put('/projects/{project}', [ProjectController::class, 'update']);
-        Route::post('/projects/{project}/archive', [ProjectController::class, 'archive']);
-        Route::delete('/projects/{project}', [ProjectController::class, 'delete']);
+        Route::get('/projects/{id}', [ProjectController::class, 'show']);
+        Route::put('/projects/{id}', [ProjectController::class, 'update']);
+        Route::post('/projects/{id}/archive', [ProjectController::class, 'archive']);
+        Route::delete('/projects/{id}', [ProjectController::class, 'delete']);
+        Route::get('/projects/{id}/cash', [ProjectController::class, 'cash']);
 
-        Route::post('/projects/{project}/costs', [ProjectController::class, 'addCost']);
-        Route::put('/projects/{project}/costs/{cost}', [ProjectController::class, 'updateCost']);
-        Route::delete('/projects/{project}/costs/{cost}', [ProjectController::class, 'deleteCost']);
+        Route::post('/projects/{id}/costs', [ProjectController::class, 'addCost']);
+        Route::put('/projects/{id}/costs/{costId}', [ProjectController::class, 'updateCost']);
+        Route::delete('/projects/{id}/costs/{costId}', [ProjectController::class, 'deleteCost']);
 
-        Route::post('/projects/{project}/incomes', [ProjectController::class, 'addIncome']);
-        Route::put('/projects/{project}/incomes/{income}', [ProjectController::class, 'updateIncome']);
-        Route::delete('/projects/{project}/incomes/{income}', [ProjectController::class, 'deleteIncome']);
+        Route::post('/projects/{id}/incomes', [ProjectController::class, 'addIncome']);
+        Route::put('/projects/{id}/incomes/{incomeId}', [ProjectController::class, 'updateIncome']);
+        Route::delete('/projects/{id}/incomes/{incomeId}', [ProjectController::class, 'deleteIncome']);
 
-        Route::put('/projects/{project}/admins', [ProjectController::class, 'syncAdmins']);
+        Route::put('/projects/{id}/admins', [ProjectController::class, 'syncAdmins']);
 
-        Route::post('/projects/{project}/plans/{kind}', [ProjectController::class, 'upsertPlan']);
-        Route::put('/projects/{project}/plans/{kind}/{plan}', [ProjectController::class, 'upsertPlan']);
-        Route::delete('/projects/{project}/plans/{kind}/{plan}', [ProjectController::class, 'deletePlan']);
+        Route::post('/projects/{id}/plans/{kind}', [ProjectController::class, 'upsertPlan']);
+        Route::put('/projects/{id}/plans/{kind}/{planId}', [ProjectController::class, 'upsertPlan']);
+        Route::delete('/projects/{id}/plans/{kind}/{planId}', [ProjectController::class, 'deletePlan']);
 
         Route::get('/categories/{kind}', [CategoriesController::class, 'index']);
         Route::post('/categories/{kind}', [CategoriesController::class, 'store']);
-        Route::put('/categories/{kind}/{type}', [CategoriesController::class, 'update']);
-        Route::delete('/categories/{kind}/{type}', [CategoriesController::class, 'delete']);
+        Route::put('/categories/{kind}/{id}', [CategoriesController::class, 'update']);
+        Route::delete('/categories/{kind}/{id}', [CategoriesController::class, 'delete']);
 
         Route::get('/reports', [ReportController::class, 'index']);
         Route::get('/reports/export', [ReportController::class, 'export']);
@@ -53,28 +54,30 @@ Route::prefix('v1')->group(function () {
         Route::put('/profile', [ProfileController::class, 'updateData']);
         Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
 
-        Route::get('/assets', [AssetsController::class, 'index']);
-        Route::post('/assets', [AssetsController::class, 'store']);
-        Route::put('/assets/{asset}', [AssetsController::class, 'update']);
-        Route::delete('/assets/{asset}', [AssetsController::class, 'delete']);
-        Route::post('/assets/{asset}/sell', [AssetsController::class, 'sell']);
-        Route::post('/assets/{asset}/maintenance', [AssetsController::class, 'addMaintenance']);
-        Route::delete('/assets/{asset}/maintenance/{maintenance}', [AssetsController::class, 'deleteMaintenance']);
-        Route::get('/assets/{asset}/image', [AssetsController::class, 'image']);
+        Route::middleware('not-super-admin')->group(function () {
+            Route::get('/assets', [AssetsController::class, 'index']);
+            Route::post('/assets', [AssetsController::class, 'store']);
+            Route::put('/assets/{id}', [AssetsController::class, 'update']);
+            Route::delete('/assets/{id}', [AssetsController::class, 'delete']);
+            Route::post('/assets/{id}/sell', [AssetsController::class, 'sell']);
+            Route::post('/assets/{id}/maintenance', [AssetsController::class, 'addMaintenance']);
+            Route::delete('/assets/{id}/maintenance/{maintenanceId}', [AssetsController::class, 'deleteMaintenance']);
+            Route::get('/assets/{id}/image', [AssetsController::class, 'image']);
+        });
 
         Route::middleware('role:SUPER ADMIN')->group(function () {
             Route::get('/users', [UsersController::class, 'index']);
             Route::post('/users', [UsersController::class, 'store']);
-            Route::put('/users/{pengguna}', [UsersController::class, 'update']);
-            Route::delete('/users/{pengguna}', [UsersController::class, 'delete']);
+            Route::put('/users/{id}', [UsersController::class, 'update']);
+            Route::delete('/users/{id}', [UsersController::class, 'delete']);
         });
 
         // Investor management — ADMIN only
         Route::middleware('role:ADMIN')->group(function () {
-            Route::get('/projects/{project}/investor', [ProjectController::class, 'showInvestor']);
-            Route::post('/projects/{project}/investor', [ProjectController::class, 'assignInvestor']);
-            Route::delete('/projects/{project}/investor', [ProjectController::class, 'revokeInvestor']);
-            Route::post('/projects/{project}/investor/reset-password', [ProjectController::class, 'resetInvestorPassword']);
+            Route::get('/projects/{id}/investor', [ProjectController::class, 'showInvestor']);
+            Route::post('/projects/{id}/investor', [ProjectController::class, 'assignInvestor']);
+            Route::delete('/projects/{id}/investor', [ProjectController::class, 'revokeInvestor']);
+            Route::post('/projects/{id}/investor/reset-password', [ProjectController::class, 'resetInvestorPassword']);
         });
     });
 

@@ -13,8 +13,13 @@ trait HandlesDecimal
         if ($value === null || $value === '') {
             return $default;
         }
-        $clean = str_replace(['.', ' '], ['', ''], (string) $value);
-        $clean = str_replace(',', '.', $clean);
+        $clean = (string) $value;
+
+        // Koma = pemisah desimal Indonesia. Saat ada koma, hapus titik (ribuan) lalu ganti koma jadi titik.
+        if (str_contains($clean, ',')) {
+            $clean = str_replace(['.', ' '], ['', ''], $clean);
+            $clean = str_replace(',', '.', $clean);
+        }
 
         return (float) $clean;
     }
@@ -34,6 +39,15 @@ trait HandlesDecimal
         }
 
         return null;
+    }
+
+    protected function normalizeMoney($value)
+    {
+        if ($value === null || $value === '') {
+            return 0;
+        }
+
+        return (float) $this->parseIndoMoney((string) $value);
     }
 
     protected function parseIndoMoney(?string $raw): ?string

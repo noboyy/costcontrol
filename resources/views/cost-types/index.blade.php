@@ -75,10 +75,10 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width:100px;">Kode</th>
+                                <th>Kode</th>
                                 <th>Nama</th>
                                 <th>Satuan Default</th>
-                                <th class="text-end" style="width:100px;">Aksi</th>
+                                <th class="text-end">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

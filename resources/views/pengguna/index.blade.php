@@ -80,52 +80,6 @@
                                 @endif
                             </td>
                         </tr>
-                        @if($user->akun?->role !== 'SUPER ADMIN')
-                        <div class="modal-backdrop" id="edit{{ $user->id_pengguna }}">
-                            <div class="modal">
-                                <form action="{{ route('pengguna.update', $user->id_pengguna) }}" method="POST">
-                                    @csrf
-                                    <div class="modal-header">
-                                        <h3>Edit Pengguna</h3>
-                                        <button type="button" class="modal-close" onclick="closeModal('edit{{ $user->id_pengguna }}')">×</button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="form-group">
-                                            <label class="form-label">Nama Lengkap <span class="req">*</span></label>
-                                            <input type="text" class="form-input" name="nama_lengkap" value="{{ $user->nama_lengkap }}" required>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label class="form-label">Telepon</label>
-                                                <input type="text" class="form-input" name="no_hp" value="{{ $user->no_hp }}">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Jabatan</label>
-                                                <input type="text" class="form-input" name="jabatan" value="{{ $user->jabatan }}">
-                                            </div>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label class="form-label">Password Baru</label>
-                                                <input type="password" class="form-input" name="password" placeholder="Kosongkan jika tidak diubah">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Status</label>
-                                                <select class="form-select" name="is_active">
-                                                    <option value="1" @selected($user->akun?->is_active === '1')>Aktif</option>
-                                                    <option value="0" @selected($user->akun?->is_active === '0')>Nonaktif</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $user->id_pengguna }}')">Batal</button>
-                                        <button type="submit" class="btn btn-primary">Simpan</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                        @endif
                     @empty
                         <tr>
                             <td colspan="7">
@@ -142,6 +96,55 @@
         </div>
     </div>
 </div>
+
+@foreach($pengguna as $user)
+    @if($user->akun?->role !== 'SUPER ADMIN')
+    <div class="modal-backdrop" id="edit{{ $user->id_pengguna }}">
+        <div class="modal">
+            <form action="{{ route('pengguna.update', $user->id_pengguna) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h3>Edit Pengguna</h3>
+                    <button type="button" class="modal-close" onclick="closeModal('edit{{ $user->id_pengguna }}')">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Nama Lengkap <span class="req">*</span></label>
+                        <input type="text" class="form-input" name="nama_lengkap" value="{{ $user->nama_lengkap }}" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Telepon</label>
+                            <input type="text" class="form-input" name="no_hp" value="{{ $user->no_hp }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Jabatan</label>
+                            <input type="text" class="form-input" name="jabatan" value="{{ $user->jabatan }}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Password Baru</label>
+                            <input type="password" class="form-input" name="password" placeholder="Kosongkan jika tidak diubah">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="is_active">
+                                <option value="1" @selected($user->akun?->is_active === '1')>Aktif</option>
+                                <option value="0" @selected($user->akun?->is_active === '0')>Nonaktif</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $user->id_pengguna }}')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
+@endforeach
 
 <div class="modal-backdrop" id="addModal">
     <div class="modal">

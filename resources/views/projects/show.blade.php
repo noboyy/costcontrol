@@ -49,7 +49,7 @@
     $isClosedToday = $snap['is_closed'] ?? false;
 @endphp
 {{-- UMKM: focus today --}}
-<div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+<div class="kpi-grid">
     <div class="kpi-card">
         <div class="kpi-top"><div class="kpi-icon green"><i class="bi bi-arrow-up-circle"></i></div></div>
         <div class="kpi-label">Omzet Hari Ini</div>
@@ -114,13 +114,13 @@
             </div>
             @endif
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;margin-bottom:14px;">
-                <div style="background:#f8fafc;padding:10px;border-radius:10px;">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:13px;margin-bottom:14px;">
+                <div style="flex:1 1 220px;background:#f8fafc;padding:10px;border-radius:10px;">
                     <div class="cell-sub">COGS / Omzet</div>
                     <strong>{{ $snap['cogs_ratio_pct'] !== null ? number_format($snap['cogs_ratio_pct'], 1).'%' : '—' }}</strong>
                     <div class="cell-sub">Batas {{ number_format(($snap['cogs_threshold'] ?? 0.45) * 100, 0) }}%</div>
                 </div>
-                <div style="background:#f8fafc;padding:10px;border-radius:10px;">
+                <div style="flex:1 1 220px;background:#f8fafc;padding:10px;border-radius:10px;">
                     <div class="cell-sub">Bulan ini (kas)</div>
                     <strong>Rp {{ number_format($monthCost, 0, ',', '.') }}</strong>
                     <div class="cell-sub">Omzet Rp {{ number_format($monthIncome, 0, ',', '.') }}</div>
@@ -274,7 +274,7 @@
 
 @else
 {{-- Proyek: overall KPI --}}
-<div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+<div class="kpi-grid">
     <div class="kpi-card">
         <div class="kpi-top"><div class="kpi-icon red"><i class="bi bi-arrow-down-circle"></i></div></div>
         <div class="kpi-label">Total Biaya</div>
@@ -332,7 +332,7 @@
         <span class="cell-sub">Saldo awal + omzet − biaya s/d {{ \Carbon\Carbon::parse($cp['date'])->format('d M Y') }}</span>
     </div>
     <div class="card-body">
-        <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-top"><div class="kpi-icon blue"><i class="bi bi-wallet2"></i></div></div>
                 <div class="kpi-label">Saldo Kas Hari Ini</div>
@@ -802,7 +802,7 @@
 
             @if($investor)
             {{-- Investor sudah ada --}}
-            <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border:1px solid var(--border);border-radius:10px;margin-bottom:16px;">
                 <div style="width:40px;height:40px;border-radius:50%;background:var(--primary-light,#eff6ff);display:flex;align-items:center;justify-content:center;">
                     <i class="bi bi-person-badge" style="font-size:18px;color:var(--primary);"></i>
                 </div>
@@ -816,7 +816,7 @@
                     </div>
                     <div class="cell-sub">Username: <code>{{ $investor->akun?->username }}</code></div>
                 </div>
-                <div style="margin-left:auto;display:flex;gap:8px;">
+                <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
                     <form action="{{ route('cost-centers.investor.resetPassword', $project->id_project) }}" method="POST" onsubmit="return confirm('Reset password investor?')">
                         @csrf
                         <button type="submit" class="btn btn-sm btn-outline"><i class="bi bi-key"></i> Reset Password</button>

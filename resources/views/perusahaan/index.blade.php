@@ -59,44 +59,6 @@
                                 </div>
                             </td>
                         </tr>
-                        <div class="modal-backdrop" id="edit{{ $p->id_perusahaan }}">
-                            <div class="modal">
-                                <form action="{{ route('perusahaan.update', $p->id_perusahaan) }}" method="POST">
-                                    @csrf
-                                    <div class="modal-header">
-                                        <h3>Edit Perusahaan</h3>
-                                        <button type="button" class="modal-close" onclick="closeModal('edit{{ $p->id_perusahaan }}')">×</button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="form-group">
-                                            <label class="form-label">Nama <span class="req">*</span></label>
-                                            <input type="text" class="form-input" name="nama_perusahaan" value="{{ $p->nama_perusahaan }}" required>
-                                        </div>
-                                        <div class="form-group">
-<label class="form-label">Pemilik</label>
-                                            <input type="text" class="form-input" name="owner" value="{{ $p->owner }}">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Alamat</label>
-                                            <textarea class="form-textarea" name="alamat_lengkap">{{ $p->alamat_lengkap }}</textarea>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Modul Aplikasi</label>
-                                            <select class="form-input" name="module">
-                                                <option value="all" {{ $p->isModuleAll() ? 'selected' : '' }}>Keduanya (Proyek + UMKM)</option>
-                                                <option value="project" {{ $p->isModuleProject() ? 'selected' : '' }}>Hanya Proyek</option>
-                                                <option value="umkm" {{ $p->isModuleUmkm() ? 'selected' : '' }}>Hanya UMKM</option>
-                                            </select>
-                                            <small style="color:var(--text-secondary)">UI tenant hanya menampilkan modul yang dipilih.</small>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $p->id_perusahaan }}')">Batal</button>
-                                        <button type="submit" class="btn btn-primary">Simpan</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
                     @empty
                         <tr><td colspan="5"><div class="empty-state">Belum ada perusahaan</div></td></tr>
                     @endforelse
@@ -105,6 +67,47 @@
         </div>
     </div>
 </div>
+
+@foreach($list as $p)
+    <div class="modal-backdrop" id="edit{{ $p->id_perusahaan }}">
+        <div class="modal">
+            <form action="{{ route('perusahaan.update', $p->id_perusahaan) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h3>Edit Perusahaan</h3>
+                    <button type="button" class="modal-close" onclick="closeModal('edit{{ $p->id_perusahaan }}')">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Nama <span class="req">*</span></label>
+                        <input type="text" class="form-input" name="nama_perusahaan" value="{{ $p->nama_perusahaan }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pemilik</label>
+                        <input type="text" class="form-input" name="owner" value="{{ $p->owner }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Alamat</label>
+                        <textarea class="form-textarea" name="alamat_lengkap">{{ $p->alamat_lengkap }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Modul Aplikasi</label>
+                        <select class="form-input" name="module">
+                            <option value="all" {{ $p->isModuleAll() ? 'selected' : '' }}>Keduanya (Proyek + UMKM)</option>
+                            <option value="project" {{ $p->isModuleProject() ? 'selected' : '' }}>Hanya Proyek</option>
+                            <option value="umkm" {{ $p->isModuleUmkm() ? 'selected' : '' }}>Hanya UMKM</option>
+                        </select>
+                        <small style="color:var(--text-secondary)">UI tenant hanya menampilkan modul yang dipilih.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $p->id_perusahaan }}')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
 
 @if($canManageAll)
 <div class="modal-backdrop" id="addModal">

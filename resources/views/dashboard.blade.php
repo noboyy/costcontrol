@@ -72,7 +72,7 @@
         <a href="{{ route('cost-centers.index', ['mode' => 'umkm']) }}" class="btn btn-sm btn-outline">Semua UMKM</a>
     </div>
     <div class="card-body">
-        <div class="kpi-grid" style="margin-bottom:16px;grid-template-columns:repeat(3,1fr);">
+        <div class="kpi-grid" style="margin-bottom:16px;">
             <div>
                 <div class="kpi-label">Biaya hari ini</div>
                 <div class="kpi-value money negative" style="font-size:18px;">Rp {{ number_format($umkmTodayTotals['cost'] ?? 0, 0, ',', '.') }}</div>
@@ -171,7 +171,7 @@
                     <tbody>
                         @forelse($recentActivities as $activity)
                             <tr @if(!empty($activity['project_id'])) class="clickable" onclick="location.href='{{ route('cost-centers.show', $activity['project_id']) }}'" @endif>
-                                <td style="width:48px;">
+                                <td>
                                     <div style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:{{ $activity['jenis'] === 'biaya' ? 'var(--danger-light)' : 'var(--success-light)' }};color:{{ $activity['jenis'] === 'biaya' ? 'var(--danger)' : 'var(--success)' }}">
                                         <i class="bi bi-{{ $activity['jenis'] === 'biaya' ? 'arrow-down' : 'arrow-up' }}"></i>
                                     </div>

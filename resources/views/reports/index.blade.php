@@ -50,7 +50,7 @@
     </div>
 </div>
 
-<div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+<div class="kpi-grid">
     <div class="kpi-card">
         <div class="kpi-label">Total Pendapatan</div>
         <div class="kpi-value money positive">Rp {{ number_format($totalIncome, 0, ',', '.') }}</div>
@@ -183,7 +183,7 @@
 <div class="grid-2">
     <div class="card">
         <div class="card-header"><h3>Detail biaya ({{ $costs->count() }})</h3></div>
-        <div class="card-body compact" style="max-height:360px;overflow:auto;">
+        <div class="card-body compact">
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Tgl</th><th>Unit</th><th>Tipe</th><th class="text-end">Total</th></tr></thead>
@@ -203,7 +203,7 @@
     </div>
     <div class="card">
         <div class="card-header"><h3>Detail pendapatan ({{ $incomes->count() }})</h3></div>
-        <div class="card-body compact" style="max-height:360px;overflow:auto;">
+        <div class="card-body compact">
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Tgl</th><th>Unit</th><th>Tipe</th><th class="text-end">Total</th></tr></thead>

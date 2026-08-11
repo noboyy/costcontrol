@@ -57,55 +57,6 @@
                                 </div>
                             </td>
                         </tr>
-                        <div class="modal-backdrop" id="edit{{ $type->id_income_type }}">
-                            <div class="modal">
-                                <form action="{{ route('income-types.update', $type->id_income_type) }}" method="POST">
-                                    @csrf
-                                    <div class="modal-header">
-                                        <h3>Edit Tipe</h3>
-                                        <button type="button" class="modal-close" onclick="closeModal('edit{{ $type->id_income_type }}')">×</button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label class="form-label">Kode *</label>
-                                                <input type="text" class="form-input" name="kode" value="{{ $type->kode }}" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Nama *</label>
-                                                <input type="text" class="form-input" name="nama" value="{{ $type->nama }}" required>
-                                            </div>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label class="form-label">Kategori</label>
-                                                <select class="form-select" name="kategori">
-                                                    @foreach($categories as $c)
-                                                        <option value="{{ $c->kode }}" @selected($type->kategori === $c->kode)>{{ $c->nama }}</option>
-                                                    @endforeach
-                                                    @if($type->kategori && !isset($categoryLabels[$type->kategori]))
-                                                        <option value="{{ $type->kategori }}" selected>{{ $type->kategori }}</option>
-                                                    @endif
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Satuan</label>
-                                                <select class="form-select" name="default_unit">
-                                                    <option value="">—</option>
-                                                    @foreach($units as $u)
-                                                        <option value="{{ $u->nama }}" @selected($type->default_unit === $u->nama)>{{ $u->nama }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $type->id_income_type }}')">Batal</button>
-                                        <button type="submit" class="btn btn-primary">Simpan</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
                     @empty
                         <tr><td colspan="5"><div class="empty-state"><p>Belum ada tipe</p></div></td></tr>
                     @endforelse
@@ -114,6 +65,58 @@
         </div>
     </div>
 </div>
+
+@foreach($types as $type)
+    <div class="modal-backdrop" id="edit{{ $type->id_income_type }}">
+        <div class="modal">
+            <form action="{{ route('income-types.update', $type->id_income_type) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h3>Edit Tipe</h3>
+                    <button type="button" class="modal-close" onclick="closeModal('edit{{ $type->id_income_type }}')">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Kode *</label>
+                            <input type="text" class="form-input" name="kode" value="{{ $type->kode }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nama *</label>
+                            <input type="text" class="form-input" name="nama" value="{{ $type->nama }}" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Kategori</label>
+                            <select class="form-select" name="kategori">
+                                @foreach($categories as $c)
+                                    <option value="{{ $c->kode }}" @selected($type->kategori === $c->kode)>{{ $c->nama }}</option>
+                                @endforeach
+                                @if($type->kategori && !isset($categoryLabels[$type->kategori]))
+                                    <option value="{{ $type->kategori }}" selected>{{ $type->kategori }}</option>
+                                @endif
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Satuan</label>
+                            <select class="form-select" name="default_unit">
+                                <option value="">—</option>
+                                @foreach($units as $u)
+                                    <option value="{{ $u->nama }}" @selected($type->default_unit === $u->nama)>{{ $u->nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $type->id_income_type }}')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
 
 <div class="modal-backdrop" id="addModal">
     <div class="modal">

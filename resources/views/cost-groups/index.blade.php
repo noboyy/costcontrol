@@ -46,7 +46,7 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th style="width:70px;">Urutan</th>
+                        <th>Urutan</th>
                         <th>Kelompok</th>
                         <th>Kode</th>
                         <th>Warna</th>
@@ -82,56 +82,6 @@
                                 </div>
                             </td>
                         </tr>
-
-                        <div class="modal-backdrop" id="edit{{ $group->id_cost_group }}">
-                            <div class="modal">
-                                <form action="{{ route('cost-groups.update', $group->id_cost_group) }}" method="POST">
-                                    @csrf
-                                    <div class="modal-header">
-                                        <h3>Edit Kelompok</h3>
-                                        <button type="button" class="modal-close" onclick="closeModal('edit{{ $group->id_cost_group }}')">×</button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="form-group">
-                                            <label class="form-label">Nama <span class="req">*</span></label>
-                                            <input type="text" class="form-input" name="nama" value="{{ $group->nama }}" required>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label class="form-label">Kode <span class="req">*</span></label>
-                                                <input type="text" class="form-input" name="kode" value="{{ $group->kode }}" required pattern="[a-z0-9_\-]+" title="huruf kecil, angka, _ atau -">
-                                                <div class="form-hint">Ubah kode = sinkron otomatis ke kategori biaya</div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Urutan</label>
-                                                <input type="number" class="form-input" name="urutan" value="{{ $group->urutan }}" min="0">
-                                            </div>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label class="form-label">Warna</label>
-                                                <select class="form-select" name="warna">
-                                                    @foreach($colorOptions as $val => $label)
-                                                        <option value="{{ $val }}" @selected(($group->warna ?: 'gray') === $val)>{{ $label }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Status</label>
-                                                <select class="form-select" name="is_active">
-                                                    <option value="1" @selected($group->is_active)>Aktif</option>
-                                                    <option value="0" @selected(!$group->is_active)>Nonaktif</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $group->id_cost_group }}')">Batal</button>
-                                        <button type="submit" class="btn btn-primary">Simpan</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
                     @empty
                         <tr>
                             <td colspan="6">
@@ -148,6 +98,58 @@
         </div>
     </div>
 </div>
+
+@foreach($groups as $group)
+    <div class="modal-backdrop" id="edit{{ $group->id_cost_group }}">
+        <div class="modal">
+            <form action="{{ route('cost-groups.update', $group->id_cost_group) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h3>Edit Kelompok</h3>
+                    <button type="button" class="modal-close" onclick="closeModal('edit{{ $group->id_cost_group }}')">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Nama <span class="req">*</span></label>
+                        <input type="text" class="form-input" name="nama" value="{{ $group->nama }}" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Kode <span class="req">*</span></label>
+                            <input type="text" class="form-input" name="kode" value="{{ $group->kode }}" required pattern="[a-z0-9_\-]+" title="huruf kecil, angka, _ atau -">
+                            <div class="form-hint">Ubah kode = sinkron otomatis ke kategori biaya</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Urutan</label>
+                            <input type="number" class="form-input" name="urutan" value="{{ $group->urutan }}" min="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Warna</label>
+                            <select class="form-select" name="warna">
+                                @foreach($colorOptions as $val => $label)
+                                    <option value="{{ $val }}" @selected(($group->warna ?: 'gray') === $val)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="is_active">
+                                <option value="1" @selected($group->is_active)>Aktif</option>
+                                <option value="0" @selected(!$group->is_active)>Nonaktif</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $group->id_cost_group }}')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
 
 <div class="modal-backdrop" id="addModal">
     <div class="modal">

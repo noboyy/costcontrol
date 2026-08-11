@@ -14,7 +14,7 @@
     </div>
 </div>
 
-<div class="grid-2" style="grid-template-columns: 300px 1fr; align-items:start;">
+<div class="grid-2" style="align-items:start;">
     <div>
         <div class="card" style="text-align:center;">
             <div class="card-body">

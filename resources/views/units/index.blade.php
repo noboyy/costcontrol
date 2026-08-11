@@ -55,31 +55,6 @@
                                 </div>
                             </td>
                         </tr>
-                        <div class="modal-backdrop" id="edit{{ $unit->id_unit }}">
-                            <div class="modal modal-sm">
-                                <form action="{{ route('units.update', $unit->id_unit) }}" method="POST">
-                                    @csrf
-                                    <div class="modal-header">
-                                        <h3>Edit Satuan</h3>
-                                        <button type="button" class="modal-close" onclick="closeModal('edit{{ $unit->id_unit }}')">×</button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="form-group">
-                                            <label class="form-label">Nama <span class="req">*</span></label>
-                                            <input type="text" class="form-input" name="nama" value="{{ $unit->nama }}" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Simbol</label>
-                                            <input type="text" class="form-input" name="simbol" value="{{ $unit->simbol }}" placeholder="kg, m³, unit">
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $unit->id_unit }}')">Batal</button>
-                                        <button type="submit" class="btn btn-primary">Simpan</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
                     @empty
                         <tr>
                             <td colspan="3">
@@ -96,6 +71,34 @@
         </div>
     </div>
 </div>
+
+@foreach($units as $unit)
+    <div class="modal-backdrop" id="edit{{ $unit->id_unit }}">
+        <div class="modal modal-sm">
+            <form action="{{ route('units.update', $unit->id_unit) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h3>Edit Satuan</h3>
+                    <button type="button" class="modal-close" onclick="closeModal('edit{{ $unit->id_unit }}')">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Nama <span class="req">*</span></label>
+                        <input type="text" class="form-input" name="nama" value="{{ $unit->nama }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Simbol</label>
+                        <input type="text" class="form-input" name="simbol" value="{{ $unit->simbol }}" placeholder="kg, m³, unit">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $unit->id_unit }}')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
 
 <div class="modal-backdrop" id="addModal">
     <div class="modal modal-sm">

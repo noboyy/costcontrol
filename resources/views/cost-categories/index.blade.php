@@ -46,7 +46,7 @@
             <table id="dataTable">
                 <thead>
                     <tr>
-                        <th style="width:70px;">Urutan</th>
+                        <th>Urutan</th>
                         <th>Kategori</th>
                         <th>Kode</th>
                         <th>Kelompok</th>
@@ -107,75 +107,6 @@
                                 </div>
                             </td>
                         </tr>
-
-                        <div class="modal-backdrop" id="edit{{ $cat->id_cost_category }}">
-                            <div class="modal">
-                                <form action="{{ route('cost-categories.update', $cat->id_cost_category) }}" method="POST">
-                                    @csrf
-                                    <div class="modal-header">
-                                        <h3>Edit Kategori</h3>
-                                        <button type="button" class="modal-close" onclick="closeModal('edit{{ $cat->id_cost_category }}')">×</button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="form-group">
-                                            <label class="form-label">Nama <span class="req">*</span></label>
-                                            <input type="text" class="form-input" name="nama" value="{{ $cat->nama }}" required>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label class="form-label">Kode <span class="req">*</span></label>
-                                                <input type="text" class="form-input" name="kode" value="{{ $cat->kode }}" required pattern="[a-z0-9_\-]+" title="huruf kecil, angka, _ atau -">
-                                                <div class="form-hint">Ubah kode = sinkron otomatis ke tipe biaya</div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Urutan</label>
-                                                <input type="number" class="form-input" name="urutan" value="{{ $cat->urutan }}" min="0">
-                                            </div>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label class="form-label">Ikon</label>
-                                                <select class="form-select" name="icon">
-                                                    @foreach($iconOptions as $val => $label)
-                                                        <option value="{{ $val }}" @selected(($cat->icon ?: 'bi-folder') === $val)>{{ $label }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Warna</label>
-                                                <select class="form-select" name="warna">
-                                                    @foreach($colorOptions as $val => $label)
-                                                        <option value="{{ $val }}" @selected(($cat->warna ?: 'gray') === $val)>{{ $label }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label class="form-label">Kelompok</label>
-                                                <select class="form-select" name="kelompok">
-                                                    <option value="">—</option>
-                                                    @foreach($groups as $group)
-                                                        <option value="{{ $group->kode }}" @selected($cat->kelompok === $group->kode)>{{ $group->nama }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Status</label>
-                                                <select class="form-select" name="is_active">
-                                                    <option value="1" @selected($cat->is_active)>Aktif</option>
-                                                    <option value="0" @selected(!$cat->is_active)>Nonaktif</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $cat->id_cost_category }}')">Batal</button>
-                                        <button type="submit" class="btn btn-primary">Simpan</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
                     @empty
                         <tr>
                             <td colspan="8">
@@ -192,6 +123,77 @@
         </div>
     </div>
 </div>
+
+@foreach($categories as $cat)
+    <div class="modal-backdrop" id="edit{{ $cat->id_cost_category }}">
+        <div class="modal">
+            <form action="{{ route('cost-categories.update', $cat->id_cost_category) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h3>Edit Kategori</h3>
+                    <button type="button" class="modal-close" onclick="closeModal('edit{{ $cat->id_cost_category }}')">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Nama <span class="req">*</span></label>
+                        <input type="text" class="form-input" name="nama" value="{{ $cat->nama }}" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Kode <span class="req">*</span></label>
+                            <input type="text" class="form-input" name="kode" value="{{ $cat->kode }}" required pattern="[a-z0-9_\-]+" title="huruf kecil, angka, _ atau -">
+                            <div class="form-hint">Ubah kode = sinkron otomatis ke tipe biaya</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Urutan</label>
+                            <input type="number" class="form-input" name="urutan" value="{{ $cat->urutan }}" min="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Ikon</label>
+                            <select class="form-select" name="icon">
+                                @foreach($iconOptions as $val => $label)
+                                    <option value="{{ $val }}" @selected(($cat->icon ?: 'bi-folder') === $val)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Warna</label>
+                            <select class="form-select" name="warna">
+                                @foreach($colorOptions as $val => $label)
+                                    <option value="{{ $val }}" @selected(($cat->warna ?: 'gray') === $val)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Kelompok</label>
+                            <select class="form-select" name="kelompok">
+                                <option value="">—</option>
+                                @foreach($groups as $group)
+                                    <option value="{{ $group->kode }}" @selected($cat->kelompok === $group->kode)>{{ $group->nama }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="is_active">
+                                <option value="1" @selected($cat->is_active)>Aktif</option>
+                                <option value="0" @selected(!$cat->is_active)>Nonaktif</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('edit{{ $cat->id_cost_category }}')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
 
 <div class="modal-backdrop" id="addModal">
     <div class="modal">

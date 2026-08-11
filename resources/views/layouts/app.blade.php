@@ -328,6 +328,7 @@
         /* ===== SEGMENT / TABS ===== */
         .seg {
             display: inline-flex;
+            flex-wrap: wrap;
             background: #eef2f7;
             border-radius: 999px;
             padding: 3px;
@@ -545,10 +546,10 @@
         .btn-sm { padding: 7px 11px; font-size: 12.5px; }
         .btn-xs { padding: 5px 8px; font-size: 12px; border-radius: 7px; }
         .btn-icon {
-            width: 34px; height: 34px;
+            width: 40px; height: 40px;
             padding: 0;
         }
-        .btn-icon.btn-xs { width: 30px; height: 30px; }
+        .btn-icon.btn-xs { width: 36px; height: 36px; }
         .btn-group { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 
         /* ===== FORMS ===== */

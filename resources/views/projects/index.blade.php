@@ -91,7 +91,7 @@
                             </td>
                             <td>{{ $project->client ?? ($project->business_type ?? '—') }}</td>
                             <td>{{ $project->lokasi ?? '—' }}</td>
-                            <td class="text-end money" style="font-size:12.5px;">{{ $budgetLabel }}</td>
+                            <td class="text-end money">{{ $budgetLabel }}</td>
                             <td>
                                 <span class="badge {{ $project->isArchived() ? 'badge-gray' : 'badge-green' }}">
                                     <span class="status-dot {{ $project->isArchived() ? 'archived' : 'active' }}"></span>
@@ -111,92 +111,6 @@
                                 </div>
                             </td>
                         </tr>
-
-                        <div class="modal-backdrop" id="editUnit{{ $project->id_project }}">
-                            <div class="modal modal-lg">
-                                <form action="{{ route('cost-centers.update', $project->id_project) }}" method="POST">
-                                    @csrf
-                                    <div class="modal-header">
-                                        <h3>Edit {{ $project->mode_label }}</h3>
-                                        <button type="button" class="modal-close" onclick="closeModal('editUnit{{ $project->id_project }}')">×</button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="form-group">
-                                            <label class="form-label">Nama <span class="req">*</span></label>
-                                            <input type="text" class="form-input" name="nama_project" value="{{ $project->nama_project }}" required>
-                                        </div>
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label class="form-label">{{ $project->isUmkm() ? 'Jenis Usaha / Brand' : 'Klien' }}</label>
-                                                <input type="text" class="form-input" name="client" value="{{ $project->client }}">
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Lokasi</label>
-                                                <input type="text" class="form-input" name="lokasi" value="{{ $project->lokasi }}">
-                                            </div>
-                                        </div>
-                                        @if($project->isUmkm())
-                                            <div class="form-row">
-                                                <div class="form-group">
-                                                    <label class="form-label">Periode Pagu</label>
-                                                    <select class="form-select" name="budget_period">
-                                                        <option value="daily" @selected($project->budget_period === 'daily')>Harian</option>
-                                                        <option value="monthly" @selected($project->budget_period === 'monthly')>Bulanan</option>
-                                                        <option value="total" @selected($project->budget_period === 'total')>Total</option>
-                                                    </select>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label class="form-label">Tipe Bisnis</label>
-                                                    <input type="text" class="form-input" name="business_type" value="{{ $project->business_type }}" placeholder="Resto, retail, jasa...">
-                                                </div>
-                                            </div>
-                                            <div class="form-row">
-                                                <div class="form-group">
-                                                    <label class="form-label">Pagu Harian</label>
-                                                    <div class="input-prefix"><span>Rp</span>
-                                                        <input type="text" class="form-input" name="daily_budget" data-money value="{{ $project->daily_budget ? number_format($project->daily_budget, 0, ',', '.') : '' }}">
-                                                    </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label class="form-label">Pagu Bulanan</label>
-                                                    <div class="input-prefix"><span>Rp</span>
-                                                        <input type="text" class="form-input" name="monthly_budget" data-money value="{{ $project->monthly_budget ? number_format($project->monthly_budget, 0, ',', '.') : '' }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @else
-                                            <div class="form-row">
-                                                <div class="form-group">
-                                                    <label class="form-label">Tanggal Mulai</label>
-                                                    <input type="date" class="form-input" name="date_start" value="{{ $project->date_start?->format('Y-m-d') }}">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label class="form-label">Tanggal Selesai</label>
-                                                    <input type="date" class="form-input" name="date_end" value="{{ $project->date_end?->format('Y-m-d') }}">
-                                                </div>
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Nilai Kontrak</label>
-                                                <div class="input-prefix"><span>Rp</span>
-                                                    <input type="text" class="form-input" name="project_value" data-money value="{{ $project->project_value ? number_format($project->project_value, 0, ',', '.') : '' }}">
-                                                </div>
-                                            </div>
-                                            <input type="hidden" name="budget_period" value="total">
-                                        @endif
-                                        <div class="form-group">
-                                            <label class="form-label">Saldo Awal Kas</label>
-                                            <div class="input-prefix"><span>Rp</span>
-                                                <input type="text" class="form-input" name="opening_balance" data-money value="{{ $project->opening_balance ? number_format($project->opening_balance, 0, ',', '.') : '' }}" placeholder="0">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-outline" onclick="closeModal('editUnit{{ $project->id_project }}')">Batal</button>
-                                        <button type="submit" class="btn btn-primary">Simpan</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
                     @empty
                         <tr>
                             <td colspan="7">
@@ -214,6 +128,94 @@
     </div>
 </div>
 
+@foreach($projects as $project)
+    <div class="modal-backdrop" id="editUnit{{ $project->id_project }}">
+        <div class="modal modal-lg">
+            <form action="{{ route('cost-centers.update', $project->id_project) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h3>Edit {{ $project->mode_label }}</h3>
+                    <button type="button" class="modal-close" onclick="closeModal('editUnit{{ $project->id_project }}')">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Nama <span class="req">*</span></label>
+                        <input type="text" class="form-input" name="nama_project" value="{{ $project->nama_project }}" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">{{ $project->isUmkm() ? 'Jenis Usaha / Brand' : 'Klien' }}</label>
+                            <input type="text" class="form-input" name="client" value="{{ $project->client }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Lokasi</label>
+                            <input type="text" class="form-input" name="lokasi" value="{{ $project->lokasi }}">
+                        </div>
+                    </div>
+                    @if($project->isUmkm())
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Periode Pagu</label>
+                                <select class="form-select" name="budget_period">
+                                    <option value="daily" @selected($project->budget_period === 'daily')>Harian</option>
+                                    <option value="monthly" @selected($project->budget_period === 'monthly')>Bulanan</option>
+                                    <option value="total" @selected($project->budget_period === 'total')>Total</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tipe Bisnis</label>
+                                <input type="text" class="form-input" name="business_type" value="{{ $project->business_type }}" placeholder="Resto, retail, jasa...">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Pagu Harian</label>
+                                <div class="input-prefix"><span>Rp</span>
+                                    <input type="text" class="form-input" name="daily_budget" data-money value="{{ $project->daily_budget ? number_format($project->daily_budget, 0, ',', '.') : '' }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pagu Bulanan</label>
+                                <div class="input-prefix"><span>Rp</span>
+                                    <input type="text" class="form-input" name="monthly_budget" data-money value="{{ $project->monthly_budget ? number_format($project->monthly_budget, 0, ',', '.') : '' }}">
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Mulai</label>
+                                <input type="date" class="form-input" name="date_start" value="{{ $project->date_start?->format('Y-m-d') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Selesai</label>
+                                <input type="date" class="form-input" name="date_end" value="{{ $project->date_end?->format('Y-m-d') }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nilai Kontrak</label>
+                            <div class="input-prefix"><span>Rp</span>
+                                <input type="text" class="form-input" name="project_value" data-money value="{{ $project->project_value ? number_format($project->project_value, 0, ',', '.') : '' }}">
+                            </div>
+                        </div>
+                        <input type="hidden" name="budget_period" value="total">
+                    @endif
+                    <div class="form-group">
+                        <label class="form-label">Saldo Awal Kas</label>
+                        <div class="input-prefix"><span>Rp</span>
+                            <input type="text" class="form-input" name="opening_balance" data-money value="{{ $project->opening_balance ? number_format($project->opening_balance, 0, ',', '.') : '' }}" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('editUnit{{ $project->id_project }}')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endforeach
+
 {{-- Add Unit --}}
 <div class="modal-backdrop" id="addUnitModal">
     <div class="modal modal-lg">
@@ -226,16 +228,16 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label class="form-label">Mode Bisnis <span class="req">*</span></label>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;">
                         @if($module !== 'umkm')
-                        <label class="mode-card" style="border:1px solid var(--border-strong);border-radius:12px;padding:14px;cursor:pointer;display:block;">
+                        <label class="mode-card" style="flex:1 1 240px;border:1px solid var(--border-strong);border-radius:12px;padding:14px;cursor:pointer;display:block;">
                             <input type="radio" name="mode" value="project" {{ $module === 'project' ? 'checked' : '' }} onchange="toggleModeFields()" style="margin-right:8px;">
                             <strong><i class="bi bi-building"></i> Proyek</strong>
                             <div class="cell-sub" style="margin-top:4px;">RAB, kontrak, timeline konstruksi</div>
                         </label>
                         @endif
                         @if($module !== 'project')
-                        <label class="mode-card" style="border:1px solid var(--border-strong);border-radius:12px;padding:14px;cursor:pointer;display:block;">
+                        <label class="mode-card" style="flex:1 1 240px;border:1px solid var(--border-strong);border-radius:12px;padding:14px;cursor:pointer;display:block;">
                             <input type="radio" name="mode" value="umkm" {{ $module === 'umkm' ? 'checked' : '' }} onchange="toggleModeFields()" style="margin-right:8px;">
                             <strong><i class="bi bi-shop"></i> UMKM</strong>
                             <div class="cell-sub" style="margin-top:4px;">Outlet, pagu harian/bulanan, kontrol ops</div>

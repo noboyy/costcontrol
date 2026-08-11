@@ -62,8 +62,8 @@
     <div class="card-header">
         <h3>Tenant / Perusahaan</h3>
     </div>
-    <div class="table-responsive">
-        <table class="table">
+    <div class="table-wrap">
+        <table>
             <thead>
                 <tr>
                     <th>Perusahaan</th>
@@ -108,8 +108,8 @@
     <div class="card-header">
         <h3>User Terbaru</h3>
     </div>
-    <div class="table-responsive">
-        <table class="table">
+    <div class="table-wrap">
+        <table>
             <thead>
                 <tr>
                     <th>Nama</th>
@@ -162,8 +162,8 @@
     <div class="card-header">
         <h3>Akun Investor</h3>
     </div>
-    <div class="table-responsive">
-        <table class="table">
+    <div class="table-wrap">
+        <table>
             <thead>
                 <tr>
                     <th>Nama</th>
@@ -205,7 +205,7 @@
         <form method="POST" id="extendForm" action="">
             @csrf
             <div class="modal-body">
-                <p class="text-muted" style="font-size:13px;margin-bottom:14px;">Perpanjang untuk <strong id="extendTarget">—</strong></p>
+                <p class="cell-sub" style="font-size:13px;margin-bottom:14px;">Perpanjang untuk <strong id="extendTarget">—</strong></p>
                 <label class="form-label">Tambahkan Berapa Hari?</label>
                 <input type="number" name="days" class="form-input" value="14" min="1" max="3650" required>
             </div>

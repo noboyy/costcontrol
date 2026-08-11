@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
@@ -61,11 +62,13 @@ class ProfileController extends Controller
         }
 
         $user->update([
-            'password' => Hash::make($request->new_password),
+            'password' => $request->new_password,
             'change_password' => ($user->change_password ?? 0) + 1,
         ]);
 
-        auth()->logout();
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect('/')->with('success', 'Kata sandi berhasil diubah. Silakan login kembali.');
     }

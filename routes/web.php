@@ -34,6 +34,7 @@ Route::middleware([
     config('jetstream.auth_session'),
     'active',
     'trial',
+    'tenant',
     'verified.user',
 ])->group(function () {
     Route::middleware('not-super-admin')->group(function () {

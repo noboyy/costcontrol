@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "mkdir -p out/investor && cp out/investor.html out/investor/index.html",
     "start": "next start",
     "lint": "next lint"
   },

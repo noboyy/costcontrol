@@ -22,6 +22,7 @@ use App\Models\Unit;
 use App\Services\BusinessTemplateSeeder;
 use App\Services\CashService;
 use App\Services\DailyControlService;
+use App\Services\TenantResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -34,12 +35,12 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
         $statusFilter = $request->get('status');
         $modeFilter = $request->get('mode');
 
         $query = Project::with(['admins'])
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId));
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId));
 
         if ($statusFilter === 'archive') {
             $query->where('status', 'archived');
@@ -54,10 +55,10 @@ class ProjectController extends Controller
         $projects = $query->orderBy('created_at', 'desc')->get();
 
         $counts = [
-            'all' => Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            'all' => Project::when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
                 ->when($statusFilter === 'archive', fn ($q) => $q->where('status', 'archived'), fn ($q) => $q->where('status', 'active'))
                 ->count(),
-            'project' => Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            'project' => Project::when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
                 ->when($statusFilter === 'archive', fn ($q) => $q->where('status', 'archived'), fn ($q) => $q->where('status', 'active'))
                 ->where(fn ($q) => $q->where('mode', Project::MODE_PROJECT)->orWhereNull('mode'))
                 ->count(),
@@ -78,10 +79,12 @@ class ProjectController extends Controller
     public function show(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::with([
+            'costEntries' => fn ($q) => $q->orderBy('tanggal', 'desc')->orderBy('created_at', 'desc'),
             'costEntries.costType',
+            'incomeEntries' => fn ($q) => $q->orderBy('tanggal', 'desc')->orderBy('created_at', 'desc'),
             'incomeEntries.incomeType',
             'admins',
             'fixedCosts',
@@ -89,13 +92,13 @@ class ProjectController extends Controller
             'incomePlans.incomeType',
         ])
             ->where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         $costTypes = CostType::where('id_perusahaan', $companyId ?: null)->orderBy('nama')->get();
         $incomeTypes = IncomeType::where('id_perusahaan', $companyId ?: null)->orderBy('nama')->get();
         $units = Unit::where('deleted_at', null)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->orderBy('nama')
             ->get();
 
@@ -133,7 +136,7 @@ class ProjectController extends Controller
             ->pluck('total', 'id_income_type');
 
         $availableAdmins = Pengguna::with('akun')
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->orderBy('nama_lengkap')
             ->get();
         $assignedAdminIds = $project->admins->pluck('id_pengguna')->all();
@@ -198,7 +201,7 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $request->validate([
             'mode' => ['required', Rule::in([Project::MODE_PROJECT, Project::MODE_UMKM])],
@@ -258,10 +261,10 @@ class ProjectController extends Controller
     public function update(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         if ($project->isArchived()) {
@@ -317,10 +320,10 @@ class ProjectController extends Controller
     public function addCost(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         if ($project->isArchived()) {
@@ -371,10 +374,10 @@ class ProjectController extends Controller
     public function updateCost(Request $request, $id, $costId)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         if ($project->isArchived()) {
@@ -427,10 +430,10 @@ class ProjectController extends Controller
     public function deleteCost(Request $request, $id, $costId)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         if ($project->isArchived()) {
@@ -451,10 +454,10 @@ class ProjectController extends Controller
     public function addIncome(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         if ($project->isArchived()) {
@@ -505,10 +508,10 @@ class ProjectController extends Controller
     public function updateIncome(Request $request, $id, $incomeId)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         if ($project->isArchived()) {
@@ -561,10 +564,10 @@ class ProjectController extends Controller
     public function deleteIncome(Request $request, $id, $incomeId)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         if ($project->isArchived()) {
@@ -585,10 +588,10 @@ class ProjectController extends Controller
     public function syncAdmins(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         $request->validate([
@@ -623,10 +626,10 @@ class ProjectController extends Controller
     public function upsertPlan(Request $request, $id, string $kind, $planId = null)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         if ($project->isArchived()) {
@@ -683,10 +686,10 @@ class ProjectController extends Controller
     public function deletePlan(Request $request, $id, $planId, string $kind)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         if ($kind === 'cost') {
@@ -701,10 +704,10 @@ class ProjectController extends Controller
     public function archive(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         $newStatus = $project->isArchived() ? 'active' : 'archived';
@@ -719,10 +722,10 @@ class ProjectController extends Controller
     public function delete(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         if ($project->isArchived()) {
@@ -765,10 +768,10 @@ class ProjectController extends Controller
     public function assignInvestor(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         $request->validate([
@@ -818,10 +821,10 @@ class ProjectController extends Controller
     public function revokeInvestor(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         $relation = ProjectInvestor::where('id_project', $project->id_project)->first();
@@ -855,10 +858,10 @@ class ProjectController extends Controller
     public function resetInvestorPassword(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         $relation = ProjectInvestor::where('id_project', $project->id_project)
@@ -883,10 +886,10 @@ class ProjectController extends Controller
     public function showInvestor(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         $relation = ProjectInvestor::where('id_project', $project->id_project)
@@ -913,10 +916,10 @@ class ProjectController extends Controller
     public function cash(Request $request, $id)
     {
         $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = app(TenantResolver::class)->companyId();
 
         $project = Project::where('id_project', $id)
-            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->firstOrFail();
 
         $cash = app(CashService::class);

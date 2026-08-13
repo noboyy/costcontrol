@@ -24,16 +24,17 @@ class AuthController extends Controller
             ->orWhere('username', $account)
             ->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        // BUG-03: cek is_active sebelum password agar tidak bocor info akun valid
+        if (! $user || ! $user->is_active) {
             return response()->json([
                 'message' => 'Email atau kata sandi salah.',
             ], 401);
         }
 
-        if ($user->is_active !== '1') {
+        if (! Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'Akun Anda tidak aktif. Silakan hubungi administrator.',
-            ], 403);
+                'message' => 'Email atau kata sandi salah.',
+            ], 401);
         }
 
         if ($user->isTrialExpired()) {
@@ -42,6 +43,8 @@ class AuthController extends Controller
             ], 403);
         }
 
+        // BUG-06: hapus token lama agar tidak menumpuk di DB
+        $user->tokens()->where('name', 'api-token')->delete();
         $token = $user->createToken('api-token')->plainTextToken;
 
         $extra = [];

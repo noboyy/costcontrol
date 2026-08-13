@@ -20,7 +20,7 @@ class CheckActive
 
         $user = auth()->user();
 
-        if ($user->is_active !== '1') {
+        if (! $user->is_active) {
             auth()->logout();
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Akun Anda tidak aktif.'], 403);

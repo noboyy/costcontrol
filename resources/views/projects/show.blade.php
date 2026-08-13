@@ -817,11 +817,11 @@
                     <div class="cell-sub">Username: <code>{{ $investor->akun?->username }}</code></div>
                 </div>
                 <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
-                    <form action="{{ route('cost-centers.investor.resetPassword', $project->id_project) }}" method="POST" onsubmit="return confirm('Reset password investor?')">
+                    <form action="{{ route('cost-centers.investor.resetPassword', $project->id_project) }}" method="POST" data-confirm="Reset password investor?">
                         @csrf
                         <button type="submit" class="btn btn-sm btn-outline"><i class="bi bi-key"></i> Reset Password</button>
                     </form>
-                    <form action="{{ route('cost-centers.investor.toggle', $project->id_project) }}" method="POST" onsubmit="return confirm('{{ $investor->akun->is_active === '1' ? 'Nonaktifkan akun investor ini? Investor tidak bisa login.' : 'Aktifkan kembali akun investor ini?' }}')">
+                    <form action="{{ route('cost-centers.investor.toggle', $project->id_project) }}" method="POST" data-confirm="{{ $investor->akun->is_active === '1' ? 'Nonaktifkan akun investor ini? Investor tidak bisa login.' : 'Aktifkan kembali akun investor ini?' }}">
                         @csrf
                         @if($investor->akun->is_active === '1')
                         <button type="submit" class="btn btn-sm btn-outline"><i class="bi bi-pause-circle"></i> Nonaktifkan</button>
@@ -829,7 +829,7 @@
                         <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-play-circle"></i> Aktifkan</button>
                         @endif
                     </form>
-                    <form action="{{ route('cost-centers.investor.delete', $project->id_project) }}" method="POST" onsubmit="return confirm('Hapus akun investor ini? Akun tidak dapat dikembalikan.')">
+                    <form action="{{ route('cost-centers.investor.delete', $project->id_project) }}" method="POST" data-confirm="Hapus akun investor ini? Akun tidak dapat dikembalikan.">
                         @csrf
                         <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i> Hapus</button>
                     </form>

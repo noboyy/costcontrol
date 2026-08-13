@@ -45,13 +45,15 @@ class ReportController extends Controller
         $costs = CostEntry::with(['costType', 'project'])
             ->whereIn('id_project', $ids ?: [0])
             ->whereBetween('tanggal', [$from, $to])
-            ->orderBy('tanggal')
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         $incomes = IncomeEntry::with(['incomeType', 'project'])
             ->whereIn('id_project', $ids ?: [0])
             ->whereBetween('tanggal', [$from, $to])
-            ->orderBy('tanggal')
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         $totalCost = (float) $costs->sum('total');
@@ -141,7 +143,8 @@ class ReportController extends Controller
                 CostEntry::with(['costType', 'project'])
                     ->whereIn('id_project', $ids ?: [0])
                     ->whereBetween('tanggal', [$from, $to])
-                    ->orderBy('tanggal')
+                    ->orderBy('tanggal', 'desc')
+                    ->orderBy('created_at', 'desc')
                     ->chunk(200, function ($rows) use ($out) {
                         foreach ($rows as $r) {
                             fputcsv($out, [
@@ -163,7 +166,8 @@ class ReportController extends Controller
                 IncomeEntry::with(['incomeType', 'project'])
                     ->whereIn('id_project', $ids ?: [0])
                     ->whereBetween('tanggal', [$from, $to])
-                    ->orderBy('tanggal')
+                    ->orderBy('tanggal', 'desc')
+                    ->orderBy('created_at', 'desc')
                     ->chunk(200, function ($rows) use ($out) {
                         foreach ($rows as $r) {
                             fputcsv($out, [

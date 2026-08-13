@@ -12,8 +12,17 @@ class EnforceTrial
     {
         $user = $request->user();
 
-        // SUPER ADMIN and ADMIN bypass trial enforcement
-        if (! $user || $user->isAdmin()) {
+        // Unauthenticated request — reject
+        if (! $user) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+
+            return redirect('/login');
+        }
+
+        // Only SUPER ADMIN bypass trial enforcement
+        if ($user->isSuperAdmin()) {
             return $next($request);
         }
 

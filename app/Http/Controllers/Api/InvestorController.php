@@ -119,7 +119,8 @@ class InvestorController extends Controller
 
         $query = CostEntry::with(['costType'])
             ->where('id_project', $projectId)
-            ->orderBy('tanggal', 'desc');
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc');
 
         if ($from) {
             $query->where('tanggal', '>=', $from);
@@ -162,7 +163,8 @@ class InvestorController extends Controller
 
         $query = IncomeEntry::with(['incomeType'])
             ->where('id_project', $projectId)
-            ->orderBy('tanggal', 'desc');
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc');
 
         if ($from) {
             $query->where('tanggal', '>=', $from);

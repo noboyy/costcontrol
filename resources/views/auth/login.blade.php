@@ -154,7 +154,7 @@
         }
         .password-toggle {
             position: absolute;
-            right: 10px; top: 50%;
+            right: 12px; top: 50%;
             transform: translateY(-50%);
             border: none;
             background: none;
@@ -162,6 +162,7 @@
             cursor: pointer;
             padding: 4px;
             font-size: 15px;
+            z-index: 2;
         }
         .password-toggle:hover { color: #475569; }
         .btn {

@@ -1051,7 +1051,7 @@
                     <i class="bi bi-search"></i>
                     <input type="search" id="globalSearchHint" placeholder="Cari di halaman... (/)" autocomplete="off">
                 </div>
-                @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin() && ! request()->routeIs('asset.index'))
+                @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin() && request()->routeIs('cost-categories.index'))
                 <button type="button" class="btn btn-sm btn-outline" onclick="openModal('downloadModuleModal')" title="Import modul master data dari CostControl">
                     <i class="bi bi-download"></i> Import Modul
                 </button>

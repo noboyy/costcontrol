@@ -4,6 +4,7 @@ use App\Http\Middleware\CheckActive;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\EnforceTrial;
 use App\Http\Middleware\EnsureEmailVerified;
+use App\Http\Middleware\EnsureTenant;
 use App\Http\Middleware\InvestorOnly;
 use App\Http\Middleware\NoCache;
 use App\Http\Middleware\NotSuperAdmin;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => CheckRole::class,
             'active' => CheckActive::class,
             'trial' => EnforceTrial::class,
+            'tenant' => EnsureTenant::class,
             'verified.user' => EnsureEmailVerified::class,
             'investor' => InvestorOnly::class,
             'not-super-admin' => NotSuperAdmin::class,

@@ -44,14 +44,13 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::authenticateUsing(function (Request $request) {
             $user = Akun::where('email', $request->email)->first();
 
-            if (! $user || ! Hash::check($request->password, $user->password)) {
+            // BUG-03: cek is_active sebelum password agar tidak bocor info akun valid
+            if (! $user || ! $user->is_active) {
                 return null;
             }
 
-            if ($user->is_active !== '1') {
-                throw ValidationException::withMessages([
-                    'email' => 'Akun Anda tidak aktif. Silakan hubungi administrator.',
-                ]);
+            if (! Hash::check($request->password, $user->password)) {
+                return null;
             }
 
             if ($user->isTrialExpired()) {

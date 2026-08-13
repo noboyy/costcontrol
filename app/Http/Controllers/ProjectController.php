@@ -87,7 +87,9 @@ class ProjectController extends Controller
         $companyId = $user->id_perusahaan;
 
         $project = Project::with([
+            'costEntries' => fn ($q) => $q->orderBy('tanggal', 'desc')->orderBy('created_at', 'desc'),
             'costEntries.costType',
+            'incomeEntries' => fn ($q) => $q->orderBy('tanggal', 'desc')->orderBy('created_at', 'desc'),
             'incomeEntries.incomeType',
             'admins',
             'fixedCosts',
@@ -798,7 +800,7 @@ class ProjectController extends Controller
 
             CostEntry::create($data);
 
-            return redirect()->route('projects.show', $id)
+            return redirect(route('projects.show', $id).'#costs')
                 ->with('success', 'Biaya berhasil ditambahkan.');
         } catch (\Exception $e) {
             return back()->withInput()
@@ -867,7 +869,7 @@ class ProjectController extends Controller
 
         $cost->update($data);
 
-        return redirect()->route('projects.show', $id)->with('success', 'Entri biaya diperbarui.');
+        return redirect(route('projects.show', $id).'#costs')->with('success', 'Entri biaya diperbarui.');
     }
 
     public function addIncome(Request $request, $id)
@@ -928,7 +930,7 @@ class ProjectController extends Controller
 
             IncomeEntry::create($data);
 
-            return redirect()->route('projects.show', $id)
+            return redirect(route('projects.show', $id).'#incomes')
                 ->with('success', 'Pendapatan berhasil ditambahkan.');
         } catch (\Exception $e) {
             return back()->withInput()
@@ -997,7 +999,7 @@ class ProjectController extends Controller
 
         $income->update($data);
 
-        return redirect()->route('projects.show', $id)->with('success', 'Entri pendapatan diperbarui.');
+        return redirect(route('projects.show', $id).'#incomes')->with('success', 'Entri pendapatan diperbarui.');
     }
 
     public function deleteCost($id, $costId)
@@ -1025,7 +1027,7 @@ class ProjectController extends Controller
 
         $cost->delete();
 
-        return redirect()->route('projects.show', $id)
+        return redirect(route('projects.show', $id).'#costs')
             ->with('success', 'Riwayat biaya berhasil dihapus.');
     }
 
@@ -1054,7 +1056,7 @@ class ProjectController extends Controller
 
         $income->delete();
 
-        return redirect()->route('projects.show', $id)
+        return redirect(route('projects.show', $id).'#incomes')
             ->with('success', 'Riwayat pendapatan berhasil dihapus.');
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\ResolvesTenant;
 use App\Http\Controllers\Controller;
 use App\Models\CostEntry;
 use App\Models\IncomeEntry;
@@ -11,35 +12,36 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    use ResolvesTenant;
+
     public function index(Request $request)
     {
-        $user = $request->user();
-        $companyId = $user->id_perusahaan;
+        $companyId = $this->companyId();
 
         $activeProjectIds = Project::where('status', 'active')
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })
             ->pluck('id_project')
             ->toArray();
 
         $totalCost = CostEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->sum('total');
 
         $totalIncome = IncomeEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->sum('total');
 
         $countCost = CostEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->count();
 
         $countIncome = IncomeEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->count();
 
@@ -48,22 +50,22 @@ class DashboardController extends Controller
         $startLastMonth = now()->subMonth()->startOfMonth()->format('Y-m-d');
 
         $thisMonthCost = CostEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->where('tanggal', '>=', $startThisMonth)->where('tanggal', '<', $startNextMonth)->sum('total');
 
         $lastMonthCost = CostEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->where('tanggal', '>=', $startLastMonth)->where('tanggal', '<', $startThisMonth)->sum('total');
 
         $thisMonthIncome = IncomeEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->where('tanggal', '>=', $startThisMonth)->where('tanggal', '<', $startNextMonth)->sum('total');
 
         $lastMonthIncome = IncomeEntry::whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->where('tanggal', '>=', $startLastMonth)->where('tanggal', '<', $startThisMonth)->sum('total');
 
@@ -72,7 +74,7 @@ class DashboardController extends Controller
 
         $recentCosts = CostEntry::with(['costType', 'project'])
             ->whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->orderBy('tanggal', 'desc')->orderBy('id_cost', 'desc')->limit(5)->get()
             ->map(fn ($e) => [
@@ -87,7 +89,7 @@ class DashboardController extends Controller
 
         $recentIncomes = IncomeEntry::with(['incomeType', 'project'])
             ->whereIn('id_project', $activeProjectIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->orderBy('tanggal', 'desc')->orderBy('id_income', 'desc')->limit(5)->get()
             ->map(fn ($e) => [
@@ -104,7 +106,7 @@ class DashboardController extends Controller
             ->sortByDesc('tanggal')->sortByDesc('id')->take(5)->values();
 
         $projects = Project::where('status', 'active')
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })->orderBy('created_at', 'desc')->get();
 
@@ -179,7 +181,7 @@ class DashboardController extends Controller
         $fromDate = now()->subDays(6)->format('Y-m-d');
 
         $byDate = $model::whereIn('id_project', $activeIds)
-            ->when($companyId, function ($query) use ($companyId) {
+            ->when($companyId !== null, function ($query) use ($companyId) {
                 $query->where('id_perusahaan', $companyId);
             })
             ->where('tanggal', '>=', $fromDate)

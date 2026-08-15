@@ -17,6 +17,7 @@ use App\Models\Perusahaan;
 use App\Models\Project;
 use App\Models\ProjectAdmin;
 use App\Models\ProjectCostPlan;
+use App\Models\ProjectGallery;
 use App\Models\ProjectIncomePlan;
 use App\Models\ProjectInvestor;
 use App\Models\Unit;
@@ -89,8 +90,10 @@ class ProjectController extends Controller
         $project = Project::with([
             'costEntries' => fn ($q) => $q->orderBy('tanggal', 'desc')->orderBy('created_at', 'desc'),
             'costEntries.costType',
+            'costEntries.gallery',
             'incomeEntries' => fn ($q) => $q->orderBy('tanggal', 'desc')->orderBy('created_at', 'desc'),
             'incomeEntries.incomeType',
+            'incomeEntries.gallery',
             'admins',
             'fixedCosts',
             'costPlans.costType',
@@ -1027,6 +1030,8 @@ class ProjectController extends Controller
 
         $cost->delete();
 
+        ProjectGallery::where('id_cost', $cost->id_cost)->delete();
+
         return redirect(route('projects.show', $id).'#costs')
             ->with('success', 'Riwayat biaya berhasil dihapus.');
     }
@@ -1055,6 +1060,8 @@ class ProjectController extends Controller
         }
 
         $income->delete();
+
+        ProjectGallery::where('id_income', $income->id_income)->delete();
 
         return redirect(route('projects.show', $id).'#incomes')
             ->with('success', 'Riwayat pendapatan berhasil dihapus.');

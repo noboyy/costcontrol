@@ -469,11 +469,36 @@
                                 <td class="text-end">Rp {{ number_format($cost->harga_satuan, 0, ',', '.') }}</td>
                                 <td class="text-end money negative">Rp {{ number_format($cost->total, 0, ',', '.') }}</td>
                                 <td>
-                                    @if($cost->file_bukti)
-                                        <a href="{{ route('cost-centers.costBukti', $cost->id_cost) }}" target="_blank" class="btn btn-xs btn-outline btn-icon" title="Lihat bukti"><i class="bi bi-image"></i></a>
-                                    @else
-                                        <span style="color:var(--text-muted)">—</span>
-                                    @endif
+                                    <div class="bukti-wrap">
+                                        @forelse($cost->gallery as $g)
+                                            <div class="bukti-item">
+                                                <a href="{{ route("{$galleryRoute}.gallery.serve", [$project->id_project, $g->id_gallery]) }}" target="_blank" title="{{ $g->original_name }}">
+                                                    @if($g->file_type === 'image')
+                                                        <img src="{{ route("{$galleryRoute}.gallery.serve", [$project->id_project, $g->id_gallery]) }}" alt="{{ $g->original_name }}">
+                                                    @elseif($g->file_type === 'video')
+                                                        <span class="bukti-icon video"><i class="bi bi-film"></i></span>
+                                                    @else
+                                                        <span class="bukti-icon doc"><i class="bi bi-file-earmark-pdf-fill"></i></span>
+                                                    @endif
+                                                </a>
+                                                @if(!$isArchived)
+                                                    <form action="{{ route("{$galleryRoute}.gallery.destroy", [$project->id_project, $g->id_gallery]) }}" method="POST" data-confirm="Hapus file {{ $g->original_name }}?" class="bukti-del">
+                                                        @csrf
+                                                        <button type="submit" title="Hapus"><i class="bi bi-x"></i></button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        @empty
+                                            @if($cost->file_bukti)
+                                                <a href="{{ route('cost-centers.costBukti', $cost->id_cost) }}" target="_blank" class="btn btn-xs btn-outline btn-icon" title="Lihat bukti"><i class="bi bi-image"></i></a>
+                                            @else
+                                                <span style="color:var(--text-muted)">—</span>
+                                            @endif
+                                        @endforelse
+                                        @if(!$isArchived)
+                                            <button type="button" class="btn btn-xs btn-outline btn-icon" title="Unggah bukti" onclick="openEntryGallery('{{ $project->id_project }}', 'cost', '{{ $cost->id_cost }}')"><i class="bi bi-plus-lg"></i></button>
+                                        @endif
+                                    </div>
                                 </td>
                                 @if(!$isArchived)
                                 <td class="text-end">
@@ -539,11 +564,36 @@
                                 <td class="text-end">Rp {{ number_format($income->harga_satuan, 0, ',', '.') }}</td>
                                 <td class="text-end money positive">Rp {{ number_format($income->total, 0, ',', '.') }}</td>
                                 <td>
-                                    @if($income->file_bukti)
-                                        <a href="{{ route('cost-centers.incomeBukti', $income->id_income) }}" target="_blank" class="btn btn-xs btn-outline btn-icon" title="Lihat bukti"><i class="bi bi-image"></i></a>
-                                    @else
-                                        <span style="color:var(--text-muted)">—</span>
-                                    @endif
+                                    <div class="bukti-wrap">
+                                        @forelse($income->gallery as $g)
+                                            <div class="bukti-item">
+                                                <a href="{{ route("{$galleryRoute}.gallery.serve", [$project->id_project, $g->id_gallery]) }}" target="_blank" title="{{ $g->original_name }}">
+                                                    @if($g->file_type === 'image')
+                                                        <img src="{{ route("{$galleryRoute}.gallery.serve", [$project->id_project, $g->id_gallery]) }}" alt="{{ $g->original_name }}">
+                                                    @elseif($g->file_type === 'video')
+                                                        <span class="bukti-icon video"><i class="bi bi-film"></i></span>
+                                                    @else
+                                                        <span class="bukti-icon doc"><i class="bi bi-file-earmark-pdf-fill"></i></span>
+                                                    @endif
+                                                </a>
+                                                @if(!$isArchived)
+                                                    <form action="{{ route("{$galleryRoute}.gallery.destroy", [$project->id_project, $g->id_gallery]) }}" method="POST" data-confirm="Hapus file {{ $g->original_name }}?" class="bukti-del">
+                                                        @csrf
+                                                        <button type="submit" title="Hapus"><i class="bi bi-x"></i></button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        @empty
+                                            @if($income->file_bukti)
+                                                <a href="{{ route('cost-centers.incomeBukti', $income->id_income) }}" target="_blank" class="btn btn-xs btn-outline btn-icon" title="Lihat bukti"><i class="bi bi-image"></i></a>
+                                            @else
+                                                <span style="color:var(--text-muted)">—</span>
+                                            @endif
+                                        @endforelse
+                                        @if(!$isArchived)
+                                            <button type="button" class="btn btn-xs btn-outline btn-icon" title="Unggah bukti" onclick="openEntryGallery('{{ $project->id_project }}', 'income', '{{ $income->id_income }}')"><i class="bi bi-plus-lg"></i></button>
+                                        @endif
+                                    </div>
                                 </td>
                                 @if(!$isArchived)
                                 <td class="text-end">
@@ -1382,7 +1432,56 @@
     </div>
 </div>
 @endif
+
+{{-- Modal Unggah Bukti Transaksi --}}
+@if(!$isArchived)
+<div class="modal-backdrop" id="entryGalleryModal">
+    <div class="modal modal-md">
+        <form method="POST" enctype="multipart/form-data" id="entryGalleryForm">
+            @csrf
+            <div class="modal-header">
+                <h3><i class="bi bi-cloud-upload"></i> Unggah Bukti</h3>
+                <button type="button" class="modal-close" onclick="closeModal('entryGalleryModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label class="form-label">File <span style="color:var(--danger)">*</span></label>
+                    <input type="file" name="files[]" multiple
+                           accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,application/pdf"
+                           class="form-input" required>
+                    <div class="form-hint">Bisa pilih banyak file sekaligus. Foto: jpg/png/webp (maks 5MB) · Video: mp4/mov (maks 50MB) · PDF (maks 10MB)</div>
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label class="form-label">Label</label>
+                    <input type="text" name="label" class="form-input" placeholder="Default: Bukti Biaya / Bukti Pendapatan" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Keterangan</label>
+                    <input type="text" name="caption" class="form-input" placeholder="Opsional" maxlength="500">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('entryGalleryModal')">Batal</button>
+                <button type="submit" class="btn btn-primary" id="btnUploadEntryGallery"><i class="bi bi-cloud-upload"></i> Unggah</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
 @endsection
+
+@push('styles')
+<style>
+.bukti-wrap { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.bukti-item { position:relative; display:inline-flex; }
+.bukti-item img { width:34px; height:34px; object-fit:cover; border-radius:4px; border:1px solid var(--border); }
+.bukti-icon { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:4px; border:1px solid var(--border); font-size:16px; }
+.bukti-icon.video { color:#3b82f6; background:#eff6ff; }
+.bukti-icon.doc { color:#ef4444; background:#fef2f2; }
+.bukti-del { position:absolute; top:-6px; right:-6px; margin:0; }
+.bukti-del button { width:16px; height:16px; font-size:9px; line-height:1; padding:0; border-radius:50%; background:var(--danger,#ef4444); color:#fff; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -1482,5 +1581,27 @@ document.getElementById('btnConfirmDelete')?.addEventListener('click', () => {
         if (btn) showTab(hash, btn);
     }
 })();
+
+// ---- Unggah bukti transaksi (multi-file, ter-link ke cost/income) ----
+let entryGalleryTarget = null;
+function openEntryGallery(projectId, type, entryId) {
+    entryGalleryTarget = { projectId, type, entryId };
+    const form = document.getElementById('entryGalleryForm');
+    if (form) form.reset();
+    openModal('entryGalleryModal');
+}
+document.getElementById('entryGalleryForm')?.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!entryGalleryTarget) return;
+    const prefix = location.pathname.split('/')[1];
+    const url = `/${prefix}/${entryGalleryTarget.projectId}/${entryGalleryTarget.type}/${entryGalleryTarget.entryId}/gallery`;
+    const btn = document.getElementById('btnUploadEntryGallery');
+    if (btn) { btn.disabled = true; btn.textContent = 'Mengunggah...'; }
+    fetch(url, { method: 'POST', body: new FormData(this) })
+        .then(r => r.json().catch(() => ({ message: 'Gagal mengunggah.' })))
+        .then(() => { closeModal('entryGalleryModal'); location.reload(); })
+        .catch(() => { closeModal('entryGalleryModal'); location.reload(); })
+        .finally(() => { if (btn) { btn.disabled = false; btn.textContent = 'Unggah'; } });
+});
 </script>
 @endpush

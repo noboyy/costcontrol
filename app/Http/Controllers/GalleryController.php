@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Akun;
+use App\Models\CostEntry;
+use App\Models\IncomeEntry;
 use App\Models\Project;
 use App\Models\ProjectGallery;
 use App\Models\ProjectInvestor;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class GalleryController extends Controller
 {
@@ -101,6 +102,136 @@ class GalleryController extends Controller
             return back()->withErrors(['file' => 'File tidak valid.']);
         }
 
+        $stored = $this->persistFile($file, $project, [
+            'label'       => trim($request->label),
+            'caption'     => $request->caption ? trim($request->caption) : null,
+            'uploaded_by' => $user->id_akun ?? $user->id,
+        ]);
+
+        if ($stored instanceof \Illuminate\Validation\ValidationException) {
+            return back()->withErrors(['file' => $stored->getMessage()]);
+        }
+
+        if ($stored === false) {
+            return back()->withErrors(['file' => 'Tipe file tidak didukung. Gunakan jpg/png/webp, mp4/mov, atau pdf.']);
+        }
+
+        $routeName = $this->routeName();
+
+        return redirect()->route("{$routeName}.gallery", $project->id_project)
+            ->with('success', 'File berhasil diunggah ke galeri.');
+    }
+
+    public function storeCostGallery(Request $request, int $id, int $costId)
+    {
+        return $this->storeEntryGallery($request, $id, 'cost', $costId);
+    }
+
+    public function storeIncomeGallery(Request $request, int $id, int $incomeId)
+    {
+        return $this->storeEntryGallery($request, $id, 'income', $incomeId);
+    }
+
+    private function storeEntryGallery(Request $request, int $id, string $type, int $entryId)
+    {
+        $project = $this->resolveProject($id);
+        $this->checkAdmin();
+
+        if ($type === 'cost') {
+            $entry = CostEntry::where('id_project', $project->id_project)->findOrFail($entryId);
+            $entryKey = 'id_cost';
+        } else {
+            $entry = IncomeEntry::where('id_project', $project->id_project)->findOrFail($entryId);
+            $entryKey = 'id_income';
+        }
+
+        $request->validate([
+            'files'   => 'required|array|min:1',
+            'files.*' => 'required|file|max:102400',
+            'label'   => 'nullable|string|max:100',
+            'caption' => 'nullable|string|max:500',
+        ]);
+
+        $user = auth()->user();
+        $label = trim($request->label ?: 'Bukti '.($type === 'cost' ? 'Biaya' : 'Pendapatan'));
+        $saved = 0;
+
+        foreach ($request->file('files', []) as $file) {
+            if (! $file->isValid()) {
+                continue;
+            }
+
+            $stored = $this->persistFile($file, $project, [
+                'label'       => $label,
+                'caption'     => $request->caption ? trim($request->caption) : null,
+                'uploaded_by' => $user->id_akun ?? $user->id,
+            ]);
+
+            if ($stored === false) {
+                continue;
+            }
+
+            if ($stored instanceof \Illuminate\Validation\ValidationException) {
+                continue;
+            }
+
+            $stored->update([$entryKey => $entry->{$entryKey}]);
+            $saved++;
+        }
+
+        if ($saved === 0) {
+            return response()->json(['message' => 'Tidak ada file yang berhasil disimpan.'], 422);
+        }
+
+        return response()->json(['message' => "{$saved} file berhasil diunggah."]);
+    }
+
+    public function costGallery(int $id, int $costId)
+    {
+        $project = $this->resolveProject($id);
+        $this->checkAccess($project);
+
+        $items = ProjectGallery::where('id_project', $project->id_project)
+            ->where('id_cost', $costId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($this->serializeItems($project, $items));
+    }
+
+    public function incomeGallery(int $id, int $incomeId)
+    {
+        $project = $this->resolveProject($id);
+        $this->checkAccess($project);
+
+        $items = ProjectGallery::where('id_project', $project->id_project)
+            ->where('id_income', $incomeId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($this->serializeItems($project, $items));
+    }
+
+    private function serializeItems(Project $project, $items)
+    {
+        $routeName = $this->routeName();
+
+        return $items->map(fn ($item) => [
+            'id'             => $item->id_gallery,
+            'file_type'      => $item->file_type,
+            'mime_type'      => $item->mime_type,
+            'label'          => $item->label,
+            'caption'        => $item->caption,
+            'original_name'  => $item->original_name,
+            'file_size'      => $item->file_size,
+            'file_size_human'=> $item->fileSizeHuman(),
+            'created_at'     => $item->created_at->format('Y-m-d H:i:s'),
+            'serve_url'      => route("{$routeName}.gallery.serve", [$project->id_project, $item->id_gallery]),
+        ])->values();
+    }
+
+    private function persistFile($file, Project $project, array $data): ProjectGallery|false|\Illuminate\Validation\ValidationException
+    {
         $mime = $file->getMimeType();
         $size = $file->getSize();
 
@@ -118,12 +249,15 @@ class GalleryController extends Controller
             $fileType = 'document';
             $maxBytes = 10 * 1024 * 1024;
         } else {
-            return back()->withErrors(['file' => 'Tipe file tidak didukung. Gunakan jpg/png/webp, mp4/mov, atau pdf.']);
+            return false;
         }
 
         if ($size > $maxBytes) {
             $limitMb = $maxBytes / (1024 * 1024);
-            return back()->withErrors(['file' => "Ukuran file melebihi batas {$limitMb}MB untuk tipe ini."]);
+
+            return \Illuminate\Validation\ValidationException::withMessages([
+                'file' => "Ukuran file melebihi batas {$limitMb}MB untuk tipe ini.",
+            ]);
         }
 
         $ext = $file->getClientOriginalExtension();
@@ -132,23 +266,18 @@ class GalleryController extends Controller
         $dir = 'gallery/'.$project->id_project;
         $file->storeAs($dir, $filename, 'public');
 
-        ProjectGallery::create([
+        return ProjectGallery::create([
             'id_perusahaan' => $project->id_perusahaan,
             'id_project'    => $project->id_project,
-            'label'         => trim($request->label),
+            'label'         => $data['label'],
             'file_name'     => $filename,
             'original_name' => $file->getClientOriginalName(),
             'file_type'     => $fileType,
             'mime_type'     => $mime,
             'file_size'     => $size,
-            'caption'       => $request->caption ? trim($request->caption) : null,
-            'uploaded_by'   => $user->id_akun ?? $user->id,
+            'caption'       => $data['caption'],
+            'uploaded_by'   => $data['uploaded_by'],
         ]);
-
-        $routeName = $this->routeName();
-
-        return redirect()->route("{$routeName}.gallery", $project->id_project)
-            ->with('success', 'File berhasil diunggah ke galeri.');
     }
 
     public function destroy(int $id, int $galleryId)
@@ -159,9 +288,6 @@ class GalleryController extends Controller
         $item = ProjectGallery::where('id_project', $project->id_project)
             ->where('id_gallery', $galleryId)
             ->firstOrFail();
-
-        $storagePath = 'gallery/'.$project->id_project.'/'.$item->file_name;
-        Storage::disk('public')->delete($storagePath);
 
         $item->delete();
 

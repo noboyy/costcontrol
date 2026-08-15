@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getInvestorIncomes } from '@/lib/api'
 import type { IncomeEntry } from '@/lib/types'
 import InvestorNav from '@/components/investor/nav'
+import ProofThumbs from '@/components/investor/proof-thumbs'
 import { formatRupiah, formatDate } from '@/lib/utils'
 
 export default function InvestorIncomesPage() {
@@ -102,12 +103,13 @@ Terapkan
                     <th className="px-4 py-2 text-right font-medium">Jml</th>
                     <th className="px-4 py-2 text-right font-medium">Harga Satuan</th>
                     <th className="px-4 py-2 text-right font-medium">Total</th>
+                    <th className="px-4 py-2 text-left font-medium">Bukti</th>
                   </tr>
                 </thead>
                 <tbody>
                   {incomes.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                      <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                         <div className="mb-2 text-2xl">📭</div>
                         Belum ada pendapatan tercatat.
                       </td>
@@ -128,6 +130,9 @@ Terapkan
                         <td className="px-4 py-2 text-right">{formatRupiah(i.harga_satuan)}</td>
                         <td className="px-4 py-2 text-right font-medium text-green-600">
                           {formatRupiah(i.total)}
+                        </td>
+                        <td className="px-4 py-2">
+                          <ProofThumbs items={i.gallery} />
                         </td>
                       </tr>
                     ))
@@ -162,6 +167,7 @@ Terapkan
                     </div>
                     {i.tipe && <div className="mt-2 inline-block rounded bg-muted px-2 py-0.5 text-xs">{i.tipe}</div>}
                     {i.catatan && <div className="mt-2 text-xs italic text-muted-foreground">{i.catatan}</div>}
+                    <ProofThumbs items={i.gallery} />
                   </div>
                 ))
               )}

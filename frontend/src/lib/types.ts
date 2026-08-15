@@ -86,6 +86,7 @@ export interface CostEntry {
   tipe: string | null
   kategori: string | null
   file_bukti: string | null
+  gallery: GalleryItem[]
 }
 
 export interface IncomeEntry {
@@ -100,6 +101,7 @@ export interface IncomeEntry {
   tipe: string | null
   kategori: string | null
   file_bukti: string | null
+  gallery: GalleryItem[]
 }
 
 export interface ReportResponse {

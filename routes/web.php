@@ -72,8 +72,14 @@ Route::middleware([
             $name = $prefix === 'projects' ? 'projects' : 'cost-centers';
             Route::get("/{$prefix}", [ProjectController::class, 'index'])->name("{$name}.index");
             Route::post("/{$prefix}", [ProjectController::class, 'store'])->name("{$name}.store");
-            Route::get("/{$prefix}/cost/{id}/bukti", [ProjectController::class, 'costBukti'])->name("{$name}.costBukti");
-            Route::get("/{$prefix}/income/{id}/bukti", [ProjectController::class, 'incomeBukti'])->name("{$name}.incomeBukti");
+            Route::get("/{$prefix}/{id}/cost/{costId}/bukti", [ProjectController::class, 'costBukti'])->name("{$name}.costBukti");
+            Route::get("/{$prefix}/{id}/income/{incomeId}/bukti", [ProjectController::class, 'incomeBukti'])->name("{$name}.incomeBukti");
+
+            // Gallery per-entry (bukti transaksi)
+            Route::get("/{$prefix}/{id}/cost/{costId}/gallery", [GalleryController::class, 'costGallery'])->name("{$name}.costGallery");
+            Route::get("/{$prefix}/{id}/income/{incomeId}/gallery", [GalleryController::class, 'incomeGallery'])->name("{$name}.incomeGallery");
+            Route::post("/{$prefix}/{id}/cost/{costId}/gallery", [GalleryController::class, 'storeCostGallery'])->name("{$name}.costGallery.store");
+            Route::post("/{$prefix}/{id}/income/{incomeId}/gallery", [GalleryController::class, 'storeIncomeGallery'])->name("{$name}.incomeGallery.store");
             Route::get("/{$prefix}/{id}", [ProjectController::class, 'show'])->name("{$name}.show");
             Route::post("/{$prefix}/{id}/update", [ProjectController::class, 'update'])->name("{$name}.update");
             Route::post("/{$prefix}/{id}/cost", [ProjectController::class, 'addCost'])->name("{$name}.addCost");

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { getInvestorCosts } from '@/lib/api'
 import type { CostEntry } from '@/lib/types'
 import InvestorNav from '@/components/investor/nav'
+import ProofThumbs from '@/components/investor/proof-thumbs'
 import { formatRupiah, formatDate } from '@/lib/utils'
 
 export default function InvestorCostsPage() {
@@ -103,12 +104,13 @@ Terapkan
                     <th className="px-4 py-2 text-right font-medium">Jml</th>
                     <th className="px-4 py-2 text-right font-medium">Harga Satuan</th>
                     <th className="px-4 py-2 text-right font-medium">Total</th>
+                    <th className="px-4 py-2 text-left font-medium">Bukti</th>
                   </tr>
                 </thead>
                 <tbody>
                   {costs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                      <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
                         <div className="mb-2 text-2xl">📭</div>
                         Belum ada biaya tercatat.
                       </td>
@@ -129,6 +131,9 @@ Terapkan
                         <td className="px-4 py-2 text-right">{formatRupiah(c.harga_satuan)}</td>
                         <td className="px-4 py-2 text-right font-medium text-red-600">
                           {formatRupiah(c.total)}
+                        </td>
+                        <td className="px-4 py-2">
+                          <ProofThumbs items={c.gallery} />
                         </td>
                       </tr>
                     ))
@@ -163,6 +168,7 @@ Terapkan
                     </div>
                     {c.tipe && <div className="mt-2 inline-block rounded bg-muted px-2 py-0.5 text-xs">{c.tipe}</div>}
                     {c.catatan && <div className="mt-2 text-xs italic text-muted-foreground">{c.catatan}</div>}
+                    <ProofThumbs items={c.gallery} />
                   </div>
                 ))
               )}

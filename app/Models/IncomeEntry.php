@@ -59,4 +59,9 @@ class IncomeEntry extends Model
     {
         return $this->belongsTo(IncomeType::class, 'id_income_type', 'id_income_type');
     }
+
+    public function gallery()
+    {
+        return $this->hasMany(ProjectGallery::class, 'id_income', 'id_income');
+    }
 }

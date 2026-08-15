@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectGallery extends Model
 {
@@ -13,6 +14,8 @@ class ProjectGallery extends Model
     protected $fillable = [
         'id_perusahaan',
         'id_project',
+        'id_cost',
+        'id_income',
         'label',
         'file_name',
         'original_name',
@@ -23,6 +26,15 @@ class ProjectGallery extends Model
         'uploaded_by',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $model) {
+            if ($model->file_name) {
+                Storage::disk('public')->delete('gallery/'.$model->id_project.'/'.$model->file_name);
+            }
+        });
+    }
+
     protected $casts = [
         'file_size' => 'integer',
     ];
@@ -30,6 +42,16 @@ class ProjectGallery extends Model
     public function project()
     {
         return $this->belongsTo(Project::class, 'id_project', 'id_project');
+    }
+
+    public function cost()
+    {
+        return $this->belongsTo(CostEntry::class, 'id_cost', 'id_cost');
+    }
+
+    public function income()
+    {
+        return $this->belongsTo(IncomeEntry::class, 'id_income', 'id_income');
     }
 
     public function uploader()

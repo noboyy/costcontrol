@@ -118,7 +118,7 @@ class InvestorController extends Controller
         $from = $request->get('from');
         $to = $request->get('to');
 
-        $query = CostEntry::with(['costType'])
+        $query = CostEntry::with(['costType', 'gallery'])
             ->where('id_project', $projectId)
             ->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc');
@@ -142,6 +142,7 @@ class InvestorController extends Controller
             'tipe' => $e->costType?->nama,
             'kategori' => $e->costType?->kategori,
             'file_bukti' => $e->file_bukti,
+            'gallery' => $e->gallery->map(fn ($g) => $this->serializeGalleryItem($g))->values(),
         ]);
 
         return response()->json(['costs' => $entries]);
@@ -162,7 +163,7 @@ class InvestorController extends Controller
         $from = $request->get('from');
         $to = $request->get('to');
 
-        $query = IncomeEntry::with(['incomeType'])
+        $query = IncomeEntry::with(['incomeType', 'gallery'])
             ->where('id_project', $projectId)
             ->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc');
@@ -186,6 +187,7 @@ class InvestorController extends Controller
             'tipe' => $e->incomeType?->nama,
             'kategori' => $e->incomeType?->kategori,
             'file_bukti' => $e->file_bukti,
+            'gallery' => $e->gallery->map(fn ($g) => $this->serializeGalleryItem($g))->values(),
         ]);
 
         return response()->json(['incomes' => $entries]);
@@ -260,18 +262,7 @@ class InvestorController extends Controller
             $query->where('label', $request->input('label'));
         }
 
-        $items = $query->get()->map(fn ($item) => [
-            'id'             => $item->id_gallery,
-            'file_type'      => $item->file_type,
-            'mime_type'      => $item->mime_type,
-            'label'          => $item->label,
-            'caption'        => $item->caption,
-            'original_name'  => $item->original_name,
-            'file_size'      => $item->file_size,
-            'file_size_human'=> $item->fileSizeHuman(),
-            'created_at'     => $item->created_at,
-            'serve_url'      => url("/api/v1/investor/project/gallery/{$item->id_gallery}/serve"),
-        ]);
+        $items = $query->get()->map(fn ($item) => $this->serializeGalleryItem($item));
 
         $labels = ProjectGallery::where('id_project', $projectId)
             ->whereNotNull('label')
@@ -323,5 +314,21 @@ class InvestorController extends Controller
         $relation = ProjectInvestor::where('id_akun', $user->id_akun)->first();
 
         return $relation?->id_project;
+    }
+
+    private function serializeGalleryItem(ProjectGallery $item): array
+    {
+        return [
+            'id'              => $item->id_gallery,
+            'file_type'       => $item->file_type,
+            'mime_type'       => $item->mime_type,
+            'label'           => $item->label,
+            'caption'         => $item->caption,
+            'original_name'   => $item->original_name,
+            'file_size'       => $item->file_size,
+            'file_size_human' => $item->fileSizeHuman(),
+            'created_at'      => $item->created_at,
+            'serve_url'       => url("/api/v1/investor/project/gallery/{$item->id_gallery}/serve"),
+        ];
     }
 }

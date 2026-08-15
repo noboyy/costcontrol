@@ -59,4 +59,9 @@ class CostEntry extends Model
     {
         return $this->belongsTo(CostType::class, 'id_cost_type', 'id_cost_type');
     }
+
+    public function gallery()
+    {
+        return $this->hasMany(ProjectGallery::class, 'id_cost', 'id_cost');
+    }
 }

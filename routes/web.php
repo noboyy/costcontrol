@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CostCategoryController;
 use App\Http\Controllers\CostGroupController;
 use App\Http\Controllers\CostTypeController;
@@ -46,6 +47,16 @@ Route::middleware([
     Route::post('/profil/password', [ProfileController::class, 'updatePassword'])->name('profil.updatePassword');
     Route::get('/profil/foto', [ProfileController::class, 'photo'])->name('profil.photo');
     Route::post('/profil/foto', [ProfileController::class, 'updatePhoto'])->name('profil.updatePhoto');
+
+    // Gallery read — investor + admin bisa akses, guard di controller
+    Route::middleware('not-super-admin')->group(function () {
+        foreach (['cost-centers', 'projects'] as $prefix) {
+            $name = $prefix === 'projects' ? 'projects' : 'cost-centers';
+            Route::get("/{$prefix}/{id}/gallery", [GalleryController::class, 'index'])->name("{$name}.gallery");
+            Route::get("/{$prefix}/{id}/gallery/labels", [GalleryController::class, 'labels'])->name("{$name}.gallery.labels");
+            Route::get("/{$prefix}/{id}/gallery/{galleryId}/file", [GalleryController::class, 'serve'])->name("{$name}.gallery.serve");
+        }
+    });
 
     Route::middleware(['role:SUPER ADMIN,ADMIN'])->group(function () {
         Route::middleware('not-super-admin')->group(function () {
@@ -99,6 +110,10 @@ Route::middleware([
             // Daily close
             Route::post("/{$prefix}/{id}/daily-close", [DailyCloseController::class, 'store'])->name("{$name}.dailyClose.store");
             Route::post("/{$prefix}/{id}/daily-close/reopen", [DailyCloseController::class, 'destroy'])->name("{$name}.dailyClose.reopen");
+
+            // Gallery write — admin only
+            Route::post("/{$prefix}/{id}/gallery", [GalleryController::class, 'store'])->name("{$name}.gallery.store");
+            Route::post("/{$prefix}/{id}/gallery/{galleryId}/delete", [GalleryController::class, 'destroy'])->name("{$name}.gallery.destroy");
         }
         });
 

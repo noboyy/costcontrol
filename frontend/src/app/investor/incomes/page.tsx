@@ -119,6 +119,7 @@ Terapkan
                         <td className="px-4 py-2">
                           <div>{i.keterangan}</div>
                           {i.tipe && <div className="text-xs text-muted-foreground">{i.tipe}</div>}
+                          {i.catatan && <div className="mt-1 text-xs italic text-muted-foreground">{i.catatan}</div>}
                         </td>
                         <td className="px-4 py-2 text-muted-foreground">{i.kategori ?? '-'}</td>
                         <td className="px-4 py-2 text-right">
@@ -160,6 +161,7 @@ Terapkan
                       </div>
                     </div>
                     {i.tipe && <div className="mt-2 inline-block rounded bg-muted px-2 py-0.5 text-xs">{i.tipe}</div>}
+                    {i.catatan && <div className="mt-2 text-xs italic text-muted-foreground">{i.catatan}</div>}
                   </div>
                 ))
               )}

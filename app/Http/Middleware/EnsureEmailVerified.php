@@ -15,7 +15,7 @@ class EnsureEmailVerified
         $user = $request->user();
 
         // Only self-registered USER accounts need email verification.
-        if (! $user || $user->isAdmin() || ! Features::enabled(Features::emailVerification())) {
+        if (! $user || $user->isAdmin() || $user->isInvestor() || ! Features::enabled(Features::emailVerification())) {
             return $next($request);
         }
 

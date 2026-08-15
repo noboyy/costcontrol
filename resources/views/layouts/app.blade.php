@@ -913,6 +913,26 @@
         </div>
 
         <div class="sidebar-nav">
+            @if(auth()->user()->isInvestor())
+            {{-- Sidebar khusus investor --}}
+            @php
+                $investorProj = auth()->user()->investorProject()->with('project')->first();
+                $invProject = $investorProj?->project;
+            @endphp
+            <div class="sidebar-section open">
+                <div class="sidebar-section-title">Proyek Saya</div>
+                <div class="sidebar-section-body" style="display:block;">
+                    @if($invProject)
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('cost-centers.gallery') ? 'active' : '' }}"
+                           href="{{ route('cost-centers.gallery', $invProject->id_project) }}">
+                            <i class="bi bi-images"></i> Galeri Proyek
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @else
             <div class="sidebar-section open">
                 <button type="button" class="sidebar-acc" onclick="toggleAcc(this)">
                     Fitur Aplikasi <i class="bi bi-chevron-right chev"></i>
@@ -1013,8 +1033,7 @@
             </div>
             @endif
         </div>
-
-        <div class="sidebar-footer">
+        @endif
             <a href="{{ route('profil') }}" class="sidebar-user" style="margin-bottom:8px;">
                 <div class="avatar">{{ strtoupper(substr(auth()->user()->nama_lengkap ?? 'A', 0, 1)) }}</div>
                 <div class="meta">

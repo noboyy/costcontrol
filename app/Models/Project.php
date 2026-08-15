@@ -95,6 +95,11 @@ class Project extends Model
         return $this->hasMany(FixedCost::class, 'id_project', 'id_project');
     }
 
+    public function galleries()
+    {
+        return $this->hasMany(ProjectGallery::class, 'id_project', 'id_project');
+    }
+
     public function dailyCloses()
     {
         return $this->hasMany(DailyClose::class, 'id_project', 'id_project');

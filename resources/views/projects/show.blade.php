@@ -409,6 +409,14 @@
     <button type="button" class="tab" data-tab="investor" onclick="showTab('investor', this)">
         Investor <span class="count">{{ $investor ? 1 : 0 }}</span>
     </button>
+    @php $galleryRoute = request()->segment(1) === 'projects' ? 'projects' : 'cost-centers'; @endphp
+    <a href="{{ route("{$galleryRoute}.gallery", $project->id_project) }}"
+       class="tab" style="text-decoration:none;">
+        <i class="bi bi-images"></i> Galeri
+        @if($project->galleries_count ?? false)
+            <span class="count">{{ $project->galleries_count }}</span>
+        @endif
+    </a>
     <button type="button" class="tab" data-tab="delete" onclick="showTab('delete', this)" style="color:var(--danger);">
         Hapus <i class="bi bi-trash"></i>
     </button>

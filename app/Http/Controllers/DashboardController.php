@@ -13,6 +13,19 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
+
+        // Investor redirect langsung ke gallery proyeknya
+        if ($user->isInvestor()) {
+            $investorProject = $user->investorProject()->with('project')->first();
+            if ($investorProject && $investorProject->project) {
+                $project = $investorProject->project;
+                $prefix = $project->isUmkm() ? 'cost-centers' : 'cost-centers';
+                return redirect()->route('cost-centers.gallery', $project->id_project);
+            }
+            // Fallback kalau tidak ada proyek
+            abort(403, 'Tidak ada proyek yang terhubung ke akun investor ini.');
+        }
+
         $companyId = $user->id_perusahaan;
 
         // Get active project IDs

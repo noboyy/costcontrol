@@ -6,6 +6,7 @@ use App\Services\MasterDataModuleService;
 use App\Services\TenantResolver;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +23,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Allow Sanctum to read token from ?token= query param (for file serving via <img src>)
+        Sanctum::getAccessTokenFromRequestUsing(function ($request) {
+            $token = $request->bearerToken() ?? $request->query('token');
+            return $token;
+        });
+
         View::composer('layouts.app', function ($view) {
             $user = auth()->user();
 

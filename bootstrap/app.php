@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureTenant;
 use App\Http\Middleware\InvestorOnly;
 use App\Http\Middleware\NoCache;
 use App\Http\Middleware\NotSuperAdmin;
+use App\Http\Middleware\TokenFromQuery;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verified.user' => EnsureEmailVerified::class,
             'investor' => InvestorOnly::class,
             'not-super-admin' => NotSuperAdmin::class,
+            'token-from-query' => TokenFromQuery::class,
         ]);
 
         $middleware->appendToGroup('web', NoCache::class);

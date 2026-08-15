@@ -87,5 +87,11 @@ Route::prefix('v1')->group(function () {
         Route::get('/investor/project/costs', [InvestorController::class, 'costs']);
         Route::get('/investor/project/incomes', [InvestorController::class, 'incomes']);
         Route::get('/investor/project/report', [InvestorController::class, 'report']);
+        Route::get('/investor/project/gallery', [InvestorController::class, 'gallery']);
+    });
+
+    // Gallery serve — token-from-query MUST run before auth:sanctum
+    Route::middleware(['auth:sanctum', 'active', 'investor'])->group(function () {
+        Route::get('/investor/project/gallery/{galleryId}/serve', [InvestorController::class, 'galleryServe']);
     });
 });

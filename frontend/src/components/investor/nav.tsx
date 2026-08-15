@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { logout } from '@/lib/api'
 import { getStoredUser } from '@/lib/api'
 import type { User } from '@/lib/types'
-import { BarChart3, TrendingDown, TrendingUp, FileText, LogOut, Menu, X } from 'lucide-react'
+import { BarChart3, TrendingDown, TrendingUp, FileText, LogOut, Menu, X, Images } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/investor/costs', label: 'Biaya', icon: TrendingDown },
   { href: '/investor/incomes', label: 'Pendapatan', icon: TrendingUp },
   { href: '/investor/report', label: 'Laporan', icon: FileText },
+  { href: '/investor/gallery', label: 'Galeri', icon: Images },
 ]
 
 export default function InvestorNav() {

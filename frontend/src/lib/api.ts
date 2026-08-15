@@ -4,6 +4,7 @@ import type {
   CostEntry,
   IncomeEntry,
   ReportResponse,
+  GalleryResponse,
 } from './types'
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1'
@@ -121,4 +122,20 @@ export async function getInvestorReport(params?: {
   if (params?.to) qs.set('to', params.to)
   const query = qs.toString() ? `?${qs.toString()}` : ''
   return apiFetch(`/investor/project/report${query}`)
+}
+
+export async function getInvestorGallery(params?: {
+  label?: string
+}): Promise<GalleryResponse> {
+  const qs = new URLSearchParams()
+  if (params?.label) qs.set('label', params.label)
+  const query = qs.toString() ? `?${qs.toString()}` : ''
+  return apiFetch<GalleryResponse>(`/investor/project/gallery${query}`)
+}
+
+export function buildGalleryServeUrl(serveUrl: string): string {
+  const token = getToken()
+  if (!token) return serveUrl
+  const sep = serveUrl.includes('?') ? '&' : '?'
+  return `${serveUrl}${sep}token=${encodeURIComponent(token)}`
 }

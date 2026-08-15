@@ -111,3 +111,21 @@ export interface ReportResponse {
   byCostCategory: Record<string, number>
   byIncomeCategory: Record<string, number>
 }
+
+export interface GalleryItem {
+  id: number
+  file_type: 'image' | 'video' | 'document'
+  mime_type: string
+  label: string
+  caption: string | null
+  original_name: string
+  file_size: number
+  file_size_human: string
+  created_at: string
+  serve_url: string
+}
+
+export interface GalleryResponse {
+  items: GalleryItem[]
+  labels: string[]
+}

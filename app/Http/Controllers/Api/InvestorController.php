@@ -8,6 +8,7 @@ use App\Models\CostEntry;
 use App\Models\CostType;
 use App\Models\IncomeEntry;
 use App\Models\IncomeType;
+use App\Models\ProjectGallery;
 use App\Models\ProjectInvestor;
 use App\Services\DailyControlService;
 use App\Services\CashService;
@@ -236,6 +237,84 @@ class InvestorController extends Controller
             'margin' => $totalIncome - $totalCost,
             'byCostCategory' => $byCostCategory,
             'byIncomeCategory' => $byIncomeCategory,
+        ]);
+    }
+
+    /**
+     * List gallery items untuk investor yang login.
+     * Support filter by ?label=xxx
+     */
+    public function gallery(Request $request)
+    {
+        $user = $request->user();
+        $projectId = $this->resolveProjectId($user);
+
+        if (! $projectId) {
+            return response()->json(['message' => 'Tidak ada proyek yang di-assign.'], 404);
+        }
+
+        $query = ProjectGallery::where('id_project', $projectId)
+            ->orderBy('created_at', 'desc');
+
+        if ($request->filled('label')) {
+            $query->where('label', $request->input('label'));
+        }
+
+        $items = $query->get()->map(fn ($item) => [
+            'id'             => $item->id_gallery,
+            'file_type'      => $item->file_type,
+            'mime_type'      => $item->mime_type,
+            'label'          => $item->label,
+            'caption'        => $item->caption,
+            'original_name'  => $item->original_name,
+            'file_size'      => $item->file_size,
+            'file_size_human'=> $item->fileSizeHuman(),
+            'created_at'     => $item->created_at,
+            'serve_url'      => url("/api/v1/investor/project/gallery/{$item->id_gallery}/serve"),
+        ]);
+
+        $labels = ProjectGallery::where('id_project', $projectId)
+            ->whereNotNull('label')
+            ->where('label', '!=', '')
+            ->distinct()
+            ->orderBy('label')
+            ->pluck('label');
+
+        return response()->json([
+            'items'  => $items,
+            'labels' => $labels,
+        ]);
+    }
+
+    /**
+     * Serve file gallery — token via query param (?token=xxx) untuk bisa dipakai di <img src>.
+     */
+    public function galleryServe(Request $request, int $galleryId)
+    {
+        $user = $request->user();
+        $projectId = $this->resolveProjectId($user);
+
+        if (! $projectId) {
+            return response()->json(['message' => 'Tidak ada proyek yang di-assign.'], 404);
+        }
+
+        $item = ProjectGallery::where('id_gallery', $galleryId)
+            ->where('id_project', $projectId)
+            ->first();
+
+        if (! $item) {
+            return response()->json(['message' => 'File tidak ditemukan.'], 404);
+        }
+
+        $path = $item->storagePath();
+
+        if (! file_exists($path)) {
+            return response()->json(['message' => 'File tidak tersedia di storage.'], 404);
+        }
+
+        return response()->file($path, [
+            'Content-Type'        => $item->mime_type,
+            'Content-Disposition' => 'inline; filename="'.addslashes($item->original_name).'"',
         ]);
     }
 

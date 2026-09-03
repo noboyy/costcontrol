@@ -34,7 +34,6 @@ Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'active',
-    'trial',
     'tenant',
     'verified.user',
 ])->group(function () {
@@ -165,11 +164,9 @@ Route::middleware([
             Route::post('/asset/maintenance/{id}/delete', [AssetController::class, 'deleteMaintenance'])->name('asset.deleteMaintenance');
         });
 
-        // Perusahaan (admin can edit own; super admin all)
+        // Pengaturan perusahaan (edit profile perusahaan — single tenant)
         Route::get('/perusahaan', [PerusahaanController::class, 'index'])->name('perusahaan.index');
-        Route::post('/perusahaan', [PerusahaanController::class, 'store'])->name('perusahaan.store');
         Route::post('/perusahaan/{id}/update', [PerusahaanController::class, 'update'])->name('perusahaan.update');
-        Route::post('/perusahaan/{id}/delete', [PerusahaanController::class, 'delete'])->name('perusahaan.delete');
     });
 
     Route::middleware(['role:SUPER ADMIN'])->group(function () {
@@ -179,8 +176,5 @@ Route::middleware([
         Route::post('/pengguna/{id}/delete', [PenggunaController::class, 'delete'])->name('pengguna.delete');
 
         Route::get('/super-admin/stats', [SuperAdminController::class, 'stats'])->name('super-admin.stats');
-        Route::post('/super-admin/trial/{id}/extend', [SuperAdminController::class, 'extendTrial'])->name('super-admin.extendTrial');
-        Route::post('/super-admin/user/{id}/delete', [SuperAdminController::class, 'deleteUser'])->name('super-admin.deleteUser');
-        Route::post('/super-admin/tenant/{id}/delete', [SuperAdminController::class, 'deleteTenant'])->name('super-admin.deleteTenant');
     });
 });

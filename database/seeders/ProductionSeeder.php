@@ -16,10 +16,10 @@ class ProductionSeeder extends Seeder
     public function run(): void
     {
         $company = Perusahaan::firstOrCreate(
-            ['nama_perusahaan' => 'Demo CostControl'],
+            ['nama_perusahaan' => 'Sahla Journey'],
             [
                 'alamat_lengkap' => 'Indonesia',
-                'owner' => 'Owner Demo',
+                'owner' => 'Owner Sahla Journey',
             ]
         );
 
@@ -39,7 +39,7 @@ class ProductionSeeder extends Seeder
             [
                 'id_pengguna' => $pengguna->id_pengguna,
                 'role' => 'SUPER ADMIN',
-                'email' => 'admin@costcontrol.id',
+                'email' => 'admin@sahlajourney.com',
                 'password' => Hash::make('admin123'),
                 'is_active' => '1',
                 'change_password' => 0,
@@ -85,6 +85,6 @@ class ProductionSeeder extends Seeder
             );
         }
 
-        $this->command?->info('Production seed done. Login: admin / admin123');
+        $this->command?->info('Production seed done. Login: admin@sahlajourney.com / admin123');
     }
 }

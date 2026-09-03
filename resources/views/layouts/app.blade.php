@@ -7,7 +7,7 @@
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="icon" type="image/png" href="{{ asset('favicon-32.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-    <title>{{ $title ?? 'Dashboard' }} — CostControl</title>
+    <title>{{ $title ?? 'Dashboard' }} — Sahla Journey Finance</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -907,7 +907,7 @@
         <div class="sidebar-brand">
             <div class="brand-mark">CC</div>
             <div class="brand-text">
-                <h1>CostControl</h1>
+                <h1>Sahla Journey Finance</h1>
                 <small>Manajemen Keuangan</small>
             </div>
         </div>
@@ -1027,7 +1027,7 @@
                 <div class="sidebar-section-title">Pengaturan</div>
                 <div class="nav-item">
                     <a class="nav-link {{ request()->routeIs('perusahaan.*') ? 'active' : '' }}" href="{{ route('perusahaan.index') }}">
-                        <i class="bi bi-buildings"></i> Perusahaan
+                        <i class="bi bi-gear"></i> Pengaturan
                     </a>
                 </div>
             </div>
@@ -1071,7 +1071,7 @@
                     <input type="search" id="globalSearchHint" placeholder="Cari di halaman... (/)" autocomplete="off">
                 </div>
                 @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin() && request()->routeIs('cost-categories.index'))
-                <button type="button" class="btn btn-sm btn-outline" onclick="openModal('downloadModuleModal')" title="Import modul master data dari CostControl">
+                <button type="button" class="btn btn-sm btn-outline" onclick="openModal('downloadModuleModal')" title="Import modul master data global">
                     <i class="bi bi-download"></i> Import Modul
                 </button>
                 @endif
@@ -1122,7 +1122,7 @@
             <form method="POST" action="{{ route('modules.download') }}">
                 @csrf
                 <div class="modal-body">
-                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Pilih data master yang ingin diimport dari CostControl:</p>
+                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Pilih data master yang ingin diimport:</p>
                     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
                         @foreach(\App\Services\MasterDataModuleService::MODULES as $key => $label)
                         <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;">

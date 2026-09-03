@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk — CostControl</title>
+    <title>Masuk — Sahla Journey Finance</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="icon" type="image/png" href="{{ asset('favicon-32.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
@@ -220,7 +220,7 @@
         <div class="brand">
             <div class="brand-mark">CC</div>
             <div>
-                <h1>CostControl</h1>
+                <h1>Sahla Journey Finance</h1>
                 <p>Manajemen Keuangan Proyek</p>
             </div>
         </div>
@@ -251,7 +251,7 @@
                 </div>
             </div>
         </div>
-        <div style="font-size:12px;color:#64748b;position:relative;z-index:1;">© {{ date('Y') }} CostControl</div>
+        <div style="font-size:12px;color:#64748b;position:relative;z-index:1;">© {{ date('Y') }} Sahla Journey Finance</div>
     </div>
 
     <div class="panel-right">
@@ -306,7 +306,7 @@
                 </form>
             </div>
             <div class="footer-note">
-                Belum punya akun? <a href="{{ route('register') }}" style="color:#2563eb;text-decoration:none;font-weight:600;">Coba gratis 14 hari</a>
+                Hanya untuk internal Sahla Journey. Hubungi administrator untuk mendapatkan akun.
             </div>
         </div>
     </div>

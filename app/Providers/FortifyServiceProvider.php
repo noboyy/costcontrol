@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
@@ -13,7 +12,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Fortify;
@@ -27,7 +25,6 @@ class FortifyServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
@@ -35,10 +32,6 @@ class FortifyServiceProvider extends ServiceProvider
 
         Fortify::loginView(function () {
             return view('auth.login');
-        });
-
-        Fortify::registerView(function () {
-            return view('auth.register');
         });
 
         Fortify::authenticateUsing(function (Request $request) {
@@ -51,12 +44,6 @@ class FortifyServiceProvider extends ServiceProvider
 
             if (! Hash::check($request->password, $user->password)) {
                 return null;
-            }
-
-            if ($user->isTrialExpired()) {
-                throw ValidationException::withMessages([
-                    'email' => 'Masa trial Anda telah berakhir. Silakan hubungi administrator untuk perpanjang.',
-                ]);
             }
 
             return $user;

@@ -6,8 +6,8 @@ return [
     | Cross-Origin Resource Sharing (CORS) Configuration
     |--------------------------------------------------------------------------
     |
-    | Bearer token auth (localStorage) — no cookies, so credentials disabled.
-    | Only the production frontend origin is allowed.
+    | Full Laravel (Blade) — session-based auth, no SPA frontend.
+    | CORS tidak dibutuhkan untuk UI; dikosongkan demi keamanan.
     |
     */
 
@@ -16,7 +16,6 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => array_filter([
-        'https://costcontrol.technoutama.com',
         env('APP_ENV') === 'local' ? 'http://localhost:3000' : null,
     ]),
 

@@ -37,6 +37,7 @@
                     <tr>
                         <th>Nama</th>
                         <th>Username</th>
+                        <th>Email</th>
                         <th>Role</th>
                         <th>Telepon</th>
                         <th>Jabatan</th>
@@ -46,7 +47,7 @@
                 </thead>
                 <tbody>
                     @forelse($pengguna as $user)
-                        <tr data-search="{{ strtolower(($user->nama_lengkap ?? '').' '.($user->akun?->username ?? '').' '.($user->jabatan ?? '')) }}">
+                        <tr data-search="{{ strtolower(($user->nama_lengkap ?? '').' '.($user->akun?->username ?? '').' '.($user->akun?->email ?? '').' '.($user->jabatan ?? '')) }}">
                             <td>
                                 <div class="cell-title">{{ $user->nama_lengkap }}</div>
                                 @if($user->perusahaan)
@@ -54,6 +55,7 @@
                                 @endif
                             </td>
                             <td>{{ $user->akun?->username ?? '—' }}</td>
+                            <td>{{ $user->akun?->email ?? '—' }}</td>
                             <td>
                                 <span class="badge {{ $user->akun?->role === 'SUPER ADMIN' ? 'badge-red' : 'badge-blue' }}">
                                     {{ $user->akun?->role ?? '—' }}
@@ -112,6 +114,10 @@
                         <label class="form-label">Nama Lengkap <span class="req">*</span></label>
                         <input type="text" class="form-input" name="nama_lengkap" value="{{ $user->nama_lengkap }}" required>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Email <span class="req">*</span></label>
+                        <input type="email" class="form-input" name="email" value="{{ $user->akun?->email }}" required autocomplete="off">
+                    </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Telepon</label>
@@ -158,6 +164,10 @@
                 <div class="form-group">
                     <label class="form-label">Nama Lengkap <span class="req">*</span></label>
                     <input type="text" class="form-input" name="nama_lengkap" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email <span class="req">*</span></label>
+                    <input type="email" class="form-input" name="email" required autocomplete="off">
                 </div>
                 <div class="form-row">
                     <div class="form-group">

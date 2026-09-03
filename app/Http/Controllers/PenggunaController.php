@@ -36,6 +36,7 @@ class PenggunaController extends Controller
             'nama_lengkap' => 'required|string|max:255',
             'no_hp' => 'nullable|string|max:20',
             'jabatan' => 'nullable|string|max:100',
+            'email' => 'required|email|max:255|unique:akun,email',
             'username' => 'required|string|max:50|unique:akun,username',
             'password' => 'required|string|min:6|confirmed',
         ]);
@@ -53,6 +54,7 @@ class PenggunaController extends Controller
             Akun::create([
                 'id_pengguna' => $pengguna->id_pengguna,
                 'username' => $request->username,
+                'email' => $request->email,
                 'role' => 'ADMIN',
                 'password' => Hash::make($request->password),
                 'is_active' => '1',
@@ -81,6 +83,7 @@ class PenggunaController extends Controller
             'nama_lengkap' => 'required|string|max:255',
             'no_hp' => 'nullable|string|max:20',
             'jabatan' => 'nullable|string|max:100',
+            'email' => 'required|email|max:255|unique:akun,email,'.$pengguna->akun?->id_akun.',id_akun',
             'username' => 'nullable|string|max:50|unique:akun,username,'.$pengguna->akun?->id_akun.',id_akun',
             'password' => 'nullable|string|min:6',
             'is_active' => 'nullable|in:0,1',
@@ -97,6 +100,10 @@ class PenggunaController extends Controller
 
             if ($pengguna->akun) {
                 $updateData = [];
+
+                if ($request->filled('email')) {
+                    $updateData['email'] = $request->email;
+                }
 
                 if ($request->filled('username')) {
                     $updateData['username'] = $request->username;

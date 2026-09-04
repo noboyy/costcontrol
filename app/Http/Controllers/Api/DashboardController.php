@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\CostEntry;
 use App\Models\IncomeEntry;
 use App\Models\Project;
-use App\Services\DailyControlService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -110,39 +109,6 @@ class DashboardController extends Controller
                 $query->where('id_perusahaan', $companyId);
             })->orderBy('created_at', 'desc')->get();
 
-        $today = now()->format('Y-m-d');
-        $dailyService = app(DailyControlService::class);
-
-        $umkmToday = $projects->where(fn ($p) => $p->isUmkm())->map(function ($unit) use ($today, $dailyService) {
-            $snap = $dailyService->snapshot($unit, $today);
-
-            return [
-                'id_project' => $unit->id_project,
-                'nama_project' => $unit->nama_project,
-                'lokasi' => $unit->lokasi,
-                'today_cost' => $snap['cost_cash'],
-                'today_income' => $snap['income'],
-                'today_margin' => $snap['margin_cash'],
-                'margin_economic' => $snap['margin_economic'],
-                'fixed_prorate' => $snap['fixed_prorate'],
-                'daily_target' => $snap['daily_budget'],
-                'usage_pct' => $snap['budget_usage_pct'],
-                'leak_alert' => $snap['leak_alert'],
-                'over_budget' => $snap['over_budget'],
-                'is_closed' => $snap['is_closed'],
-                'cogs_ratio_pct' => $snap['cogs_ratio_pct'],
-            ];
-        })->values();
-
-        $umkmTodayTotals = [
-            'cost' => $umkmToday->sum('today_cost'),
-            'income' => $umkmToday->sum('today_income'),
-            'margin' => $umkmToday->sum('today_margin'),
-            'margin_economic' => $umkmToday->sum('margin_economic'),
-            'alerts' => $umkmToday->filter(fn ($u) => $u['leak_alert'] || $u['over_budget'])->count(),
-            'count' => $umkmToday->count(),
-        ];
-
         $weeklyCosts = $this->getWeeklySeries($companyId, $activeProjectIds, CostEntry::class, 'total');
 
         return response()->json([
@@ -159,10 +125,7 @@ class DashboardController extends Controller
             'weeklyCost' => $weeklyCosts,
             'activeProjects' => count($activeProjectIds),
             'recentActivities' => $recentActivities,
-            'umkmToday' => $umkmToday,
-            'umkmTodayTotals' => $umkmTodayTotals,
-            'countProject' => $projects->where(fn ($p) => ! $p->isUmkm())->count(),
-            'countUmkm' => $projects->where(fn ($p) => $p->isUmkm())->count(),
+            'countProject' => $projects->count(),
         ]);
     }
 

@@ -12,8 +12,6 @@ class Project extends Model
 
     public const MODE_PROJECT = 'project';
 
-    public const MODE_UMKM = 'umkm';
-
     public const BUDGET_TOTAL = 'total';
 
     public const BUDGET_MONTHLY = 'monthly';
@@ -110,11 +108,6 @@ class Project extends Model
         return ($this->mode ?: self::MODE_PROJECT) === self::MODE_PROJECT;
     }
 
-    public function isUmkm(): bool
-    {
-        return $this->mode === self::MODE_UMKM;
-    }
-
     public function isArchived(): bool
     {
         return $this->status === 'archived';
@@ -127,12 +120,12 @@ class Project extends Model
 
     public function getModeLabelAttribute(): string
     {
-        return $this->isUmkm() ? 'UMKM' : 'Proyek';
+        return 'Keberangkatan';
     }
 
     public function getUnitLabelAttribute(): string
     {
-        return $this->isUmkm() ? 'Outlet / Unit' : 'Proyek';
+        return 'Keberangkatan';
     }
 
     public function getTotalCostAttribute(): float
@@ -235,11 +228,6 @@ class Project extends Model
     public function scopeMode($query, string $mode)
     {
         return $query->where('mode', $mode);
-    }
-
-    public function scopeUmkm($query)
-    {
-        return $query->where('mode', self::MODE_UMKM);
     }
 
     public function scopeProjectMode($query)

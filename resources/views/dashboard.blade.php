@@ -8,21 +8,13 @@
 <div class="page-header">
     <div>
         <h2>Halo, {{ explode(' ', auth()->user()->nama_lengkap ?? 'Admin')[0] }}</h2>
-        <p>Ringkasan multi-bisnis · {{ now()->translatedFormat('l, d F Y') }}
-            @if($module !== 'umkm')
-            · <strong>{{ $countProject ?? 0 }}</strong> proyek
-            @endif
-            @if($module !== 'project')
-            · <strong>{{ $countUmkm ?? 0 }}</strong> UMKM
-            @endif
+        <p>Ringkasan keberangkatan · {{ now()->translatedFormat('l, d F Y') }}
+            · <strong>{{ $countProject ?? 0 }}</strong> keberangkatan
         </p>
     </div>
     <div class="page-actions">
-        <a href="{{ route('cost-centers.index') }}" class="btn btn-outline"><i class="bi bi-building"></i> Unit Bisnis</a>
-        @if($module !== 'project')
-        <button class="btn btn-outline" onclick="location.href='{{ route('cost-centers.index') }}#umkm'"><i class="bi bi-shop"></i> + UMKM</button>
-        @endif
-        <button class="btn btn-primary" onclick="location.href='{{ route('cost-centers.index') }}#new'"><i class="bi bi-plus-lg"></i> Unit Baru</button>
+        <a href="{{ route('cost-centers.index') }}" class="btn btn-outline"><i class="bi bi-airplane"></i> Keberangkatan</a>
+        <button class="btn btn-primary" onclick="location.href='{{ route('cost-centers.index') }}#new'"><i class="bi bi-plus-lg"></i> Keberangkatan Baru</button>
     </div>
 </div>
 
@@ -64,90 +56,6 @@
     </div>
 </div>
 
-{{-- UMKM Hari Ini --}}
-@if($module !== 'project' && (($umkmTodayTotals['count'] ?? 0) > 0 || ($countUmkm ?? 0) > 0))
-<div class="card" style="margin-bottom:18px;">
-    <div class="card-header">
-        <h3><i class="bi bi-shop"></i> UMKM · Hari Ini</h3>
-        <a href="{{ route('cost-centers.index', ['mode' => 'umkm']) }}" class="btn btn-sm btn-outline">Semua UMKM</a>
-    </div>
-    <div class="card-body">
-        <div class="kpi-grid" style="margin-bottom:16px;">
-            <div>
-                <div class="kpi-label">Biaya hari ini</div>
-                <div class="kpi-value money negative" style="font-size:18px;">Rp {{ number_format($umkmTodayTotals['cost'] ?? 0, 0, ',', '.') }}</div>
-            </div>
-            <div>
-                <div class="kpi-label">Omzet hari ini</div>
-                <div class="kpi-value money positive" style="font-size:18px;">Rp {{ number_format($umkmTodayTotals['income'] ?? 0, 0, ',', '.') }}</div>
-            </div>
-            <div>
-                <div class="kpi-label">Profit hari ini</div>
-                <div class="kpi-value money {{ ($umkmTodayTotals['margin'] ?? 0) >= 0 ? 'positive' : 'negative' }}" style="font-size:18px;">
-                    Rp {{ number_format($umkmTodayTotals['margin'] ?? 0, 0, ',', '.') }}
-                </div>
-            </div>
-        </div>
-
-        @if(($umkmToday ?? collect())->count() > 0)
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Outlet</th>
-                        <th class="text-end">Biaya</th>
-                        <th class="text-end">Omzet</th>
-                        <th class="text-end">Profit</th>
-                        <th class="text-end">vs Pagu</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($umkmToday as $u)
-                        <tr class="clickable" onclick="location.href='{{ route('cost-centers.show', $u['id_project']) }}'">
-                            <td>
-                                <div class="cell-title">
-                                    {{ $u['nama_project'] }}
-                                    @if($u['is_closed'] ?? false)<span class="badge badge-green" style="margin-left:4px;">Tutup</span>@endif
-                                    @if(($u['leak_alert'] ?? false) || ($u['over_budget'] ?? false))
-                                        <span class="badge badge-red" style="margin-left:4px;">Alert</span>
-                                    @endif
-                                </div>
-                                @if($u['lokasi'])<div class="cell-sub">{{ $u['lokasi'] }}</div>@endif
-                            </td>
-                            <td class="text-end money negative">Rp {{ number_format($u['today_cost'], 0, ',', '.') }}</td>
-                            <td class="text-end money positive">Rp {{ number_format($u['today_income'], 0, ',', '.') }}</td>
-                            <td class="text-end money {{ $u['today_margin'] >= 0 ? 'positive' : 'negative' }}">
-                                Rp {{ number_format($u['today_margin'], 0, ',', '.') }}
-                                @if(($u['fixed_prorate'] ?? 0) > 0)
-                                    <div class="cell-sub">Eko: Rp {{ number_format($u['margin_economic'] ?? 0, 0, ',', '.') }}</div>
-                                @endif
-                            </td>
-                            <td class="text-end">
-                                @if($u['usage_pct'] !== null)
-                                    @php $c = $u['usage_pct'] > 100 ? 'badge-red' : ($u['usage_pct'] > 80 ? 'badge-yellow' : 'badge-green'); @endphp
-                                    <span class="badge {{ $c }}">{{ number_format($u['usage_pct'], 0) }}%</span>
-                                @else
-                                    <span class="cell-sub">—</span>
-                                @endif
-                            </td>
-                            <td class="text-end" onclick="event.stopPropagation()">
-                                <a href="{{ route('cost-centers.show', $u['id_project']) }}" class="btn btn-xs btn-outline">Catat</a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        @else
-            <div class="empty-state" style="padding:20px;">
-                <p>Belum ada unit UMKM aktif</p>
-                <a href="{{ route('cost-centers.index') }}#umkm" class="btn btn-sm btn-primary">Buat unit UMKM</a>
-            </div>
-        @endif
-    </div>
-</div>
-@endif
 
 <div class="grid-2" style="margin-bottom: 20px;">
     <div class="card">
@@ -204,18 +112,17 @@
     </div>
 </div>
 
-@if($module !== 'umkm')
 <div class="card">
     <div class="card-header">
-        <h3><i class="bi bi-building"></i> Proyek Aktif</h3>
-        <a href="{{ route('cost-centers.index', ['mode' => 'project']) }}" class="btn btn-sm btn-outline">Lihat semua</a>
+        <h3><i class="bi bi-airplane"></i> Keberangkatan Aktif</h3>
+        <a href="{{ route('cost-centers.index') }}" class="btn btn-sm btn-outline">Lihat semua</a>
     </div>
     <div class="card-body compact">
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>Proyek</th>
+                        <th>Keberangkatan</th>
                         <th>Klien</th>
                         <th class="text-end">Biaya</th>
                         <th class="text-end">Pendapatan</th>
@@ -240,8 +147,8 @@
                             <td colspan="6">
                                 <div class="empty-state">
                                     <i class="bi bi-folder2-open"></i>
-                                    <p>Belum ada proyek aktif</p>
-                                    <a href="{{ route('cost-centers.index') }}#new">Buat unit proyek</a>
+                                    <p>Belum ada keberangkatan aktif</p>
+                                    <a href="{{ route('cost-centers.index') }}#new">Buat keberangkatan</a>
                                 </div>
                             </td>
                         </tr>
@@ -251,7 +158,6 @@
         </div>
     </div>
 </div>
-@endif
 @endsection
 
 @push('scripts')

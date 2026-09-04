@@ -3,7 +3,7 @@
 @section('breadcrumb')
     <a href="{{ route('beranda') }}">Dashboard</a>
     <span class="sep">/</span>
-    <a href="{{ route('cost-centers.index') }}">Unit Bisnis</a>
+    <a href="{{ route('cost-centers.index') }}">Keberangkatan</a>
     <span class="sep">/</span>
     <a href="{{ route('cost-centers.show', $project->id_project) }}">{{ $project->nama_project }}</a>
     <span class="sep">/</span>

@@ -32,7 +32,7 @@ class ProjectFactory extends Factory
     public function umkm(): static
     {
         return $this->state([
-            'mode' => Project::MODE_UMKM,
+            'mode' => Project::MODE_PROJECT,
             'budget_period' => Project::BUDGET_DAILY,
             'daily_budget' => 1000000,
             'business_type' => 'kopi',

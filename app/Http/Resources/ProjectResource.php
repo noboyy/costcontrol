@@ -23,10 +23,8 @@ class ProjectResource extends JsonResource
             'budget_period' => $this->budget_period,
             'daily_budget' => $this->daily_budget !== null ? (float) $this->daily_budget : null,
             'monthly_budget' => $this->monthly_budget !== null ? (float) $this->monthly_budget : null,
-            'business_type' => $this->business_type,
             'cogs_ratio_alert' => $this->cogs_ratio_alert !== null ? (float) $this->cogs_ratio_alert : null,
             'lock_closed_days' => $this->lock_closed_days,
-            'is_umkm' => $this->isUmkm(),
             'is_archived' => $this->isArchived(),
             'admins' => $this->whenLoaded('admins', fn () => $this->admins->map(fn ($a) => [
                 'id_pengguna' => $a->id_pengguna,

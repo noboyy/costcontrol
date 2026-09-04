@@ -46,19 +46,20 @@ class ProductionSeeder extends Seeder
             ]
         );
 
-        // Project master + UMKM templates
+        // Master data Travel Umroh (units + kategori/tipe via template)
         $this->call(MasterDataSeeder::class);
-        app(BusinessTemplateSeeder::class)->seedUmkm($company->id_perusahaan);
+        app(BusinessTemplateSeeder::class)->seedTravelUmroh($company->id_perusahaan);
 
-        // Global master data (id_perusahaan = null) untuk SUPER ADMIN
+        // Global master data (id_perusahaan = null) template Travel Umroh
         $this->call(GlobalMasterDataSeeder::class);
 
-        // Income categories defaults
+        // Income categories — Travel Umroh
         $incomeCats = [
-            ['kode' => 'sales', 'nama' => 'Penjualan', 'icon' => 'bi-cash-stack', 'warna' => 'green', 'urutan' => 1],
-            ['kode' => 'contract', 'nama' => 'Kontrak / Termyn', 'icon' => 'bi-receipt', 'warna' => 'blue', 'urutan' => 2],
-            ['kode' => 'payment', 'nama' => 'Pembayaran', 'icon' => 'bi-wallet2', 'warna' => 'blue', 'urutan' => 3],
-            ['kode' => 'additional', 'nama' => 'Tambahan', 'icon' => 'bi-plus-circle', 'warna' => 'yellow', 'urutan' => 4],
+            ['kode' => 'pendaftaran', 'nama' => 'Pendaftaran Jemaah', 'icon' => 'bi-pencil-square', 'warna' => 'blue', 'urutan' => 1],
+            ['kode' => 'pembayaran', 'nama' => 'Pembayaran Paket (DP/Cicilan/Pelunasan)', 'icon' => 'bi-cash-stack', 'warna' => 'green', 'urutan' => 2],
+            ['kode' => 'paket', 'nama' => 'Paket', 'icon' => 'bi-box-seam', 'warna' => 'blue', 'urutan' => 3],
+            ['kode' => 'tambahan', 'nama' => 'Upgrade & Ekstra', 'icon' => 'bi-plus-circle', 'warna' => 'yellow', 'urutan' => 4],
+            ['kode' => 'komisi', 'nama' => 'Komisi & Jasa', 'icon' => 'bi-handshake', 'warna' => 'green', 'urutan' => 5],
             ['kode' => 'other', 'nama' => 'Lainnya', 'icon' => 'bi-three-dots', 'warna' => 'gray', 'urutan' => 9],
         ];
         foreach ($incomeCats as $c) {

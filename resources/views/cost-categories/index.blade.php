@@ -244,7 +244,7 @@
                                 <option value="{{ $group->kode }}">{{ $group->nama }}</option>
                             @endforeach
                         </select>
-                        <div class="form-hint">Untuk progres per PO/LO/OC di proyek</div>
+                        <div class="form-hint">Untuk progres per kelompok biaya di keberangkatan</div>
                     </div>
                 </div>
                 <input type="hidden" name="is_active" value="1">

@@ -920,13 +920,13 @@
                 $invProject = $investorProj?->project;
             @endphp
             <div class="sidebar-section open">
-                <div class="sidebar-section-title">Proyek Saya</div>
+                <div class="sidebar-section-title">Keberangkatan Saya</div>
                 <div class="sidebar-section-body" style="display:block;">
                     @if($invProject)
                     <div class="nav-item">
                         <a class="nav-link {{ request()->routeIs('cost-centers.gallery') ? 'active' : '' }}"
                            href="{{ route('cost-centers.gallery', $invProject->id_project) }}">
-                            <i class="bi bi-images"></i> Galeri Proyek
+                            <i class="bi bi-images"></i> Galeri Keberangkatan
                         </a>
                     </div>
                     @endif
@@ -955,13 +955,7 @@
                     @if(! auth()->user()->isSuperAdmin())
                     <div class="nav-item">
                         <a class="nav-link {{ request()->routeIs('projects.*') || request()->routeIs('cost-centers.*') ? 'active' : '' }}" href="{{ route('cost-centers.index') }}">
-                            <i class="bi bi-building"></i> @if(auth()->user()->companyModule() === 'project')
-                            Unit Proyek
-                        @elseif(auth()->user()->companyModule() === 'umkm')
-                            Unit UMKM
-                        @else
-                            Unit Bisnis
-                        @endif
+                            <i class="bi bi-airplane"></i> Keberangkatan
                         </a>
                     </div>
                     @endif

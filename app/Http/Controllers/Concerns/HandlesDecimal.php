@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Models\Project;
-use App\Services\DailyControlService;
 use Carbon\Carbon;
 
 trait HandlesDecimal
@@ -26,18 +25,7 @@ trait HandlesDecimal
 
     protected function guardClosedDay(Project $project, $date): ?string
     {
-        if (! $project->isUmkm()) {
-            return null;
-        }
-        if ($project->lock_closed_days === false) {
-            return null;
-        }
-        if (app(DailyControlService::class)->isDayClosed($project, $date)) {
-            $label = Carbon::parse($date)->format('d M Y');
-
-            return "Tanggal {$label} sudah ditutup. Buka ulang tutup kas dulu untuk mengubah entri.";
-        }
-
+        // Fitur tutup kas harian (UMKM) dihapus — tidak ada lagi hari terkunci.
         return null;
     }
 

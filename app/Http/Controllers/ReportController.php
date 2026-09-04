@@ -6,7 +6,6 @@ use App\Models\CostEntry;
 use App\Models\IncomeEntry;
 use App\Models\Perusahaan;
 use App\Models\Project;
-use App\Services\DailyControlService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -32,7 +31,6 @@ class ReportController extends Controller
 
         $queryProjects = Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->when($projectId, fn ($q) => $q->where('id_project', $projectId))
-            ->when($mode === 'umkm', fn ($q) => $q->where('mode', 'umkm'))
             ->when($mode === 'project', fn ($q) => $q->where(function ($qq) {
                 $qq->where('mode', 'project')->orWhereNull('mode');
             }));
@@ -82,19 +80,7 @@ class ReportController extends Controller
             ];
         })->sortByDesc('income')->values();
 
-        // UMKM daily rows if single umkm unit selected or mode umkm
         $dailyRows = collect();
-        if ($projectId) {
-            $unit = $selected->first();
-            if ($unit && $unit->isUmkm()) {
-                $svc = app(DailyControlService::class);
-                $start = Carbon::parse($from);
-                $end = Carbon::parse($to);
-                for ($d = $start->copy(); $d->lte($end); $d->addDay()) {
-                    $dailyRows->push($svc->snapshot($unit, $d));
-                }
-            }
-        }
 
         return view('reports.index', [
             'title' => 'Laporan',

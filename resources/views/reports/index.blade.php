@@ -28,16 +28,9 @@
                 <label class="form-label">Sampai</label>
                 <input type="date" class="form-input" name="to" value="{{ $to }}">
             </div>
+            <input type="hidden" name="mode" value="">
             <div class="form-group" style="margin:0;">
-                <label class="form-label">Mode</label>
-                <select class="form-select" name="mode">
-                    <option value="">Semua</option>
-                    <option value="project" @selected($mode === 'project')>Proyek</option>
-                    <option value="umkm" @selected($mode === 'umkm')>UMKM</option>
-                </select>
-            </div>
-            <div class="form-group" style="margin:0;">
-                <label class="form-label">Unit</label>
+                <label class="form-label">Keberangkatan</label>
                 <select class="form-select" name="project_id">
                     <option value="">Semua unit</option>
                     @foreach($units as $u)
@@ -140,45 +133,6 @@
     </div>
 </div>
 
-@if($dailyRows->count())
-<div class="card" style="margin-bottom:16px;">
-    <div class="card-header"><h3>Snapshot harian UMKM</h3></div>
-    <div class="card-body compact">
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th class="text-end">Omzet</th>
-                        <th class="text-end">Kas</th>
-                        <th class="text-end">Pro-rate</th>
-                        <th class="text-end">Profit eko</th>
-                        <th class="text-end">COGS%</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($dailyRows as $day)
-                        <tr>
-                            <td>{{ \Carbon\Carbon::parse($day['date'])->format('d M Y') }}</td>
-                            <td class="text-end money positive">Rp {{ number_format($day['income'], 0, ',', '.') }}</td>
-                            <td class="text-end money negative">Rp {{ number_format($day['cost_cash'], 0, ',', '.') }}</td>
-                            <td class="text-end">Rp {{ number_format($day['fixed_prorate'], 0, ',', '.') }}</td>
-                            <td class="text-end money {{ $day['margin_economic'] >= 0 ? 'positive' : 'negative' }}">Rp {{ number_format($day['margin_economic'], 0, ',', '.') }}</td>
-                            <td class="text-end">{{ $day['cogs_ratio_pct'] !== null ? number_format($day['cogs_ratio_pct'], 1).'%' : '—' }}</td>
-                            <td>
-                                @if($day['is_closed']) <span class="badge badge-green">Tutup</span>
-                                @elseif($day['leak_alert'] || $day['over_budget']) <span class="badge badge-red">Alert</span>
-                                @else <span class="badge badge-gray">Open</span> @endif
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-@endif
 
 <div class="grid-2">
     <div class="card">

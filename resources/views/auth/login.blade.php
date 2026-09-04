@@ -221,7 +221,7 @@
             <div class="brand-mark">CC</div>
             <div>
                 <h1>Sahla Journey Finance</h1>
-                <p>Manajemen Keuangan Proyek</p>
+                <p>Manajemen Keuangan Travel Umroh</p>
             </div>
         </div>
         <div class="hero">
@@ -238,7 +238,7 @@
                 <div class="feature">
                     <i class="bi bi-folder2-open"></i>
                     <div>
-                        <strong>Berbasis Proyek</strong>
+                        <strong>Berbasis Keberangkatan</strong>
                         <span>Semua transaksi terikat ke project</span>
                     </div>
                 </div>

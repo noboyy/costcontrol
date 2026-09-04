@@ -5,8 +5,6 @@ namespace App\Services;
 use App\Models\Project;
 use App\Models\CostEntry;
 use App\Models\IncomeEntry;
-use App\Services\DailyControlService;
-use App\Services\MasterDataModuleService;
 use Illuminate\Support\Facades\DB;
 
 class ProjectManagementService
@@ -17,22 +15,17 @@ class ProjectManagementService
             $project = Project::create([
                 'id_perusahaan' => $companyId,
                 'nama_project' => $data['nama_project'],
-                'client' => $data['mode'] === Project::MODE_UMKM ? ($data['client'] ?? $data['business_type']) : ($data['client'] ?? null),
+                'client' => $data['client'] ?? null,
                 'lokasi' => $data['lokasi'],
                 'date_start' => $data['date_start'] ?? null,
                 'date_end' => $data['date_end'] ?? null,
                 'project_value' => $this->normalizeDecimal($data['project_value'] ?? null),
                 'status' => 'active',
-                'mode' => $data['mode'],
-                'budget_period' => $data['budget_period'] ?: ($data['mode'] === Project::MODE_UMKM ? Project::BUDGET_DAILY : Project::BUDGET_TOTAL),
+                'mode' => Project::MODE_PROJECT,
+                'budget_period' => $data['budget_period'] ?: Project::BUDGET_TOTAL,
                 'daily_budget' => $this->normalizeDecimal($data['daily_budget'] ?? null),
                 'monthly_budget' => $this->normalizeDecimal($data['monthly_budget'] ?? null),
-                'business_type' => $data['business_type'],
             ]);
-
-            if ($data['mode'] === Project::MODE_UMKM && ($data['seed_template'] ?? true)) {
-                app(MasterDataModuleService::class)->copyBusinessTemplate($project);
-            }
 
             return $project;
         });
@@ -60,11 +53,6 @@ class ProjectManagementService
     {
         if ($project->isArchived()) {
             throw new \Exception('Project sudah diarsipkan.');
-        }
-
-        if ($project->isUmkm() && $project->lock_closed_days === true
-            && app(DailyControlService::class)->isDayClosed($project, $data['tanggal'])) {
-            throw new \Exception('Tanggal sudah ditutup. Buka ulang tutup kas dulu untuk menambah data.');
         }
 
         $cost = CostEntry::create([

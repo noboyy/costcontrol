@@ -21,9 +21,7 @@ use App\Models\ProjectGallery;
 use App\Models\ProjectIncomePlan;
 use App\Models\ProjectInvestor;
 use App\Models\Unit;
-use App\Services\BusinessTemplateSeeder;
 use App\Services\CashService;
-use App\Services\DailyControlService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -53,7 +51,7 @@ class ProjectController extends Controller
             $query->where('status', 'active');
         }
 
-        if (in_array($modeFilter, [Project::MODE_PROJECT, Project::MODE_UMKM], true)) {
+        if (in_array($modeFilter, [Project::MODE_PROJECT], true)) {
             $query->where('mode', $modeFilter);
         }
 
@@ -69,7 +67,6 @@ class ProjectController extends Controller
             'project' => (clone $countsBase)->where(function ($q) {
                 $q->where('mode', Project::MODE_PROJECT)->orWhereNull('mode');
             })->count(),
-            'umkm' => (clone $countsBase)->where('mode', Project::MODE_UMKM)->count(),
         ];
 
         return view('projects.index', [
@@ -127,14 +124,6 @@ class ProjectController extends Controller
         $dailySnap = null;
         $recentDays = collect();
         $fixedCosts = collect();
-        if ($project->isUmkm()) {
-            $daily = app(DailyControlService::class);
-            $dailySnap = $daily->snapshot($project, $today);
-            $recentDays = $daily->recentDays($project, 7);
-            $fixedCosts = $project->fixedCosts()->orderBy('nama')->get();
-            $todayCost = $dailySnap['cost_cash'];
-            $todayIncome = $dailySnap['income'];
-        }
 
         $costPlans = $project->costPlans()->with('costType')->get();
         $incomePlans = $project->incomePlans()->with('incomeType')->get();
@@ -150,7 +139,7 @@ class ProjectController extends Controller
             ->pluck('total', 'id_income_type');
 
         $groupSummaries = [];
-        if (! $project->isUmkm()) {
+        {
             $categoryKelompok = CostCategory::forCompany($companyId)->pluck('kelompok', 'kode');
             $groups = CostGroup::forCompany($companyId)->ordered()->get();
             $planByGroup = [];
@@ -194,7 +183,7 @@ class ProjectController extends Controller
         $cashForecast = $cash->forecast($project);
 
         return view('projects.show', [
-            'title' => $project->isUmkm() ? 'Detail UMKM' : 'Detail Proyek',
+            'title' => 'Detail Keberangkatan',
             'project' => $project,
             'costTypes' => $costTypes,
             'incomeTypes' => $incomeTypes,
@@ -544,7 +533,6 @@ class ProjectController extends Controller
         $companyId = $user->id_perusahaan;
 
         $request->validate([
-            'mode' => ['required', Rule::in([Project::MODE_PROJECT, Project::MODE_UMKM])],
             'nama_project' => 'required|string|max:255',
             'client' => 'nullable|string|max:255',
             'lokasi' => 'nullable|string|max:255',
@@ -554,22 +542,13 @@ class ProjectController extends Controller
             'budget_period' => ['nullable', Rule::in([Project::BUDGET_TOTAL, Project::BUDGET_MONTHLY, Project::BUDGET_DAILY])],
             'daily_budget' => 'nullable|string',
             'monthly_budget' => 'nullable|string',
-            'business_type' => 'nullable|string|max:50',
-            'seed_template' => 'nullable|boolean',
             'generate_investor' => 'nullable|boolean',
             'opening_balance' => 'nullable|string',
         ]);
 
-        $mode = $request->mode;
-        $module = $user->companyModule();
-        if ($module === Perusahaan::MODULE_PROJECT) {
-            $mode = Project::MODE_PROJECT;
-        } elseif ($module === Perusahaan::MODULE_UMKM) {
-            $mode = Project::MODE_UMKM;
-        }
+        $mode = Project::MODE_PROJECT;
 
-        $budgetPeriod = $request->budget_period
-            ?: ($mode === Project::MODE_UMKM ? Project::BUDGET_DAILY : Project::BUDGET_TOTAL);
+        $budgetPeriod = $request->budget_period ?: Project::BUDGET_TOTAL;
 
         try {
             DB::beginTransaction();
@@ -577,7 +556,7 @@ class ProjectController extends Controller
             $project = Project::create([
                 'id_perusahaan' => $companyId,
                 'nama_project' => $request->nama_project,
-                'client' => $mode === Project::MODE_UMKM ? ($request->client ?: $request->business_type) : $request->client,
+                'client' => $request->client,
                 'lokasi' => $request->lokasi,
                 'date_start' => $request->date_start,
                 'date_end' => $request->date_end,
@@ -587,13 +566,8 @@ class ProjectController extends Controller
                 'budget_period' => $budgetPeriod,
                 'daily_budget' => $request->daily_budget ? $this->normalizeDecimal($request->daily_budget) : null,
                 'monthly_budget' => $request->monthly_budget ? $this->normalizeDecimal($request->monthly_budget) : null,
-                'business_type' => $request->business_type,
                 'opening_balance' => $request->opening_balance ? $this->normalizeDecimal($request->opening_balance) : null,
             ]);
-
-            if ($mode === Project::MODE_UMKM && $request->boolean('seed_template', true)) {
-                app(BusinessTemplateSeeder::class)->seedUmkm($companyId);
-            }
 
             $investorCreds = null;
             if ($request->boolean('generate_investor')) {
@@ -602,9 +576,7 @@ class ProjectController extends Controller
 
             DB::commit();
 
-            $msg = $mode === Project::MODE_UMKM
-                ? 'Unit UMKM berhasil dibuat. Siap catat omzet & biaya harian.'
-                : 'Proyek berhasil ditambahkan. Silakan catat biaya/pendapatan.';
+            $msg = 'Keberangkatan berhasil dibuat. Silakan catat biaya/pendapatan.';
 
             $redirect = redirect()->route('projects.show', $project->id_project)
                 ->with('success', $msg);
@@ -684,7 +656,6 @@ class ProjectController extends Controller
             'budget_period' => ['nullable', Rule::in([Project::BUDGET_TOTAL, Project::BUDGET_MONTHLY, Project::BUDGET_DAILY])],
             'daily_budget' => 'nullable|string',
             'monthly_budget' => 'nullable|string',
-            'business_type' => 'nullable|string|max:50',
             'cogs_ratio_alert' => 'nullable|numeric|min:0|max:100',
             'lock_closed_days' => 'nullable|boolean',
             'opening_balance' => 'nullable|string',
@@ -705,7 +676,6 @@ class ProjectController extends Controller
                 'monthly_budget' => $request->monthly_budget !== null && $request->monthly_budget !== ''
                     ? $this->normalizeDecimal($request->monthly_budget)
                     : $project->monthly_budget,
-                'business_type' => $request->business_type,
                 'opening_balance' => $request->opening_balance !== null && $request->opening_balance !== ''
                     ? $this->normalizeDecimal($request->opening_balance)
                     : $project->opening_balance,

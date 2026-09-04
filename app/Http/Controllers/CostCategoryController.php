@@ -186,7 +186,6 @@ class CostCategoryController extends Controller
             'bi-receipt' => 'Pajak',
             'bi-cash-stack' => 'Keuangan',
             'bi-box-seam' => 'Barang',
-            'bi-shop' => 'UMKM / Outlet',
             'bi-lightning' => 'Utilitas',
             'bi-three-dots' => 'Lainnya',
         ];

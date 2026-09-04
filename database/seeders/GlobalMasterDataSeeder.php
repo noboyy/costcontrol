@@ -7,10 +7,12 @@ use App\Models\CostGroup;
 use App\Models\CostType;
 use App\Models\IncomeCategory;
 use App\Models\IncomeType;
+use App\Models\Unit;
 use Illuminate\Database\Seeder;
 
 /**
- * Master data global (id_perusahaan = null) yang terlihat oleh SUPER ADMIN.
+ * Master data global (id_perusahaan = null) — template Travel Umroh.
+ * Dipakai oleh tombol "Import modul master data".
  * Idempotent per kode, aman dijalankan berulang.
  */
 class GlobalMasterDataSeeder extends Seeder
@@ -22,14 +24,15 @@ class GlobalMasterDataSeeder extends Seeder
         $this->costTypes();
         $this->incomeCategories();
         $this->incomeTypes();
+        $this->units();
     }
 
     private function costGroups(): void
     {
         $groups = [
-            ['kode' => 'po', 'nama' => 'PO — Pembelian', 'warna' => 'blue', 'urutan' => 1],
-            ['kode' => 'lo', 'nama' => 'LO — Tenaga Kerja', 'warna' => 'green', 'urutan' => 2],
-            ['kode' => 'oc', 'nama' => 'OC — Biaya Lain', 'warna' => 'yellow', 'urutan' => 3],
+            ['kode' => 'direct', 'nama' => 'Direct Trip — Biaya per Jemaah/Trip', 'warna' => 'blue', 'urutan' => 1],
+            ['kode' => 'overhead', 'nama' => 'Overhead Kantor', 'warna' => 'yellow', 'urutan' => 2],
+            ['kode' => 'oc', 'nama' => 'Biaya Lain', 'warna' => 'gray', 'urutan' => 3],
         ];
 
         foreach ($groups as $g) {
@@ -43,14 +46,18 @@ class GlobalMasterDataSeeder extends Seeder
     private function costCategories(): void
     {
         $categories = [
-            ['kode' => 'material', 'nama' => 'Material', 'icon' => 'bi-bricks', 'warna' => 'blue', 'urutan' => 1, 'kelompok' => 'po'],
-            ['kode' => 'labor', 'nama' => 'Tenaga Kerja', 'icon' => 'bi-people', 'warna' => 'green', 'urutan' => 2, 'kelompok' => 'lo'],
-            ['kode' => 'equipment', 'nama' => 'Peralatan', 'icon' => 'bi-gear', 'warna' => 'yellow', 'urutan' => 3, 'kelompok' => 'po'],
-            ['kode' => 'transport', 'nama' => 'Transport', 'icon' => 'bi-truck', 'warna' => 'blue', 'urutan' => 4, 'kelompok' => 'po'],
-            ['kode' => 'overhead', 'nama' => 'Overhead / Tetap', 'icon' => 'bi-building', 'warna' => 'gray', 'urutan' => 5, 'kelompok' => 'oc'],
-            ['kode' => 'service', 'nama' => 'Jasa', 'icon' => 'bi-tools', 'warna' => 'green', 'urutan' => 6, 'kelompok' => 'oc'],
-            ['kode' => 'tax', 'nama' => 'Pajak', 'icon' => 'bi-receipt', 'warna' => 'red', 'urutan' => 7, 'kelompok' => 'oc'],
-            ['kode' => 'other', 'nama' => 'Lainnya', 'icon' => 'bi-three-dots', 'warna' => 'gray', 'urutan' => 9, 'kelompok' => 'oc'],
+            ['kode' => 'tiket_transport', 'nama' => 'Tiket & Transportasi Udara', 'icon' => 'bi-airplane', 'warna' => 'blue', 'urutan' => 1, 'kelompok' => 'direct'],
+            ['kode' => 'visa_dokumen', 'nama' => 'Visa & Dokumen Jemaah', 'icon' => 'bi-passport', 'warna' => 'green', 'urutan' => 2, 'kelompok' => 'direct'],
+            ['kode' => 'akomodasi', 'nama' => 'Hotel & Akomodasi', 'icon' => 'bi-building', 'warna' => 'blue', 'urutan' => 3, 'kelompok' => 'direct'],
+            ['kode' => 'konsumsi', 'nama' => 'Makan & Konsumsi', 'icon' => 'bi-egg-fried', 'warna' => 'yellow', 'urutan' => 4, 'kelompok' => 'direct'],
+            ['kode' => 'transport_darat', 'nama' => 'Transportasi Darat', 'icon' => 'bi-bus-front', 'warna' => 'blue', 'urutan' => 5, 'kelompok' => 'direct'],
+            ['kode' => 'handling_ziarah', 'nama' => 'Handling & Ziarah', 'icon' => 'bi-person-badge', 'warna' => 'green', 'urutan' => 6, 'kelompok' => 'direct'],
+            ['kode' => 'atribut_jemaah', 'nama' => 'Atribut & Perlengkapan Jemaah', 'icon' => 'bi-bag', 'warna' => 'yellow', 'urutan' => 7, 'kelompok' => 'direct'],
+            ['kode' => 'ops_kantor', 'nama' => 'Operasional Kantor', 'icon' => 'bi-briefcase', 'warna' => 'gray', 'urutan' => 8, 'kelompok' => 'overhead'],
+            ['kode' => 'sdm', 'nama' => 'SDM & Komisi', 'icon' => 'bi-people', 'warna' => 'green', 'urutan' => 9, 'kelompok' => 'overhead'],
+            ['kode' => 'marketing', 'nama' => 'Marketing & Agen', 'icon' => 'bi-megaphone', 'warna' => 'blue', 'urutan' => 10, 'kelompok' => 'overhead'],
+            ['kode' => 'pajak_admin', 'nama' => 'Pajak & Administrasi', 'icon' => 'bi-receipt', 'warna' => 'red', 'urutan' => 11, 'kelompok' => 'oc'],
+            ['kode' => 'other', 'nama' => 'Lainnya', 'icon' => 'bi-three-dots', 'warna' => 'gray', 'urutan' => 99, 'kelompok' => 'oc'],
         ];
 
         foreach ($categories as $cat) {
@@ -64,16 +71,82 @@ class GlobalMasterDataSeeder extends Seeder
     private function costTypes(): void
     {
         $types = [
-            ['kode' => 'MAT', 'nama' => 'Material Bangunan', 'kategori' => 'material', 'default_unit' => 'Kilogram'],
-            ['kode' => 'SEM', 'nama' => 'Semen', 'kategori' => 'material', 'default_unit' => 'Sak'],
-            ['kode' => 'TKN', 'nama' => 'Tenaga Kerja', 'kategori' => 'labor', 'default_unit' => 'Orang'],
-            ['kode' => 'TUK', 'nama' => 'Tukang', 'kategori' => 'labor', 'default_unit' => 'Orang'],
-            ['kode' => 'SEK', 'nama' => 'Sewa Alat Berat', 'kategori' => 'equipment', 'default_unit' => 'Hari'],
-            ['kode' => 'TRK', 'nama' => 'Truk/Transport', 'kategori' => 'transport', 'default_unit' => 'Unit'],
-            ['kode' => 'ADM', 'nama' => 'Administrasi', 'kategori' => 'overhead', 'default_unit' => null],
-            ['kode' => 'SRV', 'nama' => 'Jasa Lainnya', 'kategori' => 'service', 'default_unit' => null],
-            ['kode' => 'PPN', 'nama' => 'Pajak (PPN)', 'kategori' => 'tax', 'default_unit' => null],
-            ['kode' => 'OLS', 'nama' => 'Biaya Lain-lain', 'kategori' => 'other', 'default_unit' => null],
+            // Tiket & transportasi udara
+            ['kode' => 'TKT', 'nama' => 'Tiket Penerbangan CGK-JED', 'kategori' => 'tiket_transport', 'default_unit' => 'Orang'],
+            ['kode' => 'TKR', 'nama' => 'Tiket Penerbangan JED-CGK (Return)', 'kategori' => 'tiket_transport', 'default_unit' => 'Orang'],
+            ['kode' => 'TKT2', 'nama' => 'Tiket Transit / Connecting Flight', 'kategori' => 'tiket_transport', 'default_unit' => 'Orang'],
+            ['kode' => 'BGS', 'nama' => 'Bagasi Ekstra', 'kategori' => 'tiket_transport', 'default_unit' => 'Kilogram'],
+            ['kode' => 'RUB', 'nama' => 'Rebooking / Rute Change', 'kategori' => 'tiket_transport', 'default_unit' => null],
+
+            // Visa & dokumen
+            ['kode' => 'VSA', 'nama' => 'Visa Umroh', 'kategori' => 'visa_dokumen', 'default_unit' => 'Orang'],
+            ['kode' => 'PSP', 'nama' => 'Paspor (buat/perpanjang)', 'kategori' => 'visa_dokumen', 'default_unit' => 'Orang'],
+            ['kode' => 'VKS', 'nama' => 'Vaksin Meningitis', 'kategori' => 'visa_dokumen', 'default_unit' => 'Orang'],
+            ['kode' => 'ASR', 'nama' => 'Asuransi Perjalanan', 'kategori' => 'visa_dokumen', 'default_unit' => 'Orang'],
+            ['kode' => 'LGL', 'nama' => 'Legalisir & Fotokopi Dokumen', 'kategori' => 'visa_dokumen', 'default_unit' => 'Lembar'],
+
+            // Hotel & akomodasi
+            ['kode' => 'HMK', 'nama' => 'Hotel Makkah', 'kategori' => 'akomodasi', 'default_unit' => 'Malam'],
+            ['kode' => 'HMD', 'nama' => 'Hotel Madinah', 'kategori' => 'akomodasi', 'default_unit' => 'Malam'],
+            ['kode' => 'HTS', 'nama' => 'Hotel Transit', 'kategori' => 'akomodasi', 'default_unit' => 'Malam'],
+            ['kode' => 'UPG', 'nama' => 'Upgrade Kamar Hotel', 'kategori' => 'akomodasi', 'default_unit' => 'Malam'],
+            ['kode' => 'XBD', 'nama' => 'Extra Bed Hotel', 'kategori' => 'akomodasi', 'default_unit' => 'Malam'],
+
+            // Makan & konsumsi
+            ['kode' => 'PKM', 'nama' => 'Paket Makan Makkah', 'kategori' => 'konsumsi', 'default_unit' => 'Hari'],
+            ['kode' => 'PKD', 'nama' => 'Paket Makan Madinah', 'kategori' => 'konsumsi', 'default_unit' => 'Hari'],
+            ['kode' => 'PKT', 'nama' => 'Paket Makan Transit', 'kategori' => 'konsumsi', 'default_unit' => 'Hari'],
+            ['kode' => 'KSM', 'nama' => 'Konsumsi Manasik / Briefing', 'kategori' => 'konsumsi', 'default_unit' => 'Orang'],
+            ['kode' => 'SNK', 'nama' => 'Snack & Air Mineral Trip', 'kategori' => 'konsumsi', 'default_unit' => 'Paket'],
+
+            // Transportasi darat
+            ['kode' => 'BSA', 'nama' => 'Bus Bandara (Jeddah)', 'kategori' => 'transport_darat', 'default_unit' => 'Orang'],
+            ['kode' => 'BSZ', 'nama' => 'Bus Ziarah / City Tour', 'kategori' => 'transport_darat', 'default_unit' => 'Unit'],
+            ['kode' => 'KOP', 'nama' => 'Kendaraan Operasional Trip', 'kategori' => 'transport_darat', 'default_unit' => 'Hari'],
+            ['kode' => 'BBM', 'nama' => 'Bensin & Parkir Trip', 'kategori' => 'transport_darat', 'default_unit' => 'Hari'],
+            ['kode' => 'TRJ', 'nama' => 'Transport Jemaah Domestic (ke bandara asal)', 'kategori' => 'transport_darat', 'default_unit' => 'Orang'],
+
+            // Handling & ziarah
+            ['kode' => 'MSM', 'nama' => 'Fee Muassim / Handling Saudi', 'kategori' => 'handling_ziarah', 'default_unit' => 'Orang'],
+            ['kode' => 'MTW', 'nama' => 'Fee Muthawif / Muballigh', 'kategori' => 'handling_ziarah', 'default_unit' => 'Orang'],
+            ['kode' => 'TLF', 'nama' => 'Fee Tour Leader & Tim', 'kategori' => 'handling_ziarah', 'default_unit' => 'Trip'],
+            ['kode' => 'TZR', 'nama' => 'Tiket Ziarah (Raudhah dll)', 'kategori' => 'handling_ziarah', 'default_unit' => 'Orang'],
+            ['kode' => 'HBL', 'nama' => 'Handling Bandara & Imigrasi', 'kategori' => 'handling_ziarah', 'default_unit' => 'Trip'],
+
+            // Atribut & perlengkapan jemaah
+            ['kode' => 'KPR', 'nama' => 'Koper Jemaah', 'kategori' => 'atribut_jemaah', 'default_unit' => 'Orang'],
+            ['kode' => 'IDC', 'nama' => 'ID Card & Sling Bag', 'kategori' => 'atribut_jemaah', 'default_unit' => 'Orang'],
+            ['kode' => 'MKN', 'nama' => 'Mukena / Jubah Jemaah', 'kategori' => 'atribut_jemaah', 'default_unit' => 'Orang'],
+            ['kode' => 'BMS', 'nama' => 'Buku Manasik & Panduan', 'kategori' => 'atribut_jemaah', 'default_unit' => 'Orang'],
+            ['kode' => 'BDR', 'nama' => 'Bendera Group & Identitas', 'kategori' => 'atribut_jemaah', 'default_unit' => 'Set'],
+
+            // Operasional kantor
+            ['kode' => 'SWK', 'nama' => 'Sewa Kantor', 'kategori' => 'ops_kantor', 'default_unit' => 'Bulan'],
+            ['kode' => 'LST', 'nama' => 'Listrik & Air Kantor', 'kategori' => 'ops_kantor', 'default_unit' => 'Bulan'],
+            ['kode' => 'NET', 'nama' => 'Internet & Telepon', 'kategori' => 'ops_kantor', 'default_unit' => 'Bulan'],
+            ['kode' => 'ATK', 'nama' => 'ATK & Percetakan', 'kategori' => 'ops_kantor', 'default_unit' => null],
+            ['kode' => 'PLS', 'nama' => 'Pulsa & Kuota Staff', 'kategori' => 'ops_kantor', 'default_unit' => 'Bulan'],
+            ['kode' => 'RPT', 'nama' => 'Reparasi & Pemeliharaan Kantor', 'kategori' => 'ops_kantor', 'default_unit' => null],
+
+            // SDM & komisi
+            ['kode' => 'GJI', 'nama' => 'Gaji Staff Kantor', 'kategori' => 'sdm', 'default_unit' => 'Bulan'],
+            ['kode' => 'KMS', 'nama' => 'Komisi Agen / Gressor', 'kategori' => 'sdm', 'default_unit' => 'Orang'],
+            ['kode' => 'INS', 'nama' => 'Insentif Tour Leader', 'kategori' => 'sdm', 'default_unit' => 'Trip'],
+            ['kode' => 'HNU', 'nama' => 'Honor Ustadz / Pembina Manasik', 'kategori' => 'sdm', 'default_unit' => 'Orang'],
+            ['kode' => 'THR', 'nama' => 'Bonus & THR Staff', 'kategori' => 'sdm', 'default_unit' => 'Bulan'],
+
+            // Marketing & agen
+            ['kode' => 'IKL', 'nama' => 'Iklan & Promosi Digital', 'kategori' => 'marketing', 'default_unit' => 'Bulan'],
+            ['kode' => 'SMP', 'nama' => 'Seminar / Expo Umroh', 'kategori' => 'marketing', 'default_unit' => 'Trip'],
+            ['kode' => 'WBS', 'nama' => 'Website & Media Sosial', 'kategori' => 'marketing', 'default_unit' => 'Bulan'],
+            ['kode' => 'SOU', 'nama' => 'Souvenir & Merchandise Calon Jemaah', 'kategori' => 'marketing', 'default_unit' => 'Orang'],
+
+            // Pajak & administrasi
+            ['kode' => 'PJK', 'nama' => 'Pajak & Retribusi', 'kategori' => 'pajak_admin', 'default_unit' => 'Bulan'],
+            ['kode' => 'BNK', 'nama' => 'Biaya Bank & Admin Transfer', 'kategori' => 'pajak_admin', 'default_unit' => null],
+            ['kode' => 'ROY', 'nama' => 'Royalti / Lisensi Biro', 'kategori' => 'pajak_admin', 'default_unit' => 'Trip'],
+            ['kode' => 'ZKT', 'nama' => 'Zakat / Infaq / Sedekah', 'kategori' => 'pajak_admin', 'default_unit' => null],
+            ['kode' => 'LNN', 'nama' => 'Biaya Lain-lain', 'kategori' => 'other', 'default_unit' => null],
         ];
 
         foreach ($types as $type) {
@@ -88,10 +161,11 @@ class GlobalMasterDataSeeder extends Seeder
     private function incomeCategories(): void
     {
         $categories = [
-            ['kode' => 'sales', 'nama' => 'Penjualan', 'icon' => 'bi-cash-stack', 'warna' => 'green', 'urutan' => 1],
-            ['kode' => 'contract', 'nama' => 'Kontrak / Termyn', 'icon' => 'bi-receipt', 'warna' => 'blue', 'urutan' => 2],
-            ['kode' => 'payment', 'nama' => 'Pembayaran', 'icon' => 'bi-wallet2', 'warna' => 'blue', 'urutan' => 3],
-            ['kode' => 'additional', 'nama' => 'Tambahan', 'icon' => 'bi-plus-circle', 'warna' => 'yellow', 'urutan' => 4],
+            ['kode' => 'pendaftaran', 'nama' => 'Pendaftaran Jemaah', 'icon' => 'bi-pencil-square', 'warna' => 'blue', 'urutan' => 1],
+            ['kode' => 'pembayaran', 'nama' => 'Pembayaran Paket (DP/Cicilan/Pelunasan)', 'icon' => 'bi-cash-stack', 'warna' => 'green', 'urutan' => 2],
+            ['kode' => 'paket', 'nama' => 'Paket', 'icon' => 'bi-box-seam', 'warna' => 'blue', 'urutan' => 3],
+            ['kode' => 'tambahan', 'nama' => 'Upgrade & Ekstra', 'icon' => 'bi-plus-circle', 'warna' => 'yellow', 'urutan' => 4],
+            ['kode' => 'komisi', 'nama' => 'Komisi & Jasa', 'icon' => 'bi-handshake', 'warna' => 'green', 'urutan' => 5],
             ['kode' => 'other', 'nama' => 'Lainnya', 'icon' => 'bi-three-dots', 'warna' => 'gray', 'urutan' => 9],
         ];
 
@@ -106,13 +180,22 @@ class GlobalMasterDataSeeder extends Seeder
     private function incomeTypes(): void
     {
         $types = [
-            ['kode' => 'DP', 'nama' => 'Down Payment (DP)', 'kategori' => 'payment', 'default_unit' => null],
-            ['kode' => 'TER', 'nama' => 'Termin Pembayaran', 'kategori' => 'payment', 'default_unit' => null],
-            ['kode' => 'PEL', 'nama' => 'Pelunasan', 'kategori' => 'payment', 'default_unit' => null],
-            ['kode' => 'ADD', 'nama' => 'Addendum', 'kategori' => 'additional', 'default_unit' => null],
-            ['kode' => 'VAR', 'nama' => 'Variasi/Perubahan', 'kategori' => 'additional', 'default_unit' => null],
-            ['kode' => 'BON', 'nama' => 'Bonus/Insentif', 'kategori' => 'other', 'default_unit' => null],
-            ['kode' => 'OLS', 'nama' => 'Pendapatan Lain-lain', 'kategori' => 'other', 'default_unit' => null],
+            ['kode' => 'REG', 'nama' => 'Biaya Pendaftaran Jemaah', 'kategori' => 'pendaftaran', 'default_unit' => null],
+            ['kode' => 'DPJ', 'nama' => 'DP Jemaah', 'kategori' => 'pembayaran', 'default_unit' => null],
+            ['kode' => 'CIC', 'nama' => 'Cicilan Jemaah', 'kategori' => 'pembayaran', 'default_unit' => null],
+            ['kode' => 'PLL', 'nama' => 'Pelunasan Paket', 'kategori' => 'pembayaran', 'default_unit' => null],
+            ['kode' => 'TRF', 'nama' => 'Pembayaran Transfer / QRIS', 'kategori' => 'pembayaran', 'default_unit' => null],
+            ['kode' => 'TUN', 'nama' => 'Pembayaran Tunai', 'kategori' => 'pembayaran', 'default_unit' => null],
+            ['kode' => 'PKR', 'nama' => 'Paket Reguler', 'kategori' => 'paket', 'default_unit' => 'Orang'],
+            ['kode' => 'PKP', 'nama' => 'Paket Plus (Turki/Dubai)', 'kategori' => 'paket', 'default_unit' => 'Orang'],
+            ['kode' => 'PKH', 'nama' => 'Paket Haji Khusus', 'kategori' => 'paket', 'default_unit' => 'Orang'],
+            ['kode' => 'UPK', 'nama' => 'Upgrade Kamar', 'kategori' => 'tambahan', 'default_unit' => null],
+            ['kode' => 'SGL', 'nama' => 'Single Supplement', 'kategori' => 'tambahan', 'default_unit' => null],
+            ['kode' => 'EKT', 'nama' => 'Ekstra Berangkat / Perpanjangan', 'kategori' => 'tambahan', 'default_unit' => null],
+            ['kode' => 'KAG', 'nama' => 'Komisi dari Biro Partner', 'kategori' => 'komisi', 'default_unit' => null],
+            ['kode' => 'VHF', 'nama' => 'Visa Handling Fee (jasa urus)', 'kategori' => 'komisi', 'default_unit' => null],
+            ['kode' => 'JMS', 'nama' => 'Jasa Manasik / Briefing', 'kategori' => 'komisi', 'default_unit' => null],
+            ['kode' => 'PLN2', 'nama' => 'Pendapatan Lain-lain', 'kategori' => 'other', 'default_unit' => null],
         ];
 
         foreach ($types as $type) {
@@ -121,6 +204,29 @@ class GlobalMasterDataSeeder extends Seeder
                 continue;
             }
             IncomeType::create($type);
+        }
+    }
+
+    private function units(): void
+    {
+        $units = [
+            ['nama' => 'Orang', 'simbol' => 'org'],
+            ['nama' => 'Trip / Keberangkatan', 'simbol' => 'trip'],
+            ['nama' => 'Malam', 'simbol' => 'mlm'],
+            ['nama' => 'Hari', 'simbol' => 'hr'],
+            ['nama' => 'Paket', 'simbol' => 'pkt'],
+            ['nama' => 'Unit', 'simbol' => 'unit'],
+            ['nama' => 'Set', 'simbol' => 'set'],
+            ['nama' => 'Bulan', 'simbol' => 'bln'],
+            ['nama' => 'Lembar', 'simbol' => 'lbr'],
+            ['nama' => 'Kilogram', 'simbol' => 'kg'],
+        ];
+
+        foreach ($units as $u) {
+            Unit::firstOrCreate(
+                ['id_perusahaan' => null, 'nama' => $u['nama']],
+                array_merge($u, ['id_perusahaan' => null])
+            );
         }
     }
 }

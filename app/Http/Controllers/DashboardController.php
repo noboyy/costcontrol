@@ -6,7 +6,6 @@ use App\Models\CostEntry;
 use App\Models\IncomeEntry;
 use App\Models\Perusahaan;
 use App\Models\Project;
-use App\Services\DailyControlService;
 
 class DashboardController extends Controller
 {
@@ -19,7 +18,6 @@ class DashboardController extends Controller
             $investorProject = $user->investorProject()->with('project')->first();
             if ($investorProject && $investorProject->project) {
                 $project = $investorProject->project;
-                $prefix = $project->isUmkm() ? 'cost-centers' : 'cost-centers';
                 return redirect()->route('cost-centers.gallery', $project->id_project);
             }
             // Fallback kalau tidak ada proyek
@@ -137,7 +135,7 @@ class DashboardController extends Controller
 
         $today = now()->format('Y-m-d');
 
-        $projectSummaries = $projects->where(fn ($p) => ! $p->isUmkm())->take(8)->map(function ($project) {
+        $projectSummaries = $projects->take(8)->map(function ($project) {
             return [
                 'id_project' => $project->id_project,
                 'nama_project' => $project->nama_project,
@@ -148,37 +146,6 @@ class DashboardController extends Controller
                 'margin' => $project->margin,
             ];
         })->values();
-
-        $dailyService = app(DailyControlService::class);
-        $umkmToday = $projects->where(fn ($p) => $p->isUmkm())->map(function ($unit) use ($today, $dailyService) {
-            $snap = $dailyService->snapshot($unit, $today);
-
-            return [
-                'id_project' => $unit->id_project,
-                'nama_project' => $unit->nama_project,
-                'lokasi' => $unit->lokasi,
-                'today_cost' => $snap['cost_cash'],
-                'today_income' => $snap['income'],
-                'today_margin' => $snap['margin_cash'],
-                'margin_economic' => $snap['margin_economic'],
-                'fixed_prorate' => $snap['fixed_prorate'],
-                'daily_target' => $snap['daily_budget'],
-                'usage_pct' => $snap['budget_usage_pct'],
-                'leak_alert' => $snap['leak_alert'],
-                'over_budget' => $snap['over_budget'],
-                'is_closed' => $snap['is_closed'],
-                'cogs_ratio_pct' => $snap['cogs_ratio_pct'],
-            ];
-        })->values();
-
-        $umkmTodayTotals = [
-            'cost' => $umkmToday->sum('today_cost'),
-            'income' => $umkmToday->sum('today_income'),
-            'margin' => $umkmToday->sum('today_margin'),
-            'margin_economic' => $umkmToday->sum('margin_economic'),
-            'alerts' => $umkmToday->filter(fn ($u) => $u['leak_alert'] || $u['over_budget'])->count(),
-            'count' => $umkmToday->count(),
-        ];
 
         // Weekly cost series
         $weeklyCosts = $this->getWeeklyCostSeries($companyId, $activeProjectIds);
@@ -195,11 +162,8 @@ class DashboardController extends Controller
             'summaryTxCount' => (string) ($countCost + $countIncome),
             'recentActivities' => $recentActivities,
             'projectSummaries' => $projectSummaries,
-            'umkmToday' => $umkmToday,
-            'umkmTodayTotals' => $umkmTodayTotals,
             'weeklyCosts' => $weeklyCosts,
-            'countProject' => $projects->where(fn ($p) => ! $p->isUmkm())->count(),
-            'countUmkm' => $projects->where(fn ($p) => $p->isUmkm())->count(),
+            'countProject' => $projects->count(),
             'module' => $user->companyModule(),
         ]);
     }

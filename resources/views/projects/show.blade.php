@@ -9,15 +9,14 @@
 @endsection
 
 @section('content')
-@php $isUmkm = $project->isUmkm(); @endphp
 <div class="page-header">
     <div>
         <h2>{{ $project->nama_project }}</h2>
         <p>
-            <span class="badge {{ $isUmkm ? 'badge-yellow' : 'badge-blue' }}" style="vertical-align:middle;">
-                <i class="bi bi-{{ $isUmkm ? 'shop' : 'building' }}"></i> {{ $project->mode_label }}
+            <span class="badge badge-blue" style="vertical-align:middle;">
+                <i class="bi bi-airplane"></i> {{ $project->mode_label }}
             </span>
-            · {{ $project->client ?: ($isUmkm ? 'Outlet' : 'Tanpa klien') }}
+            · {{ $project->client ?: 'Tanpa penyelenggara' }}
             @if($project->lokasi) · {{ $project->lokasi }} @endif
             @if($project->date_start)
                 · {{ $project->date_start->format('d M Y') }}{{ $project->date_end ? ' – '.$project->date_end->format('d M Y') : '' }}
@@ -30,250 +29,15 @@
         </p>
     </div>
     <div class="page-actions">
-        <a href="{{ route('cost-centers.index', $isUmkm ? ['mode' => 'umkm'] : ['mode' => 'project']) }}" class="btn btn-outline"><i class="bi bi-arrow-left"></i> Kembali</a>
+        <a href="{{ route('cost-centers.index') }}" class="btn btn-outline"><i class="bi bi-arrow-left"></i> Kembali</a>
         @if(!$isArchived)
-            <button class="btn btn-outline" onclick="openModal('addCostModal')"><i class="bi bi-dash-circle"></i> {{ $isUmkm ? 'Catat Biaya Hari Ini' : 'Catat Biaya' }}</button>
-            <button class="btn btn-primary" onclick="openModal('addIncomeModal')"><i class="bi bi-plus-circle"></i> {{ $isUmkm ? 'Catat Omzet' : 'Catat Pendapatan' }}</button>
+            <button class="btn btn-outline" onclick="openModal('addCostModal')"><i class="bi bi-dash-circle"></i> Catat Biaya</button>
+            <button class="btn btn-primary" onclick="openModal('addIncomeModal')"><i class="bi bi-plus-circle"></i> Catat Pendapatan</button>
         @endif
     </div>
 </div>
 
-@if($isUmkm)
-@php
-    $snap = $dailySnap ?? null;
-    $cashCost = $snap['cost_cash'] ?? $todayCost;
-    $econCost = $snap['cost_economic'] ?? $todayCost;
-    $fixedDay = $snap['fixed_prorate'] ?? 0;
-    $marginCash = $snap['margin_cash'] ?? $todayMargin;
-    $marginEcon = $snap['margin_economic'] ?? $todayMargin;
-    $isClosedToday = $snap['is_closed'] ?? false;
-@endphp
-{{-- UMKM: focus today --}}
-<div class="kpi-grid">
-    <div class="kpi-card">
-        <div class="kpi-top"><div class="kpi-icon green"><i class="bi bi-arrow-up-circle"></i></div></div>
-        <div class="kpi-label">Omzet Hari Ini</div>
-        <div class="kpi-value money positive">Rp {{ number_format($todayIncome, 0, ',', '.') }}</div>
-        <div class="kpi-change neutral">{{ now()->translatedFormat('d M Y') }}</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-top"><div class="kpi-icon red"><i class="bi bi-cash-stack"></i></div></div>
-        <div class="kpi-label">Biaya Kas</div>
-        <div class="kpi-value money negative">Rp {{ number_format($cashCost, 0, ',', '.') }}</div>
-        <div class="kpi-change neutral">COGS {{ number_format($snap['cogs'] ?? 0, 0, ',', '.') }} · Ops {{ number_format($snap['ops'] ?? 0, 0, ',', '.') }}</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-top"><div class="kpi-icon yellow"><i class="bi bi-building"></i></div></div>
-        <div class="kpi-label">+ Pro-rate Tetap</div>
-        <div class="kpi-value" style="font-size:18px;">Rp {{ number_format($fixedDay, 0, ',', '.') }}</div>
-        <div class="kpi-change neutral">Beban ekonomi: Rp {{ number_format($econCost, 0, ',', '.') }}</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-top"><div class="kpi-icon {{ $marginEcon >= 0 ? 'blue' : 'red' }}"><i class="bi bi-graph-up-arrow"></i></div></div>
-        <div class="kpi-label">Profit (Ekonomi)</div>
-        <div class="kpi-value money {{ $marginEcon >= 0 ? 'positive' : 'negative' }}">Rp {{ number_format($marginEcon, 0, ',', '.') }}</div>
-        <div class="kpi-change neutral">Kas: Rp {{ number_format($marginCash, 0, ',', '.') }}</div>
-    </div>
-</div>
-
-@if(!empty($snap['alerts']))
-    @foreach($snap['alerts'] as $alert)
-        <div class="alert alert-{{ $alert['level'] === 'danger' ? 'danger' : ($alert['level'] === 'warning' ? 'danger' : 'info') }}" style="margin-bottom:10px;">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <div>
-                <strong>{{ $alert['title'] }}</strong>
-                <div>{{ $alert['message'] }}</div>
-            </div>
-        </div>
-    @endforeach
-@endif
-
-<div class="grid-2" style="margin-bottom:16px;align-items:start;">
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="bi bi-speedometer2"></i> Kontrol Harian</h3>
-            @if($isClosedToday)
-                <span class="badge badge-green"><i class="bi bi-lock-fill"></i> Ditutup</span>
-            @else
-                <span class="badge badge-yellow"><i class="bi bi-unlock"></i> Terbuka</span>
-            @endif
-        </div>
-        <div class="card-body">
-            @if($dailyTarget)
-            @php
-                $pct = $snap['budget_usage_pct'] ?? $dailyUsagePct ?? 0;
-                $barColor = $pct > 100 ? 'var(--danger)' : ($pct > 80 ? 'var(--warning)' : 'var(--success)');
-            @endphp
-            <div style="margin-bottom:14px;">
-                <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12.5px;">
-                    <span>Pagu biaya kas</span>
-                    <span style="color:{{ $barColor }};font-weight:600;">{{ number_format($pct, 1) }}%</span>
-                </div>
-                <div class="progress"><div class="progress-bar" style="width:{{ min($pct, 100) }}%;background:{{ $barColor }};"></div></div>
-                <div class="cell-sub" style="margin-top:6px;">Rp {{ number_format($cashCost, 0, ',', '.') }} / Rp {{ number_format($dailyTarget, 0, ',', '.') }}</div>
-            </div>
-            @endif
-
-            <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:13px;margin-bottom:14px;">
-                <div style="flex:1 1 220px;background:#f8fafc;padding:10px;border-radius:10px;">
-                    <div class="cell-sub">COGS / Omzet</div>
-                    <strong>{{ $snap['cogs_ratio_pct'] !== null ? number_format($snap['cogs_ratio_pct'], 1).'%' : '—' }}</strong>
-                    <div class="cell-sub">Batas {{ number_format(($snap['cogs_threshold'] ?? 0.45) * 100, 0) }}%</div>
-                </div>
-                <div style="flex:1 1 220px;background:#f8fafc;padding:10px;border-radius:10px;">
-                    <div class="cell-sub">Bulan ini (kas)</div>
-                    <strong>Rp {{ number_format($monthCost, 0, ',', '.') }}</strong>
-                    <div class="cell-sub">Omzet Rp {{ number_format($monthIncome, 0, ',', '.') }}</div>
-                </div>
-            </div>
-
-            @if(!$isArchived)
-                @if($isClosedToday)
-                    <form action="{{ route('cost-centers.dailyClose.reopen', $project->id_project) }}" method="POST" data-confirm="Buka ulang tutup kas tanggal ini?">
-                        @csrf
-                        <div class="form-group">
-                            <label class="form-label">Tanggal</label>
-                            <input type="date" class="form-input" name="tanggal" value="{{ now()->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
-                        </div>
-                        <button class="btn btn-outline" style="width:100%;"><i class="bi bi-unlock"></i> Buka Ulang Kas</button>
-                    </form>
-                @else
-                    <form action="{{ route('cost-centers.dailyClose.store', $project->id_project) }}" method="POST" data-confirm="Tutup kas tanggal ini? Entri akan dikunci.">
-                        @csrf
-                        <div class="form-group">
-                            <label class="form-label">Tanggal Tutup Kas</label>
-                            <input type="date" class="form-input" name="tanggal" value="{{ now()->format('Y-m-d') }}" max="{{ now()->format('Y-m-d') }}">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Catatan tutup kas</label>
-                            <input type="text" class="form-input" name="notes" placeholder="Opsional">
-                        </div>
-                        <button class="btn btn-primary" style="width:100%;"><i class="bi bi-lock"></i> Tutup Kas</button>
-                    </form>
-                @endif
-            @endif
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="bi bi-building"></i> Biaya Tetap (Pro-rate)</h3>
-            @if(!$isArchived)
-                <button type="button" class="btn btn-sm btn-outline" onclick="openModal('addFixedModal')"><i class="bi bi-plus"></i> Tambah</button>
-            @endif
-        </div>
-        <div class="card-body compact">
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Item</th>
-                            <th class="text-end">/bulan</th>
-                            <th class="text-end">/hari</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($fixedCosts as $fc)
-                            @php $dayAmt = $fc->dailyAmountFor(now()); @endphp
-                            <tr>
-                                <td>
-                                    <div class="cell-title">{{ $fc->nama }}</div>
-                                    @if(!$fc->is_active)<span class="badge badge-gray">Nonaktif</span>@endif
-                                </td>
-                                <td class="text-end money">Rp {{ number_format($fc->amount_monthly, 0, ',', '.') }}</td>
-                                <td class="text-end money">Rp {{ number_format($dayAmt, 0, ',', '.') }}</td>
-                                <td class="text-end">
-                                    @if(!$isArchived)
-                                    <form action="{{ route('cost-centers.fixedCosts.delete', [$project->id_project, $fc->id_fixed_cost]) }}" method="POST" data-confirm="Hapus biaya tetap ini?">
-                                        @csrf
-                                        <button class="btn btn-xs btn-ghost" style="color:var(--danger)"><i class="bi bi-trash3"></i></button>
-                                    </form>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4">
-                                    <div class="empty-state" style="padding:20px;">
-                                        <p>Belum ada biaya tetap</p>
-                                        <div class="cell-sub">Contoh: sewa, listrik, gaji pokok → dibagi 30 hari</div>
-                                        @if(!$isArchived)
-                                            <button class="btn btn-sm btn-outline" style="margin-top:8px;" onclick="openModal('addFixedModal')">Tambah</button>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                    @if($fixedCosts->count())
-                    <tfoot>
-                        <tr>
-                            <td><strong>Total pro-rate hari ini</strong></td>
-                            <td class="text-end money"><strong>Rp {{ number_format($fixedCosts->where('is_active', true)->sum('amount_monthly'), 0, ',', '.') }}</strong></td>
-                            <td class="text-end money"><strong>Rp {{ number_format($fixedDay, 0, ',', '.') }}</strong></td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                    @endif
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-@if(($recentDays ?? collect())->count())
-<div class="card" style="margin-bottom:18px;">
-    <div class="card-header">
-        <h3><i class="bi bi-calendar-week"></i> 7 Hari Terakhir</h3>
-    </div>
-    <div class="card-body compact">
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th class="text-end">Omzet</th>
-                        <th class="text-end">Kas</th>
-                        <th class="text-end">Pro-rate</th>
-                        <th class="text-end">Profit</th>
-                        <th class="text-end">COGS%</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($recentDays as $day)
-                        <tr>
-                            <td style="white-space:nowrap;">{{ \Carbon\Carbon::parse($day['date'])->format('d M') }}</td>
-                            <td class="text-end money positive">Rp {{ number_format($day['income'], 0, ',', '.') }}</td>
-                            <td class="text-end money negative">Rp {{ number_format($day['cost_cash'], 0, ',', '.') }}</td>
-                            <td class="text-end">Rp {{ number_format($day['fixed_prorate'], 0, ',', '.') }}</td>
-                            <td class="text-end money {{ $day['margin_economic'] >= 0 ? 'positive' : 'negative' }}">Rp {{ number_format($day['margin_economic'], 0, ',', '.') }}</td>
-                            <td class="text-end">
-                                @if($day['cogs_ratio_pct'] !== null)
-                                    <span class="badge {{ $day['leak_alert'] ? 'badge-red' : 'badge-gray' }}">{{ number_format($day['cogs_ratio_pct'], 0) }}%</span>
-                                @else — @endif
-                            </td>
-                            <td>
-                                @if($day['is_closed'])
-                                    <span class="badge badge-green">Tutup</span>
-                                @elseif($day['over_budget'] || $day['leak_alert'])
-                                    <span class="badge badge-red">Alert</span>
-                                @else
-                                    <span class="badge badge-gray">Open</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-@endif
-
-@else
-{{-- Proyek: overall KPI --}}
+{{-- Keberangkatan: overall KPI --}}
 <div class="kpi-grid">
     <div class="kpi-card">
         <div class="kpi-top"><div class="kpi-icon red"><i class="bi bi-arrow-down-circle"></i></div></div>
@@ -316,7 +80,6 @@
         </div>
     </div>
 </div>
-@endif
 @endif
 
 @php
@@ -398,7 +161,7 @@
         Biaya <span class="count">{{ $project->costEntries->count() }}</span>
     </button>
     <button type="button" class="tab" data-tab="incomes" onclick="showTab('incomes', this)">
-        {{ $isUmkm ? 'Omzet' : 'Pendapatan' }} <span class="count">{{ $project->incomeEntries->count() }}</span>
+        Pendapatan <span class="count">{{ $project->incomeEntries->count() }}</span>
     </button>
     <button type="button" class="tab" data-tab="plans" onclick="showTab('plans', this)">
         Rencana / RAB <span class="count">{{ ($costPlans ?? collect())->count() + ($incomePlans ?? collect())->count() }}</span>
@@ -432,7 +195,7 @@
     @if(!$isArchived)
     <div class="toolbar-right">
         <button class="btn btn-sm btn-outline" id="btnAddCost" onclick="openModal('addCostModal')"><i class="bi bi-plus"></i> Biaya</button>
-        <button class="btn btn-sm btn-outline" id="btnAddIncome" onclick="openModal('addIncomeModal')" style="display:none;"><i class="bi bi-plus"></i> {{ $isUmkm ? 'Omzet' : 'Pendapatan' }}</button>
+        <button class="btn btn-sm btn-outline" id="btnAddIncome" onclick="openModal('addIncomeModal')" style="display:none;"><i class="bi bi-plus"></i> Pendapatan</button>
     </div>
     @endif
 </div>
@@ -629,7 +392,7 @@
 
 {{-- Plans / RAB --}}
 <div id="tab-plans" style="display:none;">
-    @if(!$isUmkm && !empty($groupSummaries))
+    @if(!empty($groupSummaries))
     <div class="card" style="margin-bottom:16px;">
         <div class="card-header">
             <h3><i class="bi bi-diagram-3"></i> Progress per Kelompok</h3>
@@ -896,7 +659,7 @@
             @else
             {{-- Belum ada investor --}}
             @if(!$isArchived)
-            <p style="color:var(--text-secondary);margin-bottom:16px;">Proyek ini belum memiliki akun investor. Buat akun untuk berbagi akses read-only kepada investor.</p>
+            <p style="color:var(--text-secondary);margin-bottom:16px;">Keberangkatan ini belum memiliki akun investor. Buat akun untuk berbagi akses read-only kepada investor.</p>
             <form action="{{ route('cost-centers.investor.store', $project->id_project) }}" method="POST">
                 @csrf
                 <div class="form-row">
@@ -915,7 +678,7 @@
                 <button type="submit" class="btn btn-primary"><i class="bi bi-person-plus"></i> Buat Akun Investor</button>
             </form>
             @else
-            <p class="cell-sub">Proyek diarsipkan. Tidak dapat menambah investor.</p>
+            <p class="cell-sub">Keberangkatan diarsipkan. Tidak dapat menambah investor.</p>
             @endif
             @endif
 
@@ -923,11 +686,11 @@
     </div>
 </div>
 
-{{-- Delete this project/umkm --}}
+{{-- Delete this keberangkatan --}}
 <div id="tab-delete" style="display:none;">
     <div class="card">
         <div class="card-header">
-            <h3 style="color:var(--danger);"><i class="bi bi-exclamation-triangle"></i> Hapus {{ $isUmkm ? 'UMKM' : 'Proyek' }}</h3>
+            <h3 style="color:var(--danger);"><i class="bi bi-exclamation-triangle"></i> Hapus Keberangkatan</h3>
         </div>
         <div class="card-body">
             <div class="alert alert-danger" style="padding:14px 16px;border-radius:10px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;margin-bottom:14px;">
@@ -935,10 +698,10 @@
             </div>
             <p style="margin-bottom:16px;color:var(--text-secondary);">
                 Menghapus unit ini akan menghapus <strong>secara permanen</strong> seluruh data di dalamnya:
-                biaya, {{ $isUmkm ? 'omzet' : 'pendapatan' }}, rencana/RAB, admin, biaya tetap, dan penutupan harian.
+                biaya, pendapatan, rencana/RAB, admin, dan galeri.
             </p>
             <button type="button" class="btn btn-danger" onclick="openModal('confirmDeleteStep1')">
-                <i class="bi bi-trash"></i> Hapus {{ $isUmkm ? 'UMKM' : 'Proyek' }} Ini
+                <i class="bi bi-trash"></i> Hapus Keberangkatan Ini
             </button>
         </div>
     </div>
@@ -948,11 +711,11 @@
 <div class="modal-backdrop" id="confirmDeleteStep1">
     <div class="modal modal-sm">
         <div class="modal-header">
-            <h3>Hapus {{ $isUmkm ? 'UMKM' : 'Proyek' }}</h3>
+            <h3>Hapus Keberangkatan</h3>
             <button type="button" class="modal-close" onclick="closeModal('confirmDeleteStep1')">×</button>
         </div>
         <div class="modal-body">
-            <p style="font-size:14px;line-height:1.6;">Apakah yakin ingin hapus {{ $isUmkm ? 'UMKM' : 'proyek' }} ini?<br>Semua data dihapus permanen.</p>
+            <p style="font-size:14px;line-height:1.6;">Apakah yakin ingin hapus keberangkatan ini?<br>Semua data dihapus permanen.</p>
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="closeModal('confirmDeleteStep1')">Batal</button>
@@ -1371,67 +1134,6 @@
     </div>
 </div>
 
-@if($isUmkm && !$isArchived)
-<div class="modal-backdrop" id="addFixedModal">
-    <div class="modal">
-        <form action="{{ route('cost-centers.fixedCosts.store', $project->id_project) }}" method="POST">
-            @csrf
-            <div class="modal-header">
-                <h3>Tambah Biaya Tetap</h3>
-                <button type="button" class="modal-close" onclick="closeModal('addFixedModal')">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info" style="margin-bottom:14px;">
-                    <i class="bi bi-info-circle"></i>
-                    <span>Nominal bulanan dibagi jumlah hari bulan berjalan sebagai beban harian (pro-rate).</span>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Nama <span class="req">*</span></label>
-                    <input type="text" class="form-input" name="nama" required placeholder="Sewa tempat">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Nominal / bulan <span class="req">*</span></label>
-                    <div class="input-prefix">
-                        <span>Rp</span>
-                        <input type="text" class="form-input" name="amount_monthly" data-money required placeholder="0">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Tipe biaya (opsional)</label>
-                    <select class="form-select" name="id_cost_type">
-                        <option value="">—</option>
-                        @foreach($costTypesByKategori as $kat => $types)
-                            <optgroup label="{{ ucfirst(str_replace('_', ' ', $kat)) }}">
-                                @foreach($types as $type)
-                                    <option value="{{ $type->id_cost_type }}">{{ $type->nama }}</option>
-                                @endforeach
-                            </optgroup>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Mulai berlaku</label>
-                        <input type="date" class="form-input" name="start_date" value="{{ date('Y-m-01') }}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Berakhir</label>
-                        <input type="date" class="form-input" name="end_date">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Catatan</label>
-                    <input type="text" class="form-input" name="catatan" placeholder="Opsional">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline" onclick="closeModal('addFixedModal')">Batal</button>
-                <button type="submit" class="btn btn-primary">Simpan</button>
-            </div>
-        </form>
-    </div>
-</div>
-@endif
 
 {{-- Modal Unggah Bukti Transaksi --}}
 @if(!$isArchived)

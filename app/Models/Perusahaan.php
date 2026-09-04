@@ -13,8 +13,6 @@ class Perusahaan extends Model
 
     public const MODULE_PROJECT = 'project';
 
-    public const MODULE_UMKM = 'umkm';
-
     protected $table = 'perusahaan';
 
     protected $primaryKey = 'id_perusahaan';
@@ -41,11 +39,6 @@ class Perusahaan extends Model
         return $this->module() === self::MODULE_PROJECT;
     }
 
-    public function isModuleUmkm(): bool
-    {
-        return $this->module() === self::MODULE_UMKM;
-    }
-
     public static function filterByModule($query, ?string $module = null): void
     {
         $module = $module ?: self::MODULE_ALL;
@@ -54,8 +47,6 @@ class Perusahaan extends Model
             $query->where(function ($q) {
                 $q->where('mode', self::MODULE_PROJECT)->orWhereNull('mode');
             });
-        } elseif ($module === self::MODULE_UMKM) {
-            $query->where('mode', self::MODULE_UMKM);
         }
     }
 

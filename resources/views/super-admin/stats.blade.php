@@ -34,7 +34,7 @@
     </div>
     <div class="kpi-card">
         <div class="kpi-top"><div class="kpi-icon green"><i class="bi bi-kanban"></i></div></div>
-        <div class="kpi-label">Total Projek / UMKM</div>
+        <div class="kpi-label">Total Keberangkatan</div>
         <div class="kpi-value">{{ number_format($overview['proyek']) }}</div>
     </div>
 </div>

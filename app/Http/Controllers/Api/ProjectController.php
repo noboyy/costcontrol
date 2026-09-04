@@ -19,9 +19,7 @@ use App\Models\ProjectCostPlan;
 use App\Models\ProjectIncomePlan;
 use App\Models\ProjectInvestor;
 use App\Models\Unit;
-use App\Services\BusinessTemplateSeeder;
 use App\Services\CashService;
-use App\Services\DailyControlService;
 use App\Services\TenantResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -48,7 +46,7 @@ class ProjectController extends Controller
             $query->where('status', 'active');
         }
 
-        if (in_array($modeFilter, [Project::MODE_PROJECT, Project::MODE_UMKM], true)) {
+        if (in_array($modeFilter, [Project::MODE_PROJECT], true)) {
             $query->where('mode', $modeFilter);
         }
 
@@ -61,10 +59,6 @@ class ProjectController extends Controller
             'project' => Project::when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
                 ->when($statusFilter === 'archive', fn ($q) => $q->where('status', 'archived'), fn ($q) => $q->where('status', 'active'))
                 ->where(fn ($q) => $q->where('mode', Project::MODE_PROJECT)->orWhereNull('mode'))
-                ->count(),
-            'umkm' => Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
-                ->when($statusFilter === 'archive', fn ($q) => $q->where('status', 'archived'), fn ($q) => $q->where('status', 'active'))
-                ->where('mode', Project::MODE_UMKM)
                 ->count(),
         ];
 
@@ -113,14 +107,6 @@ class ProjectController extends Controller
         $dailySnap = null;
         $recentDays = collect();
         $fixedCosts = collect();
-        if ($project->isUmkm()) {
-            $daily = app(DailyControlService::class);
-            $dailySnap = $daily->snapshot($project, $today);
-            $recentDays = $daily->recentDays($project, 7);
-            $fixedCosts = $project->fixedCosts()->orderBy('nama')->get();
-            $todayCost = $dailySnap['cost_cash'];
-            $todayIncome = $dailySnap['income'];
-        }
 
         $costPlans = $project->costPlans()->with('costType')->get();
         $incomePlans = $project->incomePlans()->with('incomeType')->get();
@@ -204,7 +190,6 @@ class ProjectController extends Controller
         $companyId = app(TenantResolver::class)->companyId();
 
         $request->validate([
-            'mode' => ['required', Rule::in([Project::MODE_PROJECT, Project::MODE_UMKM])],
             'nama_project' => 'required|string|max:255',
             'client' => 'nullable|string|max:255',
             'lokasi' => 'nullable|string|max:255',
@@ -214,13 +199,10 @@ class ProjectController extends Controller
             'budget_period' => ['nullable', Rule::in([Project::BUDGET_TOTAL, Project::BUDGET_MONTHLY, Project::BUDGET_DAILY])],
             'daily_budget' => 'nullable|string',
             'monthly_budget' => 'nullable|string',
-            'business_type' => 'nullable|string|max:50',
-            'seed_template' => 'nullable|boolean',
         ]);
 
-        $mode = $request->mode;
-        $budgetPeriod = $request->budget_period
-            ?: ($mode === Project::MODE_UMKM ? Project::BUDGET_DAILY : Project::BUDGET_TOTAL);
+        $mode = Project::MODE_PROJECT;
+        $budgetPeriod = $request->budget_period ?: Project::BUDGET_TOTAL;
 
         try {
             DB::beginTransaction();
@@ -228,7 +210,7 @@ class ProjectController extends Controller
             $project = Project::create([
                 'id_perusahaan' => $companyId,
                 'nama_project' => $request->nama_project,
-                'client' => $mode === Project::MODE_UMKM ? ($request->client ?: $request->business_type) : $request->client,
+                'client' => $request->client,
                 'lokasi' => $request->lokasi,
                 'date_start' => $request->date_start,
                 'date_end' => $request->date_end,
@@ -238,12 +220,7 @@ class ProjectController extends Controller
                 'budget_period' => $budgetPeriod,
                 'daily_budget' => $request->daily_budget ? $this->normalizeDecimal($request->daily_budget) : null,
                 'monthly_budget' => $request->monthly_budget ? $this->normalizeDecimal($request->monthly_budget) : null,
-                'business_type' => $request->business_type,
             ]);
-
-            if ($mode === Project::MODE_UMKM && $request->boolean('seed_template', true)) {
-                app(BusinessTemplateSeeder::class)->seedUmkm($companyId);
-            }
 
             DB::commit();
 

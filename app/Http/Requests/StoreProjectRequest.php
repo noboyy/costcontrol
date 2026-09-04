@@ -15,7 +15,6 @@ class StoreProjectRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'mode' => ['required', Rule::in([app()->make(\App\Models\Project::class)::MODE_PROJECT, app()->make(\App\Models\Project::class)::MODE_UMKM])],
             'nama_project' => 'required|string|max:255',
             'client' => 'nullable|string|max:255',
             'lokasi' => 'nullable|string|max:255',
@@ -25,8 +24,6 @@ class StoreProjectRequest extends FormRequest
             'budget_period' => ['nullable', Rule::in(['total', 'monthly', 'daily'])],
             'daily_budget' => 'nullable|string',
             'monthly_budget' => 'nullable|string',
-            'business_type' => 'nullable|string|max:50',
-            'seed_template' => 'nullable|boolean',
         ];
     }
 }

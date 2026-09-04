@@ -5,9 +5,7 @@ use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\CostCategoryController;
 use App\Http\Controllers\CostGroupController;
 use App\Http\Controllers\CostTypeController;
-use App\Http\Controllers\DailyCloseController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\FixedCostController;
 use App\Http\Controllers\IncomeCategoryController;
 use App\Http\Controllers\IncomeTypeController;
 use App\Http\Controllers\ModuleController;
@@ -106,15 +104,6 @@ Route::middleware([
             Route::post("/{$prefix}/{id}/investor/toggle", [ProjectController::class, 'toggleInvestor'])->name("{$name}.investor.toggle");
             Route::post("/{$prefix}/{id}/investor/delete", [ProjectController::class, 'destroyInvestor'])->name("{$name}.investor.delete");
             Route::post("/{$prefix}/{id}/investor/reset-password", [ProjectController::class, 'resetInvestorPasswordWeb'])->name("{$name}.investor.resetPassword");
-
-            // Fixed cost
-            Route::post("/{$prefix}/{id}/fixed-costs", [FixedCostController::class, 'store'])->name("{$name}.fixedCosts.store");
-            Route::post("/{$prefix}/{id}/fixed-costs/{fixedId}/update", [FixedCostController::class, 'update'])->name("{$name}.fixedCosts.update");
-            Route::post("/{$prefix}/{id}/fixed-costs/{fixedId}/delete", [FixedCostController::class, 'delete'])->name("{$name}.fixedCosts.delete");
-
-            // Daily close
-            Route::post("/{$prefix}/{id}/daily-close", [DailyCloseController::class, 'store'])->name("{$name}.dailyClose.store");
-            Route::post("/{$prefix}/{id}/daily-close/reopen", [DailyCloseController::class, 'destroy'])->name("{$name}.dailyClose.reopen");
 
             // Gallery write — admin only
             Route::post("/{$prefix}/{id}/gallery", [GalleryController::class, 'store'])->name("{$name}.gallery.store");

@@ -10,7 +10,6 @@ use App\Models\IncomeEntry;
 use App\Models\IncomeType;
 use App\Models\ProjectGallery;
 use App\Models\ProjectInvestor;
-use App\Services\DailyControlService;
 use App\Services\CashService;
 use Illuminate\Http\Request;
 
@@ -42,14 +41,6 @@ class InvestorController extends Controller
         $dailySnap = null;
         $recentDays = collect();
         $fixedCosts = collect();
-        if ($project->isUmkm()) {
-            $daily = app(DailyControlService::class);
-            $dailySnap = $daily->snapshot($project, $today);
-            $recentDays = $daily->recentDays($project, 7);
-            $fixedCosts = $project->fixedCosts()->orderBy('nama')->get();
-            $todayCost = $dailySnap['cost_cash'];
-            $todayIncome = $dailySnap['income'];
-        }
 
         $cash = app(CashService::class);
         $totalCost = (float) $project->costEntries()->sum('total');

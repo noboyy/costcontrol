@@ -36,7 +36,7 @@
         </div>
         <div class="kpi-label">Total Pendapatan</div>
         <div class="kpi-value">{{ $summaryBudget }}</div>
-        <div class="kpi-change neutral"><i class="bi bi-cash-stack"></i> Semua unit aktif</div>
+        <div class="kpi-change neutral"><i class="bi bi-cash-stack"></i> Semua keberangkatan aktif</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-top">
@@ -53,6 +53,35 @@
         <div class="kpi-label">Transaksi</div>
         <div class="kpi-value">{{ $summaryTxCount }}</div>
         <div class="kpi-change neutral">Cost + Income entries</div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:18px;">
+    <div class="card-header">
+        <h3><i class="bi bi-wallet2"></i> Kas Perusahaan</h3>
+        <a href="{{ route('general-expenses.index') }}" class="btn btn-sm btn-outline"><i class="bi bi-plus"></i> Catat Pengeluaran Umum</a>
+    </div>
+    <div class="card-body">
+        <div class="kpi-grid">
+            <div>
+                <div class="kpi-label">Saldo Kas Global</div>
+                <div class="kpi-value money {{ ($companyPosition['balance'] ?? 0) < 0 ? 'negative' : 'positive' }}" style="font-size:20px;">
+                    Rp {{ number_format($companyPosition['balance'] ?? 0, 0, ',', '.') }}
+                </div>
+                <div class="kpi-change neutral">Awal + pemasukan − biaya (semua keberangkatan & umum)</div>
+            </div>
+            <div>
+                <div class="kpi-label">Pemasukan bulan ini</div>
+                <div class="kpi-value money positive">Rp {{ number_format($companySummary['income'] ?? 0, 0, ',', '.') }}</div>
+            </div>
+            <div>
+                <div class="kpi-label">Biaya bulan ini</div>
+                <div class="kpi-value money negative">Rp {{ number_format($companySummary['cost'] ?? 0, 0, ',', '.') }}</div>
+                <div class="kpi-change neutral">
+                    Umum: Rp {{ number_format($companySummary['cost_general'] ?? 0, 0, ',', '.') }}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

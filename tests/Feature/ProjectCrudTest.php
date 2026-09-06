@@ -33,7 +33,6 @@ class ProjectCrudTest extends TestCase
     public function test_admin_can_create_project(): void
     {
         $response = $this->postJson('/api/v1/projects', [
-            'mode' => Project::MODE_PROJECT,
             'nama_project' => 'Proyek Uji',
             'client' => 'Klien ABC',
             'lokasi' => 'Jakarta',
@@ -98,30 +97,6 @@ class ProjectCrudTest extends TestCase
         }
     }
 
-    public function test_budget_calculation_works(): void
-    {
-        $project = \Database\Factories\ProjectFactory::new([
-            'id_perusahaan' => $this->company->id_perusahaan,
-            'mode' => Project::MODE_UMKM,
-            'daily_budget' => 1000000,
-            'budget_period' => Project::BUDGET_DAILY,
-        ])->create();
-
-        $cost = CostEntry::create([
-            'id_perusahaan' => $this->company->id_perusahaan,
-            'id_project' => $project->id_project,
-            'id_cost_type' => \Database\Factories\CostTypeFactory::new(['id_perusahaan' => $this->company->id_perusahaan])->create()->id_cost_type,
-            'tanggal' => now()->toDateString(),
-            'qty' => 100,
-            'harga_satuan' => 5000,
-            'total' => 500000,
-        ]);
-
-        $percent = $project->budgetUsagePercent($cost->total);
-
-        $this->assertEquals(50.0, round($percent, 1));
-    }
-
     public function test_super_admin_sees_all_projects(): void
     {
         $otherCompany = \Database\Factories\PerusahaanFactory::new()->create();
@@ -150,9 +125,6 @@ class ProjectCrudTest extends TestCase
 
         $response = $this->getJson('/api/v1/projects');
 
-        $response->assertStatus(200);
-        
-        $data = $response->json('data') ?? [];
-        $this->assertEquals(0, count($data));
+        $response->assertStatus(403);
     }
 }

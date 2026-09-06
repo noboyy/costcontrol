@@ -20,12 +20,11 @@
 <div class="toolbar">
     <div class="toolbar-left">
         <div class="seg">
-            <a href="{{ route('cost-centers.index', array_filter(['status' => $statusFilter])) }}" class="{{ !$modeFilter ? 'active' : '' }}">Semua ({{ $counts['all'] }})</a>
-            <a href="{{ route('cost-centers.index', array_filter(['status' => $statusFilter, 'mode' => 'project'])) }}" class="{{ $modeFilter === 'project' ? 'active' : '' }}">Keberangkatan ({{ $counts['project'] }})</a>
+            <a href="{{ route('cost-centers.index') }}" class="{{ !$statusFilter ? 'active' : '' }}">Semua ({{ $counts['all'] }})</a>
         </div>
         <div class="seg">
-            <a href="{{ route('cost-centers.index', array_filter(['mode' => $modeFilter])) }}" class="{{ !$statusFilter ? 'active' : '' }}">Aktif</a>
-            <a href="{{ route('cost-centers.index', array_filter(['mode' => $modeFilter, 'status' => 'archive'])) }}" class="{{ $statusFilter === 'archive' ? 'active' : '' }}">Arsip</a>
+            <a href="{{ route('cost-centers.index') }}" class="{{ !$statusFilter ? 'active' : '' }}">Aktif</a>
+            <a href="{{ route('cost-centers.index', ['status' => 'archive']) }}" class="{{ $statusFilter === 'archive' ? 'active' : '' }}">Arsip</a>
         </div>
         <div class="search-box">
             <i class="bi bi-search"></i>
@@ -43,11 +42,10 @@
             <table id="unitTable">
                 <thead>
                     <tr>
-                        <th>Unit</th>
-                        <th>Mode</th>
+                        <th>Keberangkatan</th>
                         <th>Klien / Tipe</th>
                         <th>Lokasi</th>
-                        <th class="text-end">Budget / Pagu</th>
+                        <th class="text-end">Nilai Kontrak</th>
                         <th>Status</th>
                         <th class="text-end">Aksi</th>
                     </tr>
@@ -55,7 +53,7 @@
                 <tbody>
                     @forelse($projects as $project)
                         @php
-                            $search = strtolower(($project->nama_project ?? '') . ' ' . ($project->client ?? '') . ' ' . ($project->lokasi ?? '') . ' ' . ($project->mode ?? ''));
+                            $search = strtolower(($project->nama_project ?? '') . ' ' . ($project->client ?? '') . ' ' . ($project->lokasi ?? ''));
                             $budgetLabel = $project->project_value
                                 ? 'Rp '.number_format($project->project_value, 0, ',', '.')
                                 : '—';
@@ -66,12 +64,6 @@
                                 @if($project->date_start)
                                     <div class="cell-sub">{{ $project->date_start->format('d M Y') }}@if($project->date_end) – {{ $project->date_end->format('d M Y') }}@endif</div>
                                 @endif
-                            </td>
-                            <td>
-                                <span class="badge badge-blue">
-                                    <i class="bi bi-airplane"></i>
-                                    {{ $project->mode_label }}
-                                </span>
                             </td>
                             <td>{{ $project->client ?? '—' }}</td>
                             <td>{{ $project->lokasi ?? '—' }}</td>
@@ -97,7 +89,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="6">
                                 <div class="empty-state">
                                     <i class="bi bi-building"></i>
                                     <p>Belum ada keberangkatan</p>
@@ -136,23 +128,22 @@
                             <input type="text" class="form-input" name="lokasi" value="{{ $project->lokasi }}">
                         </div>
                     </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Tanggal Mulai</label>
-                                <input type="date" class="form-input" name="date_start" value="{{ $project->date_start?->format('Y-m-d') }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Tanggal Selesai</label>
-                                <input type="date" class="form-input" name="date_end" value="{{ $project->date_end?->format('Y-m-d') }}">
-                            </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Tanggal Mulai</label>
+                            <input type="date" class="form-input" name="date_start" value="{{ $project->date_start?->format('Y-m-d') }}">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Nilai Kontrak</label>
-                            <div class="input-prefix"><span>Rp</span>
-                                <input type="text" class="form-input" name="project_value" data-money value="{{ $project->project_value ? number_format($project->project_value, 0, ',', '.') : '' }}">
-                            </div>
+                            <label class="form-label">Tanggal Selesai</label>
+                            <input type="date" class="form-input" name="date_end" value="{{ $project->date_end?->format('Y-m-d') }}">
                         </div>
-                        <input type="hidden" name="budget_period" value="total">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nilai Kontrak</label>
+                        <div class="input-prefix"><span>Rp</span>
+                            <input type="text" class="form-input" name="project_value" data-money value="{{ $project->project_value ? number_format($project->project_value, 0, ',', '.') : '' }}">
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label class="form-label">Saldo Awal Kas</label>
                         <div class="input-prefix"><span>Rp</span>
@@ -226,7 +217,6 @@
                     <input type="checkbox" name="generate_investor" value="1">
                     Buat akun investor otomatis (kredensial tampil sekali setelah dibuat)
                 </label>
-                <input type="hidden" name="budget_period" value="total">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline" onclick="closeModal('addUnitModal')">Batal</button>

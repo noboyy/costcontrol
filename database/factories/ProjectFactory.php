@@ -24,18 +24,6 @@ class ProjectFactory extends Factory
             'date_end' => now()->addDays(100)->toDateString(),
             'project_value' => fake()->numberBetween(10000000, 500000000),
             'status' => 'active',
-            'mode' => Project::MODE_PROJECT,
-            'budget_period' => Project::BUDGET_TOTAL,
         ];
-    }
-
-    public function umkm(): static
-    {
-        return $this->state([
-            'mode' => Project::MODE_PROJECT,
-            'budget_period' => Project::BUDGET_DAILY,
-            'daily_budget' => 1000000,
-            'business_type' => 'kopi',
-        ]);
     }
 }

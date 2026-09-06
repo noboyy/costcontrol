@@ -8,8 +8,6 @@ use App\Models\CostCategory;
 use App\Models\CostEntry;
 use App\Models\CostGroup;
 use App\Models\CostType;
-use App\Models\DailyClose;
-use App\Models\FixedCost;
 use App\Models\IncomeEntry;
 use App\Models\IncomeType;
 use App\Models\Pengguna;
@@ -25,7 +23,6 @@ use App\Services\CashService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
@@ -36,7 +33,6 @@ class ProjectController extends Controller
         $user = auth()->user();
         $companyId = $user->id_perusahaan;
         $statusFilter = $request->get('status');
-        $modeFilter = $request->get('mode');
 
         $query = Project::with(['admins'])
             ->when($companyId, function ($q) use ($companyId) {
@@ -51,10 +47,6 @@ class ProjectController extends Controller
             $query->where('status', 'active');
         }
 
-        if (in_array($modeFilter, [Project::MODE_PROJECT], true)) {
-            $query->where('mode', $modeFilter);
-        }
-
         $projects = $query->orderBy('created_at', 'desc')->get();
 
         $countsBase = Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
@@ -64,16 +56,12 @@ class ProjectController extends Controller
 
         $counts = [
             'all' => (clone $countsBase)->count(),
-            'project' => (clone $countsBase)->where(function ($q) {
-                $q->where('mode', Project::MODE_PROJECT)->orWhereNull('mode');
-            })->count(),
         ];
 
         return view('projects.index', [
-            'title' => 'Unit Bisnis',
+            'title' => 'Keberangkatan',
             'projects' => $projects,
             'statusFilter' => $statusFilter,
-            'modeFilter' => $modeFilter,
             'counts' => $counts,
             'module' => $user->companyModule(),
         ]);
@@ -92,7 +80,6 @@ class ProjectController extends Controller
             'incomeEntries.incomeType',
             'incomeEntries.gallery',
             'admins',
-            'fixedCosts',
             'costPlans.costType',
             'incomePlans.incomeType',
         ])
@@ -118,12 +105,6 @@ class ProjectController extends Controller
         $todayIncome = $project->incomeOnDate($today);
         $monthCost = $project->costInMonth();
         $monthIncome = $project->incomeInMonth();
-        $dailyTarget = $project->budgetTargetForDate($today);
-        $monthlyTarget = $project->monthlyBudgetTarget();
-
-        $dailySnap = null;
-        $recentDays = collect();
-        $fixedCosts = collect();
 
         $costPlans = $project->costPlans()->with('costType')->get();
         $incomePlans = $project->incomePlans()->with('incomeType')->get();
@@ -196,13 +177,6 @@ class ProjectController extends Controller
             'todayMargin' => $todayIncome - $todayCost,
             'monthCost' => $monthCost,
             'monthIncome' => $monthIncome,
-            'dailyTarget' => $dailyTarget,
-            'monthlyTarget' => $monthlyTarget,
-            'dailyUsagePct' => $project->budgetUsagePercent($todayCost, $dailyTarget),
-            'monthlyUsagePct' => $monthlyTarget ? $project->budgetUsagePercent($monthCost, $monthlyTarget) : null,
-            'dailySnap' => $dailySnap,
-            'recentDays' => $recentDays,
-            'fixedCosts' => $fixedCosts,
             'costPlans' => $costPlans,
             'incomePlans' => $incomePlans,
             'planCostTotal' => $planCostTotal,
@@ -539,16 +513,9 @@ class ProjectController extends Controller
             'date_start' => 'nullable|date',
             'date_end' => 'nullable|date|after_or_equal:date_start',
             'project_value' => 'nullable|string',
-            'budget_period' => ['nullable', Rule::in([Project::BUDGET_TOTAL, Project::BUDGET_MONTHLY, Project::BUDGET_DAILY])],
-            'daily_budget' => 'nullable|string',
-            'monthly_budget' => 'nullable|string',
             'generate_investor' => 'nullable|boolean',
             'opening_balance' => 'nullable|string',
         ]);
-
-        $mode = Project::MODE_PROJECT;
-
-        $budgetPeriod = $request->budget_period ?: Project::BUDGET_TOTAL;
 
         try {
             DB::beginTransaction();
@@ -562,10 +529,6 @@ class ProjectController extends Controller
                 'date_end' => $request->date_end,
                 'project_value' => $request->project_value ? $this->normalizeDecimal($request->project_value) : null,
                 'status' => 'active',
-                'mode' => $mode,
-                'budget_period' => $budgetPeriod,
-                'daily_budget' => $request->daily_budget ? $this->normalizeDecimal($request->daily_budget) : null,
-                'monthly_budget' => $request->monthly_budget ? $this->normalizeDecimal($request->monthly_budget) : null,
                 'opening_balance' => $request->opening_balance ? $this->normalizeDecimal($request->opening_balance) : null,
             ]);
 
@@ -653,9 +616,6 @@ class ProjectController extends Controller
             'date_start' => 'nullable|date',
             'date_end' => 'nullable|date|after_or_equal:date_start',
             'project_value' => 'nullable|string',
-            'budget_period' => ['nullable', Rule::in([Project::BUDGET_TOTAL, Project::BUDGET_MONTHLY, Project::BUDGET_DAILY])],
-            'daily_budget' => 'nullable|string',
-            'monthly_budget' => 'nullable|string',
             'cogs_ratio_alert' => 'nullable|numeric|min:0|max:100',
             'lock_closed_days' => 'nullable|boolean',
             'opening_balance' => 'nullable|string',
@@ -669,13 +629,6 @@ class ProjectController extends Controller
                 'date_start' => $request->date_start,
                 'date_end' => $request->date_end,
                 'project_value' => $request->project_value ? $this->normalizeDecimal($request->project_value) : null,
-                'budget_period' => $request->budget_period ?: $project->budget_period,
-                'daily_budget' => $request->daily_budget !== null && $request->daily_budget !== ''
-                    ? $this->normalizeDecimal($request->daily_budget)
-                    : $project->daily_budget,
-                'monthly_budget' => $request->monthly_budget !== null && $request->monthly_budget !== ''
-                    ? $this->normalizeDecimal($request->monthly_budget)
-                    : $project->monthly_budget,
                 'opening_balance' => $request->opening_balance !== null && $request->opening_balance !== ''
                     ? $this->normalizeDecimal($request->opening_balance)
                     : $project->opening_balance,
@@ -692,12 +645,6 @@ class ProjectController extends Controller
             }
 
             // Allow clearing money fields when explicitly empty string submitted
-            if ($request->has('daily_budget') && $request->daily_budget === '') {
-                $data['daily_budget'] = null;
-            }
-            if ($request->has('monthly_budget') && $request->monthly_budget === '') {
-                $data['monthly_budget'] = null;
-            }
             if ($request->has('project_value') && $request->project_value === '') {
                 $data['project_value'] = null;
             }
@@ -742,9 +689,6 @@ class ProjectController extends Controller
             'file_bukti' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:3072',
         ]);
 
-        if ($msg = $this->guardClosedDay($project, $request->tanggal)) {
-            return back()->withInput()->with('error', $msg);
-        }
 
         try {
             $qty = $this->normalizeDecimal($request->qty);
@@ -807,9 +751,6 @@ class ProjectController extends Controller
             'catatan' => 'nullable|string',
         ]);
 
-        if ($msg = $this->guardClosedDay($project, $request->tanggal)) {
-            return back()->withInput()->with('error', $msg);
-        }
 
         $qty = $this->normalizeDecimal($request->qty);
         $hargaSatuan = $this->normalizeMoney($request->harga_satuan);
@@ -872,9 +813,6 @@ class ProjectController extends Controller
             'file_bukti' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:3072',
         ]);
 
-        if ($msg = $this->guardClosedDay($project, $request->tanggal)) {
-            return back()->withInput()->with('error', $msg);
-        }
 
         try {
             $qty = $this->normalizeDecimal($request->qty);
@@ -937,9 +875,6 @@ class ProjectController extends Controller
             'catatan' => 'nullable|string',
         ]);
 
-        if ($msg = $this->guardClosedDay($project, $request->tanggal)) {
-            return back()->withInput()->with('error', $msg);
-        }
 
         $qty = $this->normalizeDecimal($request->qty);
         $hargaSatuan = $this->normalizeMoney($request->harga_satuan);
@@ -994,9 +929,6 @@ class ProjectController extends Controller
             ->where('id_project', $id)
             ->firstOrFail();
 
-        if ($msg = $this->guardClosedDay($project, $cost->tanggal)) {
-            return back()->with('error', $msg);
-        }
 
         $cost->delete();
 
@@ -1025,9 +957,6 @@ class ProjectController extends Controller
             ->where('id_project', $id)
             ->firstOrFail();
 
-        if ($msg = $this->guardClosedDay($project, $income->tanggal)) {
-            return back()->with('error', $msg);
-        }
 
         $income->delete();
 
@@ -1081,8 +1010,6 @@ class ProjectController extends Controller
             ProjectAdmin::where('id_project', $id)->delete();
             ProjectCostPlan::where('id_project', $id)->delete();
             ProjectIncomePlan::where('id_project', $id)->delete();
-            FixedCost::where('id_project', $id)->delete();
-            DailyClose::where('id_project', $id)->delete();
             $project->delete();
 
             DB::commit();

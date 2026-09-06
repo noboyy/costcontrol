@@ -2,11 +2,65 @@
 
 namespace App\Services;
 
+use App\Models\CostEntry;
+use App\Models\IncomeEntry;
 use App\Models\Project;
 use Carbon\Carbon;
 
 class CashService
 {
+    /**
+     * Posisi kas perusahaan (semua keberangkatan + biaya umum):
+     * sum(opening_balance) + sum(income) - sum(cost) s/d tanggal.
+     */
+    public function positionCompany(?int $companyId, Carbon|string|null $date = null): array
+    {
+        $d = $date instanceof Carbon ? $date->copy() : Carbon::parse($date ?: now());
+        $day = $d->format('Y-m-d');
+
+        $queryProject = fn ($q) => $q->when($companyId !== null, fn ($b) => $b->where('id_perusahaan', $companyId));
+        $queryCost = fn ($q) => $q->when($companyId !== null, fn ($b) => $b->where('id_perusahaan', $companyId));
+        $queryIncome = fn ($q) => $q->when($companyId !== null, fn ($b) => $b->where('id_perusahaan', $companyId));
+
+        $opening = (float) $queryProject(Project::query())->sum('opening_balance');
+        $income = (float) $queryIncome(IncomeEntry::query())->whereDate('tanggal', '<=', $day)->sum('total');
+        $cost = (float) $queryCost(CostEntry::query())->whereDate('tanggal', '<=', $day)->sum('total');
+
+        $balance = $opening + $income - $cost;
+
+        return [
+            'date' => $day,
+            'opening' => $opening,
+            'income_to_date' => $income,
+            'cost_to_date' => $cost,
+            'cost_general_to_date' => (float) $queryCost(CostEntry::query())
+                ->whereNull('id_project')
+                ->whereDate('tanggal', '<=', $day)
+                ->sum('total'),
+            'balance' => $balance,
+            'is_negative' => $balance < 0,
+        ];
+    }
+
+    /**
+     * Ringkasan kas bulan berjalan perusahaan.
+     */
+    public function summaryCompany(?int $companyId, Carbon|string|null $date = null): array
+    {
+        $d = $date instanceof Carbon ? $date->copy() : Carbon::parse($date ?: now());
+        $start = $d->copy()->startOfMonth()->format('Y-m-d');
+        $end = $d->copy()->endOfMonth()->format('Y-m-d');
+
+        $c = fn ($q) => $q->when($companyId !== null, fn ($b) => $b->where('id_perusahaan', $companyId));
+
+        return [
+            'income' => (float) $c(IncomeEntry::query())->whereBetween('tanggal', [$start, $end])->sum('total'),
+            'cost' => (float) $c(CostEntry::query())->whereBetween('tanggal', [$start, $end])->sum('total'),
+            'cost_project' => (float) $c(CostEntry::query())->whereNotNull('id_project')->whereBetween('tanggal', [$start, $end])->sum('total'),
+            'cost_general' => (float) $c(CostEntry::query())->whereNull('id_project')->whereBetween('tanggal', [$start, $end])->sum('total'),
+        ];
+    }
+
     /**
      * Posisi kas berjalan per tanggal:
      * saldo_awal + pemasukan - pengeluaran (s/d tanggal tsb).
@@ -101,11 +155,7 @@ class CashService
         $pos = $this->position($project);
         $balance = $pos['balance'];
 
-        $budget = match ($project->budget_period ?: Project::BUDGET_TOTAL) {
-            Project::BUDGET_DAILY => $project->daily_budget !== null ? (float) $project->daily_budget * now()->daysInMonth : null,
-            Project::BUDGET_MONTHLY => $project->monthly_budget !== null ? (float) $project->monthly_budget : null,
-            default => $project->project_value !== null ? (float) $project->project_value : null,
-        };
+        $budget = $project->project_value !== null ? (float) $project->project_value : null;
 
         $daysToDeplete = null;
         if ($netBurn > 0 && $budget !== null && $budget > 0) {

@@ -39,15 +39,13 @@ class Perusahaan extends Model
         return $this->module() === self::MODULE_PROJECT;
     }
 
+    /**
+     * Kolom project.mode sudah dihapus — semua entitas adalah keberangkatan,
+     * filter module jadi no-op.
+     */
     public static function filterByModule($query, ?string $module = null): void
     {
-        $module = $module ?: self::MODULE_ALL;
-
-        if ($module === self::MODULE_PROJECT) {
-            $query->where(function ($q) {
-                $q->where('mode', self::MODULE_PROJECT)->orWhereNull('mode');
-            });
-        }
+        // no-op
     }
 
     public function pengguna()

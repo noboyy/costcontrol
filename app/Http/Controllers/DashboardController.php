@@ -6,6 +6,7 @@ use App\Models\CostEntry;
 use App\Models\IncomeEntry;
 use App\Models\Perusahaan;
 use App\Models\Project;
+use App\Services\CashService;
 
 class DashboardController extends Controller
 {
@@ -140,7 +141,7 @@ class DashboardController extends Controller
                 'id_project' => $project->id_project,
                 'nama_project' => $project->nama_project,
                 'client' => $project->client,
-                'mode' => $project->mode ?: Project::MODE_PROJECT,
+                'mode' => 'project',
                 'total_cost' => $project->total_cost,
                 'total_income' => $project->total_income,
                 'margin' => $project->margin,
@@ -151,6 +152,10 @@ class DashboardController extends Controller
         $weeklyCosts = $this->getWeeklyCostSeries($companyId, $activeProjectIds);
 
         $margin = $totalIncome - $totalCost;
+
+        $cashSvc = app(CashService::class);
+        $companyPosition = $cashSvc->positionCompany($companyId);
+        $companySummary = $cashSvc->summaryCompany($companyId);
 
         return view('dashboard', [
             'title' => 'Dashboard',
@@ -164,6 +169,8 @@ class DashboardController extends Controller
             'projectSummaries' => $projectSummaries,
             'weeklyCosts' => $weeklyCosts,
             'countProject' => $projects->count(),
+            'companyPosition' => $companyPosition,
+            'companySummary' => $companySummary,
             'module' => $user->companyModule(),
         ]);
     }

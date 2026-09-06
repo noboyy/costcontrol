@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers\Concerns;
 
-use App\Models\Project;
-use Carbon\Carbon;
-
 trait HandlesDecimal
 {
     protected function normalizeDecimal($value, $default = null)
@@ -21,12 +18,6 @@ trait HandlesDecimal
         }
 
         return (float) $clean;
-    }
-
-    protected function guardClosedDay(Project $project, $date): ?string
-    {
-        // Fitur tutup kas harian (UMKM) dihapus — tidak ada lagi hari terkunci.
-        return null;
     }
 
     protected function normalizeMoney($value)

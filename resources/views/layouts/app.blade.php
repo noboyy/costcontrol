@@ -951,6 +951,11 @@
                             <i class="bi bi-graph-up"></i> Dashboard Super Admin
                         </a>
                     </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('general-expenses.*') ? 'active' : '' }}" href="{{ route('general-expenses.index') }}">
+                            <i class="bi bi-wallet2"></i> Pengeluaran Umum
+                        </a>
+                    </div>
                     @endif
                     @if(! auth()->user()->isSuperAdmin())
                     <div class="nav-item">
@@ -963,6 +968,11 @@
                     <div class="nav-item">
                         <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
                             <i class="bi bi-file-earmark-bar-graph"></i> Laporan
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('general-expenses.*') ? 'active' : '' }}" href="{{ route('general-expenses.index') }}">
+                            <i class="bi bi-wallet2"></i> Pengeluaran Umum
                         </a>
                     </div>
                     @endif

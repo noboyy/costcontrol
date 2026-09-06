@@ -109,7 +109,6 @@
                 <thead>
                     <tr>
                         <th>Unit</th>
-                        <th>Mode</th>
                         <th class="text-end">Pendapatan</th>
                         <th class="text-end">Biaya</th>
                         <th class="text-end">Margin</th>
@@ -117,15 +116,14 @@
                 </thead>
                 <tbody>
                     @forelse($byUnit as $row)
-                        <tr class="clickable" onclick="location.href='{{ route('cost-centers.show', $row['id']) }}'">
+                        <tr class="{{ $row['id'] ? 'clickable' : '' }}" @if($row['id']) onclick="location.href='{{ route('cost-centers.show', $row['id']) }}'" @endif>
                             <td class="cell-title">{{ $row['nama'] }}</td>
-                            <td><span class="badge badge-gray">{{ $row['mode'] }}</span></td>
                             <td class="text-end money positive">Rp {{ number_format($row['income'], 0, ',', '.') }}</td>
                             <td class="text-end money negative">Rp {{ number_format($row['cost'], 0, ',', '.') }}</td>
                             <td class="text-end money {{ $row['margin'] >= 0 ? 'positive' : 'negative' }}">Rp {{ number_format($row['margin'], 0, ',', '.') }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5"><div class="empty-state">Tidak ada unit</div></td></tr>
+                        <tr><td colspan="4"><div class="empty-state">Tidak ada unit</div></td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -145,7 +143,7 @@
                         @foreach($costs->take(100) as $c)
                             <tr>
                                 <td style="white-space:nowrap;">{{ $c->tanggal?->format('d M') }}</td>
-                                <td>{{ $c->project?->nama_project }}</td>
+                                <td>{{ $c->project?->nama_project ?? 'Umum' }}</td>
                                 <td>{{ $c->costType?->nama }}</td>
                                 <td class="text-end money negative">Rp {{ number_format($c->total, 0, ',', '.') }}</td>
                             </tr>

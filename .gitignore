@@ -27,3 +27,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+/frontend/out.zip
+/frontend/.env.production

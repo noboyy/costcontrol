@@ -20,7 +20,6 @@ class ReportController extends Controller
         $from = $request->get('from', now()->startOfMonth()->format('Y-m-d'));
         $to = $request->get('to', now()->format('Y-m-d'));
         $projectId = $request->get('project_id');
-        $mode = $request->get('mode');
 
         $units = Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
             ->where('status', 'active')
@@ -28,14 +27,16 @@ class ReportController extends Controller
             ->get();
 
         $queryProjects = Project::when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
-            ->when($projectId, fn ($q) => $q->where('id_project', $projectId))
-            ->when($mode === 'project', fn ($q) => $q->where(fn ($qq) => $qq->where('mode', 'project')->orWhereNull('mode')));
+            ->when($projectId, fn ($q) => $q->where('id_project', $projectId));
 
         $selected = $queryProjects->get();
         $ids = $selected->pluck('id_project')->all();
 
         $costs = CostEntry::with(['costType', 'project'])
-            ->whereIn('id_project', $ids ?: [0])
+            ->where(function ($q) use ($ids) {
+                $q->whereIn('id_project', $ids ?: [0])
+                  ->orWhere(fn ($qq) => $qq->whereNull('id_project'));
+            })
             ->whereBetween('tanggal', [$from, $to])
             ->orderBy('tanggal', 'desc')
             ->orderBy('created_at', 'desc')
@@ -74,14 +75,29 @@ class ReportController extends Controller
             ];
         })->sortByDesc('income')->values();
 
+        $generalCost = (float) CostEntry::whereNull('id_project')
+            ->when($companyId, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->whereBetween('tanggal', [$from, $to])
+            ->sum('total');
+
+        if ($generalCost > 0) {
+            $byUnit->push([
+                'id' => null,
+                'nama' => 'Umum',
+                'mode' => 'Operasional',
+                'cost' => $generalCost,
+                'income' => 0,
+                'margin' => -$generalCost,
+            ]);
+        }
+
         $dailyRows = [];
 
         return response()->json([
             'from' => $from,
             'to' => $to,
             'projectId' => $projectId,
-            'mode' => $mode,
-            'units' => $units->map(fn ($u) => ['id' => $u->id_project, 'nama' => $u->nama_project, 'mode' => $u->mode]),
+            'units' => $units->map(fn ($u) => ['id' => $u->id_project, 'nama' => $u->nama_project, 'mode' => $u->mode_label]),
             'totalCost' => $totalCost,
             'totalIncome' => $totalIncome,
             'margin' => $margin,
@@ -91,7 +107,7 @@ class ReportController extends Controller
             'costs' => $costs->map(fn ($c) => [
                 'id' => $c->id_cost,
                 'tanggal' => $c->tanggal?->format('Y-m-d'),
-                'unit' => $c->project?->nama_project,
+                'unit' => $c->project?->nama_project ?? 'Umum',
                 'tipe' => $c->costType?->nama,
                 'keterangan' => $c->keterangan,
                 'qty' => $c->qty,
@@ -138,7 +154,10 @@ class ReportController extends Controller
 
             if ($type === 'all' || $type === 'cost') {
                 CostEntry::with(['costType', 'project'])
-                    ->whereIn('id_project', $ids ?: [0])
+                    ->where(function ($q) use ($ids) {
+                        $q->whereIn('id_project', $ids ?: [0])
+                          ->orWhere(fn ($qq) => $qq->whereNull('id_project'));
+                    })
                     ->whereBetween('tanggal', [$from, $to])
                     ->orderBy('tanggal', 'desc')
                     ->orderBy('created_at', 'desc')
@@ -147,7 +166,7 @@ class ReportController extends Controller
                             fputcsv($out, [
                                 'biaya',
                                 $r->tanggal?->format('Y-m-d'),
-                                $r->project?->nama_project,
+                                $r->project?->nama_project ?? 'Umum',
                                 $r->costType?->nama,
                                 $r->keterangan,
                                 $r->qty,

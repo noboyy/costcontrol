@@ -24,7 +24,6 @@ export interface Project {
   date_start: string | null
   date_end: string | null
   status: 'active' | 'archived'
-  mode: 'project' | 'umkm' | null
   project_value: number | null
 }
 
@@ -45,7 +44,6 @@ export interface InvestorProjectResponse {
   cashPosition: CashPosition
   dailySnap: Record<string, unknown> | null
   recentDays: RecentDay[]
-  fixedCosts: FixedCost[]
   categories: {
     byCost: Record<string, number>
     byIncome: Record<string, number>
@@ -66,12 +64,6 @@ export interface RecentDay {
   cost_cash: number
   income: number
   margin: number
-}
-
-export interface FixedCost {
-  id: number
-  nama: string
-  jumlah: number
 }
 
 export interface CostEntry {

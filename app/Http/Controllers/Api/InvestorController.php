@@ -38,10 +38,6 @@ class InvestorController extends Controller
         $monthCost = $project->costInMonth();
         $monthIncome = $project->incomeInMonth();
 
-        $dailySnap = null;
-        $recentDays = collect();
-        $fixedCosts = collect();
-
         $cash = app(CashService::class);
         $totalCost = (float) $project->costEntries()->sum('total');
         $totalIncome = (float) $project->incomeEntries()->sum('total');
@@ -70,7 +66,6 @@ class InvestorController extends Controller
                 'date_start' => $project->date_start?->format('Y-m-d'),
                 'date_end' => $project->date_end?->format('Y-m-d'),
                 'status' => $project->status,
-                'mode' => $project->mode,
                 'project_value' => $project->project_value !== null ? (float) $project->project_value : null,
             ],
             'summaries' => [
@@ -84,9 +79,9 @@ class InvestorController extends Controller
                 'monthIncome' => $monthIncome,
             ],
             'cashPosition' => $cash->position($project),
-            'dailySnap' => $dailySnap,
-            'recentDays' => $recentDays,
-            'fixedCosts' => $fixedCosts,
+            'dailySnap' => null,
+            'recentDays' => [],
+            'fixedCosts' => [],
             'categories' => [
                 'byCost' => $byCostCategory,
                 'byIncome' => $byIncomeCategory,

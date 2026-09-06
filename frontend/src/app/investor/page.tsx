@@ -101,7 +101,7 @@ export default function InvestorDashboard() {
             {/* Summary cards */}
             <div className="sticky top-14 z-20 grid grid-cols-2 gap-3 bg-background/95 py-2 backdrop-blur md:static lg:grid-cols-4 lg:gap-4">
               <SummaryCard
-                title={data.project.mode === 'umkm' ? 'Total Omzet' : 'Total Pendapatan'}
+                title="Total Pendapatan"
                 value={formatRupiah(data.summaries.totalIncome)}
                 icon={<TrendingUp className="h-5 w-5 text-green-500" />}
               />
@@ -125,7 +125,7 @@ export default function InvestorDashboard() {
                 />
               ) : (
                 <SummaryCard
-                  title={data.project.mode === 'umkm' ? 'Omzet Hari Ini' : 'Pendapatan Hari Ini'}
+                  title="Pendapatan Hari Ini"
                   value={formatRupiah(data.summaries.todayIncome)}
                   icon={<TrendingUp className="h-5 w-5 text-green-500" />}
                 />
@@ -187,7 +187,7 @@ export default function InvestorDashboard() {
             )}
 
             {/* Budget realization (project mode) */}
-            {data.project.project_value && data.project.mode !== 'umkm' && (
+            {data.project.project_value && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -215,31 +215,6 @@ export default function InvestorDashboard() {
               </Card>
             )}
 
-            {/* Fixed costs (UMKM) */}
-            {data.fixedCosts.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ReceiptText className="h-5 w-5 text-primary" /> Beban Tetap Bulanan
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="divide-y text-sm">
-                    {data.fixedCosts.map((f) => (
-                      <li key={f.id} className="flex items-center justify-between py-2">
-                        <span>{f.nama}</span>
-                        <span className="font-medium">{formatRupiah(f.jumlah)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-2 flex items-center justify-between border-t pt-2 font-semibold">
-                    <span>Total per bulan</span>
-                    <span>{formatRupiah(data.fixedCosts.reduce((s, f) => s + f.jumlah, 0))}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
             {/* Category breakdown */}
             {(Object.keys(data.categories.byCost).length > 0 || Object.keys(data.categories.byIncome).length > 0) && (
               <div>
@@ -257,7 +232,7 @@ export default function InvestorDashboard() {
                   )}
                   {Object.keys(data.categories.byIncome).length > 0 && (
                     <CategoryBreakdown
-                      title={data.project.mode === 'umkm' ? 'Omzet' : 'Pendapatan'}
+                      title="Pendapatan"
                       data={data.categories.byIncome}
                       total={data.summaries.totalIncome}
                       barClass="bg-green-500"
@@ -274,7 +249,7 @@ export default function InvestorDashboard() {
               </h2>
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4">
                 <SummaryCard
-                  title={data.project.mode === 'umkm' ? 'Omzet Bulan Ini' : 'Pendapatan Bulan Ini'}
+                  title="Pendapatan Bulan Ini"
                   value={formatRupiah(data.summaries.monthIncome)}
                   icon={<TrendingUp className="h-5 w-5 text-green-500" />}
                 />
@@ -508,7 +483,7 @@ function InsightCard({ data }: { data: InvestorProjectResponse }) {
     icon = 'AlertTriangle'
     tone = 'text-destructive'
     bg = 'bg-destructive/10'
-    text = `Biaya ${formatRupiah(summaries.totalCost - project.project_value)} melebihi nilai ${project.mode === 'umkm' ? 'pagu' : 'kontrak'}. Segera evaluasi pengeluaran.`
+    text = `Biaya ${formatRupiah(summaries.totalCost - project.project_value)} melebihi nilai kontrak. Segera evaluasi pengeluaran.`
   }
   // Cash runway
   else if (cashPosition.balance > 0 && recentDays.length > 0) {

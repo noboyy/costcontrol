@@ -6,6 +6,7 @@ use App\Http\Controllers\CostCategoryController;
 use App\Http\Controllers\CostGroupController;
 use App\Http\Controllers\CostTypeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GeneralExpenseController;
 use App\Http\Controllers\IncomeCategoryController;
 use App\Http\Controllers\IncomeTypeController;
 use App\Http\Controllers\ModuleController;
@@ -156,6 +157,14 @@ Route::middleware([
         // Pengaturan perusahaan (edit profile perusahaan — single tenant)
         Route::get('/perusahaan', [PerusahaanController::class, 'index'])->name('perusahaan.index');
         Route::post('/perusahaan/{id}/update', [PerusahaanController::class, 'update'])->name('perusahaan.update');
+    });
+
+    // Biaya umum / kas perusahaan — admin & super admin
+    Route::middleware(['role:SUPER ADMIN,ADMIN'])->group(function () {
+        Route::get('/biaya-umum', [GeneralExpenseController::class, 'index'])->name('general-expenses.index');
+        Route::post('/biaya-umum', [GeneralExpenseController::class, 'store'])->name('general-expenses.store');
+        Route::post('/biaya-umum/{id}/delete', [GeneralExpenseController::class, 'destroy'])->name('general-expenses.delete');
+        Route::get('/biaya-umum/{id}/bukti', [GeneralExpenseController::class, 'bukti'])->name('general-expenses.bukti');
     });
 
     Route::middleware(['role:SUPER ADMIN'])->group(function () {

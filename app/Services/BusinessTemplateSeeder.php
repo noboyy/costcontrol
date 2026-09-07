@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\CostCategory;
 use App\Models\CostGroup;
 use App\Models\CostType;
+use App\Models\IncomeCategory;
 use App\Models\IncomeType;
 
 class BusinessTemplateSeeder
@@ -22,6 +23,7 @@ class BusinessTemplateSeeder
         $this->seedCostGroups($companyId);
         $this->seedCostCategories($companyId);
         $this->seedCostTypes($companyId);
+        $this->seedIncomeCategories($companyId);
         $this->seedIncomeTypes($companyId);
     }
 
@@ -160,6 +162,42 @@ class BusinessTemplateSeeder
                     'id_perusahaan' => $companyId,
                     'default_unit' => $type['default_unit'],
                 ])
+            );
+        }
+    }
+
+    private function seedIncomeCategories(int $companyId): void
+    {
+        $incomeCats = [
+            ['kode' => 'pendaftaran', 'nama' => 'Pendaftaran Jemaah', 'icon' => 'bi-pencil-square', 'warna' => 'blue', 'urutan' => 1],
+            ['kode' => 'pembayaran', 'nama' => 'Pembayaran Paket (DP/Cicilan/Pelunasan)', 'icon' => 'bi-cash-stack', 'warna' => 'green', 'urutan' => 2],
+            ['kode' => 'paket', 'nama' => 'Paket', 'icon' => 'bi-box-seam', 'warna' => 'blue', 'urutan' => 3],
+            ['kode' => 'tambahan', 'nama' => 'Upgrade & Ekstra', 'icon' => 'bi-plus-circle', 'warna' => 'yellow', 'urutan' => 4],
+            ['kode' => 'komisi', 'nama' => 'Komisi & Jasa', 'icon' => 'bi-handshake', 'warna' => 'green', 'urutan' => 5],
+            ['kode' => 'other', 'nama' => 'Lainnya', 'icon' => 'bi-three-dots', 'warna' => 'gray', 'urutan' => 9],
+        ];
+
+        foreach ($incomeCats as $c) {
+            IncomeCategory::updateOrCreate(
+                ['id_perusahaan' => $companyId, 'kode' => $c['kode']],
+                array_merge($c, ['id_perusahaan' => $companyId, 'is_active' => true])
+            );
+        }
+
+        // Sync orphan income type categories
+        $used = IncomeType::where('id_perusahaan', $companyId)
+            ->pluck('kategori')->filter()->map(fn ($k) => strtolower(trim($k)))->unique();
+        $order = 10;
+        foreach ($used as $kode) {
+            IncomeCategory::firstOrCreate(
+                ['id_perusahaan' => $companyId, 'kode' => $kode],
+                [
+                    'nama' => ucfirst(str_replace('_', ' ', $kode)),
+                    'icon' => 'bi-folder',
+                    'warna' => 'green',
+                    'urutan' => $order++,
+                    'is_active' => true,
+                ]
             );
         }
     }

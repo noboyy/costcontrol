@@ -215,6 +215,28 @@
     </header>
 
     <main class="wrap">
+        @php
+            $navItems = [
+                ['route' => 'investor.index', 'label' => 'Dashboard', 'icon' => 'grid-1x2'],
+                ['route' => 'investor.costs', 'label' => 'Biaya', 'icon' => 'arrow-down-circle'],
+                ['route' => 'investor.incomes', 'label' => 'Pendapatan', 'icon' => 'arrow-up-circle'],
+                ['route' => 'investor.report', 'label' => 'Laporan', 'icon' => 'file-earmark-bar-graph'],
+            ];
+            $invRowNav = auth()->user()->investorProject()->with('project')->first();
+        @endphp
+        <nav class="pills" style="margin-bottom:26px;">
+            @foreach($navItems as $item)
+            <a href="{{ route($item['route']) }}" class="pill {{ request()->routeIs($item['route']) ? 'active' : '' }}">
+                <i class="bi bi-{{ $item['icon'] }}"></i> {{ $item['label'] }}
+            </a>
+            @endforeach
+            @if($invRowNav?->project)
+            <a href="{{ route('cost-centers.gallery', $invRowNav->project->id_project) }}" class="pill {{ request()->routeIs('cost-centers.gallery') ? 'active' : '' }}">
+                <i class="bi bi-images"></i> Galeri
+            </a>
+            @endif
+        </nav>
+
         @if(session('error'))
         <div class="alertb alertb-danger" style="margin-bottom:16px;">
             <i class="bi bi-exclamation-triangle-fill"></i><span>{{ session('error') }}</span>

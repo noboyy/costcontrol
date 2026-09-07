@@ -17,7 +17,9 @@ class KursService
     {
         $date = $date ?? now()->subDay();
 
-        return $this->fromBeaCukai($date) ?? $this->fromFrankfurter();
+        return $this->fromBeaCukai($date)
+            ?? $this->fromErApi()
+            ?? $this->fromFrankfurter();
     }
 
     /**
@@ -36,8 +38,9 @@ class KursService
                 KursHistory::create([
                     'tanggal' => $data['date'],
                     'mata_uang' => $currency,
-                    'sumber' => 'bi',
+                    'sumber' => $data['source'] === 'beacukai' ? 'bi' : 'manual',
                     'kurs' => $rate,
+                    'keterangan' => $data['source'] === 'beacukai' ? null : 'Auto ('.$data['source'].')',
                 ]);
             }
         }
@@ -113,6 +116,35 @@ class KursService
                 'source' => 'beacukai',
                 'date' => $rateDate->format('Y-m-d'),
                 'rates' => array_intersect_key($rates, array_flip(KursHistory::CURRENCIES)),
+            ];
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
+    }
+
+    private function fromErApi(): ?array
+    {
+        try {
+            $res = Http::timeout(20)->get('https://open.er-api.com/v6/latest/USD');
+            if (! $res->successful()) {
+                return null;
+            }
+            $json = $res->json();
+            $rates = $json['rates'] ?? [];
+            if (! isset($rates['IDR'])) {
+                return null;
+            }
+            $out = ['USD' => (float) $rates['IDR']];
+            if (isset($rates['SAR']) && $rates['SAR'] > 0) {
+                $out['SAR'] = round($rates['IDR'] / $rates['SAR'], 4);
+            }
+
+            return [
+                'source' => 'erapi',
+                'date' => now()->format('Y-m-d'),
+                'rates' => $out,
             ];
         } catch (\Throwable $e) {
             report($e);

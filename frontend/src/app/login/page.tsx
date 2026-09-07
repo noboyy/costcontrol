@@ -52,7 +52,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-primary">CostControl</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">Sahla Journey Finance</CardTitle>
           <CardDescription>Masuk ke akun Anda</CardDescription>
         </CardHeader>
         <CardContent>
@@ -103,7 +103,7 @@ export default function LoginPage() {
 
             <TabsContent value="admin" className="flex flex-col gap-4">
               <p className="text-sm text-muted-foreground">
-                Masuk sebagai admin/perusahaan untuk mengelola master data, unit bisnis, dan laporan.
+                Masuk sebagai admin/perusahaan untuk mengelola master data, keberangkatan, dan laporan.
               </p>
               <Button
                 type="button"
@@ -112,12 +112,6 @@ export default function LoginPage() {
               >
                 Masuk sebagai Admin
               </Button>
-              <p className="text-center text-xs text-muted-foreground">
-                Belum punya akun?{' '}
-                <a href={`${APP_URL}/register`} className="font-medium text-primary hover:underline">
-                  Coba gratis 14 hari
-                </a>
-              </p>
             </TabsContent>
           </Tabs>
         </CardContent>

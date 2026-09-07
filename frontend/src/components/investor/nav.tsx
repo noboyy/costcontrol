@@ -36,7 +36,7 @@ export default function InvestorNav() {
     <>
       {/* Mobile topbar */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:hidden">
-        <span className="font-bold text-primary">CostControl</span>
+        <span className="font-bold text-primary">Sahla Journey Finance</span>
         <button onClick={() => setOpen(!open)} className="rounded p-1 hover:bg-accent">
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -77,7 +77,7 @@ export default function InvestorNav() {
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 hidden w-56 flex-col border-r bg-background p-4 md:flex">
         <div className="mb-6 px-2">
-          <span className="font-bold text-primary">CostControl</span>
+          <span className="font-bold text-primary">Sahla Journey Finance</span>
           {user && (
             <p className="mt-1 truncate text-xs text-muted-foreground">{user.nama_lengkap}</p>
           )}

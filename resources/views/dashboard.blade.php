@@ -129,7 +129,7 @@
                                     <div class="empty-state" style="padding:32px;">
                                         <i class="bi bi-inbox"></i>
                                         <p>Belum ada aktivitas</p>
-                                        <a href="{{ route('cost-centers.index') }}">Mulai dari unit bisnis</a>
+                                        <a href="{{ route('cost-centers.index') }}">Mulai dari keberangkatan</a>
                                     </div>
                                 </td>
                             </tr>

@@ -10,7 +10,7 @@
 <div class="page-header">
     <div>
         <h2>Laporan</h2>
-        <p>P&L ringkas · filter periode & unit · export CSV</p>
+        <p>P&L ringkas · filter periode & keberangkatan · export CSV</p>
     </div>
     <div class="page-actions">
         <a class="btn btn-outline" href="{{ route('reports.export', request()->query()) }}"><i class="bi bi-download"></i> Export CSV</a>
@@ -32,7 +32,7 @@
             <div class="form-group" style="margin:0;">
                 <label class="form-label">Keberangkatan</label>
                 <select class="form-select" name="project_id">
-                    <option value="">Semua unit</option>
+                    <option value="">Semua keberangkatan</option>
                     @foreach($units as $u)
                         <option value="{{ $u->id_project }}" @selected((string)$projectId === (string)$u->id_project)>{{ $u->nama_project }} ({{ $u->mode_label }})</option>
                     @endforeach
@@ -102,13 +102,13 @@
 </div>
 
 <div class="card" style="margin-bottom:16px;">
-    <div class="card-header"><h3>Per unit</h3></div>
+    <div class="card-header"><h3>Per Keberangkatan</h3></div>
     <div class="card-body compact">
         <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>Unit</th>
+                        <th>Keberangkatan</th>
                         <th class="text-end">Pendapatan</th>
                         <th class="text-end">Biaya</th>
                         <th class="text-end">Margin</th>
@@ -123,7 +123,7 @@
                             <td class="text-end money {{ $row['margin'] >= 0 ? 'positive' : 'negative' }}">Rp {{ number_format($row['margin'], 0, ',', '.') }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="4"><div class="empty-state">Tidak ada unit</div></td></tr>
+                        <tr><td colspan="4"><div class="empty-state">Tidak ada keberangkatan</div></td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -138,7 +138,7 @@
         <div class="card-body compact">
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Tgl</th><th>Unit</th><th>Tipe</th><th class="text-end">Total</th></tr></thead>
+                    <thead><tr><th>Tgl</th><th>Keberangkatan</th><th>Tipe</th><th class="text-end">Total</th></tr></thead>
                     <tbody>
                         @foreach($costs->take(100) as $c)
                             <tr>
@@ -158,7 +158,7 @@
         <div class="card-body compact">
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Tgl</th><th>Unit</th><th>Tipe</th><th class="text-end">Total</th></tr></thead>
+                    <thead><tr><th>Tgl</th><th>Keberangkatan</th><th>Tipe</th><th class="text-end">Total</th></tr></thead>
                     <tbody>
                         @foreach($incomes->take(100) as $i)
                             <tr>

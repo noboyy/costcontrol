@@ -381,7 +381,7 @@ class ProjectController extends Controller
             }
         });
 
-        return back()->with('success', 'Admin unit diperbarui.');
+        return back()->with('success', 'Admin keberangkatan diperbarui.');
     }
 
     public function storeCostPlan(Request $request, $id)
@@ -424,7 +424,7 @@ class ProjectController extends Controller
             ->firstOrFail();
 
         if ($project->isArchived()) {
-            return back()->with('error', 'Unit diarsipkan.');
+            return back()->with('error', 'Keberangkatan diarsipkan.');
         }
 
         if ($kind === 'cost') {
@@ -554,7 +554,7 @@ class ProjectController extends Controller
             DB::rollBack();
 
             return back()->withInput()
-                ->with('error', 'Gagal menyimpan unit: '.$e->getMessage());
+                ->with('error', 'Gagal menyimpan keberangkatan: '.$e->getMessage());
         }
     }
 
@@ -606,7 +606,7 @@ class ProjectController extends Controller
             ->firstOrFail();
 
         if ($project->isArchived()) {
-            return back()->with('error', 'Unit yang sudah diarsipkan tidak dapat diubah.');
+            return back()->with('error', 'Keberangkatan yang sudah diarsipkan tidak dapat diubah.');
         }
 
         $request->validate([
@@ -655,10 +655,10 @@ class ProjectController extends Controller
             $project->update($data);
 
             return redirect()->route('projects.show', $id)
-                ->with('success', 'Unit bisnis berhasil diperbarui.');
+                ->with('success', 'Keberangkatan berhasil diperbarui.');
         } catch (\Exception $e) {
             return back()->withInput()
-                ->with('error', 'Gagal mengubah unit: '.$e->getMessage());
+                ->with('error', 'Gagal mengubah keberangkatan: '.$e->getMessage());
         }
     }
 
@@ -735,7 +735,7 @@ class ProjectController extends Controller
             ->firstOrFail();
 
         if ($project->isArchived()) {
-            return back()->with('error', 'Unit diarsipkan. Tidak bisa mengubah entri.');
+            return back()->with('error', 'Keberangkatan diarsipkan. Tidak bisa mengubah entri.');
         }
 
         $cost = CostEntry::where('id_cost', $costId)->where('id_project', $id)->firstOrFail();
@@ -859,7 +859,7 @@ class ProjectController extends Controller
             ->firstOrFail();
 
         if ($project->isArchived()) {
-            return back()->with('error', 'Unit diarsipkan. Tidak bisa mengubah entri.');
+            return back()->with('error', 'Keberangkatan diarsipkan. Tidak bisa mengubah entri.');
         }
 
         $income = IncomeEntry::where('id_income', $incomeId)->where('id_project', $id)->firstOrFail();

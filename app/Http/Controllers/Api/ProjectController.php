@@ -188,13 +188,13 @@ class ProjectController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'Unit berhasil dibuat.',
+                'message' => 'Keberangkatan berhasil dibuat.',
                 'project' => new ProjectResource($project),
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return response()->json(['message' => 'Gagal menyimpan unit: '.$e->getMessage()], 500);
+            return response()->json(['message' => 'Gagal menyimpan keberangkatan: '.$e->getMessage()], 500);
         }
     }
 
@@ -208,7 +208,7 @@ class ProjectController extends Controller
             ->firstOrFail();
 
         if ($project->isArchived()) {
-            return response()->json(['message' => 'Unit yang sudah diarsipkan tidak dapat diubah.'], 422);
+            return response()->json(['message' => 'Keberangkatan yang sudah diarsipkan tidak dapat diubah.'], 422);
         }
 
         $request->validate([
@@ -244,7 +244,7 @@ class ProjectController extends Controller
         $project->update($data);
 
         return response()->json([
-            'message' => 'Unit bisnis berhasil diperbarui.',
+            'message' => 'Keberangkatan berhasil diperbarui.',
             'project' => new ProjectResource($project),
         ]);
     }
@@ -310,7 +310,7 @@ class ProjectController extends Controller
             ->firstOrFail();
 
         if ($project->isArchived()) {
-            return response()->json(['message' => 'Unit diarsipkan.'], 422);
+            return response()->json(['message' => 'Keberangkatan diarsipkan.'], 422);
         }
 
         $cost = CostEntry::where('id_cost', $costId)->where('id_project', $id)->firstOrFail();
@@ -435,7 +435,7 @@ class ProjectController extends Controller
             ->firstOrFail();
 
         if ($project->isArchived()) {
-            return response()->json(['message' => 'Unit diarsipkan.'], 422);
+            return response()->json(['message' => 'Keberangkatan diarsipkan.'], 422);
         }
 
         $income = IncomeEntry::where('id_income', $incomeId)->where('id_project', $id)->firstOrFail();
@@ -534,7 +534,7 @@ class ProjectController extends Controller
             }
         });
 
-        return response()->json(['message' => 'Admin unit diperbarui.']);
+        return response()->json(['message' => 'Admin keberangkatan diperbarui.']);
     }
 
     public function upsertPlan(Request $request, $id, string $kind, $planId = null)
@@ -547,7 +547,7 @@ class ProjectController extends Controller
             ->firstOrFail();
 
         if ($project->isArchived()) {
-            return response()->json(['message' => 'Unit diarsipkan.'], 422);
+            return response()->json(['message' => 'Keberangkatan diarsipkan.'], 422);
         }
 
         if ($kind === 'cost') {

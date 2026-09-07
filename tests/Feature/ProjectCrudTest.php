@@ -42,7 +42,7 @@ class ProjectCrudTest extends TestCase
         ]);
 
         $response->assertStatus(201)
-            ->assertJson(['message' => 'Unit berhasil dibuat.']);
+            ->assertJson(['message' => 'Keberangkatan berhasil dibuat.']);
     }
 
     public function test_admin_sees_only_own_projects(): void

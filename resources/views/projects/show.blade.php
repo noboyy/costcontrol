@@ -3,7 +3,7 @@
 @section('breadcrumb')
     <a href="{{ route('beranda') }}">Dashboard</a>
     <span class="sep">/</span>
-    <a href="{{ route('cost-centers.index') }}">Unit Bisnis</a>
+    <a href="{{ route('cost-centers.index') }}">Keberangkatan</a>
     <span class="sep">/</span>
     <span class="current">{{ $project->nama_project }}</span>
 @endsection
@@ -92,7 +92,7 @@
 <div class="card" style="margin-bottom:18px;">
     <div class="card-header">
         <h3><i class="bi bi-cash-stack"></i> Kas Berjalan</h3>
-        <span class="cell-sub">Saldo awal + omzet − biaya s/d {{ \Carbon\Carbon::parse($cp['date'])->format('d M Y') }}</span>
+        <span class="cell-sub">Saldo awal + pendapatan − biaya s/d {{ \Carbon\Carbon::parse($cp['date'])->format('d M Y') }}</span>
     </div>
     <div class="card-body">
         <div class="kpi-grid">
@@ -132,7 +132,7 @@
 
         @if($cp['is_negative'])
             <div class="alert alert-danger" style="margin-top:12px;">
-                <i class="bi bi-exclamation-triangle"></i> Saldo kas negatif. Cek pencatatan omzet atau set saldo awal unit.
+                <i class="bi bi-exclamation-triangle"></i> Saldo kas negatif. Cek pencatatan pendapatan atau set saldo awal keberangkatan.
             </div>
         @endif
 
@@ -562,14 +562,14 @@
 <div id="tab-admins" style="display:none;">
     <div class="card">
         <div class="card-header">
-            <h3><i class="bi bi-people"></i> Admin Unit</h3>
+            <h3><i class="bi bi-people"></i> Admin Keberangkatan</h3>
         </div>
         <div class="card-body">
             @if(!$isArchived)
             <form action="{{ route('cost-centers.admins.sync', $project->id_project) }}" method="POST">
                 @csrf
                 <div class="form-group">
-                    <label class="form-label">Pilih admin yang boleh kelola unit ini</label>
+                    <label class="form-label">Pilih admin yang boleh kelola keberangkatan ini</label>
                     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;">
                         @foreach($availableAdmins as $admin)
                             <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer;">
@@ -697,7 +697,7 @@
                 <i class="bi bi-exclamation-triangle-fill"></i> Zona berbahaya. Tindakan berikut tidak dapat dibatalkan.
             </div>
             <p style="margin-bottom:16px;color:var(--text-secondary);">
-                Menghapus unit ini akan menghapus <strong>secara permanen</strong> seluruh data di dalamnya:
+                Menghapus keberangkatan ini akan menghapus <strong>secara permanen</strong> seluruh data di dalamnya:
                 biaya, pendapatan, rencana/RAB, admin, dan galeri.
             </p>
             <button type="button" class="btn btn-danger" onclick="openModal('confirmDeleteStep1')">

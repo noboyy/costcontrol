@@ -267,7 +267,7 @@ export default function InvestorDashboard() {
               </div>
             </div>
 
-            {/* Recent days (UMKM) */}
+            {/* 7 hari terakhir */}
             {data.recentDays.length > 0 && (
               <div>
                 <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">

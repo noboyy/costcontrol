@@ -46,6 +46,11 @@ Route::middleware([
     Route::get('/profil/foto', [ProfileController::class, 'photo'])->name('profil.photo');
     Route::post('/profil/foto', [ProfileController::class, 'updatePhoto'])->name('profil.updatePhoto');
 
+    // Keep-alive sesi (idle-timeout UI) — touch session, tanpa reload
+    Route::post('/session/keep-alive', function () {
+        return response()->json(['ok' => true]);
+    })->name('session.keep-alive');
+
     // Gallery read — investor + admin bisa akses, guard di controller
     Route::middleware('not-super-admin')->group(function () {
         foreach (['cost-centers', 'projects'] as $prefix) {

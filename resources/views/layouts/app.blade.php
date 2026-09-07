@@ -1330,6 +1330,118 @@
             setTimeout(() => t.remove(), 3200);
         }
     </script>
+
+    {{-- Idle session warning modal --}}
+    <div class="modal-backdrop" id="idleModal">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h3><i class="bi bi-clock-history"></i> Sesi akan berakhir</h3>
+            </div>
+            <div class="modal-body" style="text-align:center;">
+                <p style="font-size:14px;color:var(--text-secondary);line-height:1.6;">
+                    Anda tidak aktif cukup lama. Untuk keamanan, sesi akan berakhir otomatis dalam
+                </p>
+                <div id="idleCountdown" style="font-size:42px;font-weight:700;margin:14px 0;color:var(--warning);"></div>
+                <p style="font-size:13px;color:var(--text-muted);">Aktivitas yang belum disimpan akan hilang jika sesi berakhir.</p>
+            </div>
+            <div class="modal-footer" style="justify-content:center;">
+                <button type="button" class="btn btn-primary" id="idleExtendBtn" style="min-width:180px;">
+                    <i class="bi bi-arrow-counterclockwise"></i> Lanjutkan Sesi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        // Idle-timeout: warning di menit ke-40 dari 45; countdown 5 menit.
+        const WARN_AFTER_MS = 40 * 60 * 1000;
+        const COUNTDOWN_SEC = 5 * 60;
+        const EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+
+        const modal = document.getElementById('idleModal');
+        const countdownEl = document.getElementById('idleCountdown');
+        const extendBtn = document.getElementById('idleExtendBtn');
+        if (!modal || !countdownEl || !extendBtn) return;
+
+        let idleTimer = null;
+        let cdInterval = null;
+        let cdLeft = COUNTDOWN_SEC;
+        let extending = false;
+
+        function csrf() {
+            const m = document.querySelector('meta[name="csrf-token"]');
+            return m ? m.getAttribute('content') : '';
+        }
+
+        function resetIdle() {
+            if (extending) return;
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(showWarning, WARN_AFTER_MS);
+        }
+
+        function stopCountdown() {
+            clearInterval(cdInterval);
+            cdInterval = null;
+        }
+
+        function showWarning() {
+            if (document.getElementById('idleModal').classList.contains('show')) return;
+            cdLeft = COUNTDOWN_SEC;
+            renderCountdown();
+            openModal('idleModal');
+            cdInterval = setInterval(() => {
+                cdLeft--;
+                if (cdLeft <= 0) {
+                    stopCountdown();
+                    window.location.href = '/login?expired=1';
+                    return;
+                }
+                renderCountdown();
+            }, 1000);
+        }
+
+        function renderCountdown() {
+            const m = Math.floor(cdLeft / 60);
+            const s = cdLeft % 60;
+            countdownEl.textContent = m + ':' + String(s).padStart(2, '0');
+            countdownEl.style.color = cdLeft <= 60 ? 'var(--danger)' : (cdLeft <= 180 ? 'var(--warning)' : 'var(--success)');
+        }
+
+        function keepAlive() {
+            extending = true;
+            extendBtn.disabled = true;
+            extendBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Memperpanjang…';
+            fetch('/session/keep-alive', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf(),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then(r => {
+                    if (!r.ok) throw new Error('expired');
+                    return r.json();
+                })
+                .then(() => {
+                    extending = false;
+                    extendBtn.disabled = false;
+                    extendBtn.innerHTML = '<i class="bi bi-arrow-counterclockwise"></i> Lanjutkan Sesi';
+                    stopCountdown();
+                    closeModal('idleModal');
+                    resetIdle();
+                })
+                .catch(() => {
+                    window.location.href = '/login?expired=1';
+                });
+        }
+
+        extendBtn.addEventListener('click', keepAlive);
+        EVENTS.forEach(ev => document.addEventListener(ev, resetIdle, { passive: true }));
+        resetIdle();
+    })();
+    </script>
     @stack('scripts')
 </body>
 </html>

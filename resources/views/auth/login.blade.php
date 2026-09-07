@@ -260,6 +260,11 @@
             <p>Masuk untuk melanjutkan ke dashboard</p>
 
             <div class="card">
+                <div id="expiredAlert" style="display:none;" class="alert">
+                    <i class="bi bi-clock-history"></i>
+                    <div>Sesi Anda berakhir karena tidak aktif. Silakan masuk kembali.</div>
+                </div>
+
                 @if (session('success'))
                     <div class="alert alert-success">
                         <i class="bi bi-check-circle-fill"></i>
@@ -312,6 +317,13 @@
     </div>
 
     <script>
+    (function () {
+        const q = new URLSearchParams(window.location.search);
+        if (q.get('expired')) {
+            const el = document.getElementById('expiredAlert');
+            if (el) el.style.display = 'flex';
+        }
+    })();
     function togglePw() {
         const el = document.getElementById('password');
         const icon = document.getElementById('pwIcon');

@@ -69,6 +69,24 @@ class GeneralExpenseTest extends TestCase
         $response->assertSee('Kas Perusahaan');
     }
 
+    public function test_session_keep_alive_returns_ok(): void
+    {
+        $response = $this->postJson('/session/keep-alive');
+
+        $response->assertStatus(200)
+            ->assertJson(['ok' => true]);
+    }
+
+    public function test_dashboard_layout_contains_idle_timeout_markup(): void
+    {
+        $response = $this->get(route('beranda'));
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('id="idleModal"', $response->getContent());
+        $this->assertStringContainsString('session/keep-alive', $response->getContent());
+        $this->assertStringContainsString('id="idleCountdown"', $response->getContent());
+    }
+
     public function test_company_cash_position_includes_general_expense(): void
     {
         $project = \Database\Factories\ProjectFactory::new([

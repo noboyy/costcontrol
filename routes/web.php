@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GeneralExpenseController;
 use App\Http\Controllers\IncomeCategoryController;
 use App\Http\Controllers\IncomeTypeController;
+use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\KursController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\PajakController;
@@ -52,6 +53,14 @@ Route::middleware([
     Route::post('/session/keep-alive', function () {
         return response()->json(['ok' => true]);
     })->name('session.keep-alive');
+
+    // Portal investor — read-only (galeri via cost-centers.gallery)
+    Route::middleware('role:INVESTOR')->group(function () {
+        Route::get('/investor', [InvestorController::class, 'index'])->name('investor.index');
+        Route::get('/investor/biaya', [InvestorController::class, 'costs'])->name('investor.costs');
+        Route::get('/investor/pendapatan', [InvestorController::class, 'incomes'])->name('investor.incomes');
+        Route::get('/investor/laporan', [InvestorController::class, 'report'])->name('investor.report');
+    });
 
     // Gallery read — investor + admin bisa akses, guard di controller
     Route::middleware('not-super-admin')->group(function () {

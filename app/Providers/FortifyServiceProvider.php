@@ -35,7 +35,11 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         Fortify::authenticateUsing(function (Request $request) {
-            $user = Akun::where('email', $request->email)->first();
+            $login = $request->input(Fortify::username());
+
+            $user = Akun::where('email', $login)
+                ->orWhere('username', $login)
+                ->first();
 
             // BUG-03: cek is_active sebelum password agar tidak bocor info akun valid
             if (! $user || ! $user->is_active) {

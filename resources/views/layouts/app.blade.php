@@ -932,11 +932,33 @@
                 <div class="sidebar-section-body" style="display:block;">
                     @if($invProject)
                     <div class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('cost-centers.gallery') ? 'active' : '' }}"
-                           href="{{ route('cost-centers.gallery', $invProject->id_project) }}">
-                            <i class="bi bi-images"></i> Galeri Keberangkatan
+                        <a class="nav-link {{ request()->routeIs('investor.index') ? 'active' : '' }}" href="{{ route('investor.index') }}">
+                            <i class="bi bi-grid-1x2"></i> Dashboard
                         </a>
                     </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('investor.costs') ? 'active' : '' }}" href="{{ route('investor.costs') }}">
+                            <i class="bi bi-arrow-down-circle"></i> Biaya
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('investor.incomes') ? 'active' : '' }}" href="{{ route('investor.incomes') }}">
+                            <i class="bi bi-arrow-up-circle"></i> Pendapatan
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('investor.report') ? 'active' : '' }}" href="{{ route('investor.report') }}">
+                            <i class="bi bi-file-earmark-bar-graph"></i> Laporan
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('cost-centers.gallery') ? 'active' : '' }}"
+                           href="{{ route('cost-centers.gallery', $invProject->id_project) }}">
+                            <i class="bi bi-images"></i> Galeri
+                        </a>
+                    </div>
+                    @else
+                    <p class="cell-sub" style="padding:0 8px;">Belum ada keberangkatan terhubung.</p>
                     @endif
                 </div>
             </div>

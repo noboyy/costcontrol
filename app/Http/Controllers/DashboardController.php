@@ -14,15 +14,9 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Investor redirect langsung ke gallery proyeknya
+        // Investor redirect ke portal read-only-nya
         if ($user->isInvestor()) {
-            $investorProject = $user->investorProject()->with('project')->first();
-            if ($investorProject && $investorProject->project) {
-                $project = $investorProject->project;
-                return redirect()->route('cost-centers.gallery', $project->id_project);
-            }
-            // Fallback kalau tidak ada proyek
-            abort(403, 'Tidak ada proyek yang terhubung ke akun investor ini.');
+            return redirect()->route('investor.index');
         }
 
         $companyId = $user->id_perusahaan;

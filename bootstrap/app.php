@@ -4,10 +4,8 @@ use App\Http\Middleware\CheckActive;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\EnsureEmailVerified;
 use App\Http\Middleware\EnsureTenant;
-use App\Http\Middleware\InvestorOnly;
 use App\Http\Middleware\NoCache;
 use App\Http\Middleware\NotSuperAdmin;
-use App\Http\Middleware\TokenFromQuery;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,7 +13,6 @@ use Illuminate\Foundation\Configuration\Middleware;
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
@@ -25,9 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'active' => CheckActive::class,
             'tenant' => EnsureTenant::class,
             'verified.user' => EnsureEmailVerified::class,
-            'investor' => InvestorOnly::class,
             'not-super-admin' => NotSuperAdmin::class,
-            'token-from-query' => TokenFromQuery::class,
         ]);
 
         $middleware->appendToGroup('web', NoCache::class);

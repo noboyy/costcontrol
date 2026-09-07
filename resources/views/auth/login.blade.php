@@ -286,10 +286,10 @@
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
                     <div class="form-group">
-                        <label class="form-label">Email</label>
+                        <label class="form-label">Email / Username</label>
                         <div class="input-wrap">
-                            <i class="bi bi-envelope"></i>
-                            <input type="email" class="form-input" name="email" value="{{ old('email') }}" required autofocus autocomplete="email" placeholder="nama@email.com">
+                            <i class="bi bi-person"></i>
+                            <input type="text" class="form-input" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" placeholder="nama@email.com atau username">
                         </div>
                     </div>
                     <div class="form-group">

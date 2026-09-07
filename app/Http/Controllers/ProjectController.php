@@ -228,6 +228,7 @@ class ProjectController extends Controller
             $akun = Akun::create([
                 'id_pengguna' => $pengguna->id_pengguna,
                 'username' => $request->username,
+                'email' => $this->investorEmail($request->username),
                 'password' => $plainPassword,
                 'role' => 'INVESTOR',
                 'is_active' => '1',
@@ -246,6 +247,7 @@ class ProjectController extends Controller
                 ->back()
                 ->with('investor_created', [
                     'username' => $akun->username,
+                    'email' => $akun->email,
                     'password' => $plainPassword,
                     'nama_lengkap' => $pengguna->nama_lengkap,
                 ])
@@ -314,6 +316,7 @@ class ProjectController extends Controller
             ->back()
             ->with('investor_created', [
                 'username' => $relation->akun->username,
+                'email' => $relation->akun->email,
                 'password' => $plainPassword,
                 'nama_lengkap' => $relation->akun->pengguna?->nama_lengkap,
             ])
@@ -585,6 +588,7 @@ class ProjectController extends Controller
         $akun = Akun::create([
             'id_pengguna' => $pengguna->id_pengguna,
             'username' => $username,
+            'email' => $this->investorEmail($username),
             'password' => $plainPassword,
             'role' => 'INVESTOR',
             'is_active' => '1',
@@ -597,9 +601,20 @@ class ProjectController extends Controller
 
         return [
             'username' => $akun->username,
+            'email' => $akun->email,
             'password' => $plainPassword,
             'nama_lengkap' => $namaLengkap,
         ];
+    }
+
+    /**
+     * Email sintetis untuk akun investor — identitas login via username/email.
+     */
+    protected function investorEmail(string $username): string
+    {
+        $host = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'sahlajourney.com';
+
+        return $username.'@'.$host;
     }
 
     public function update(Request $request, $id)

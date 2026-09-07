@@ -966,13 +966,13 @@
                     @endif
                     @if(auth()->user()->isAdmin() && ! auth()->user()->isSuperAdmin())
                     <div class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
-                            <i class="bi bi-file-earmark-bar-graph"></i> Laporan
+                        <a class="nav-link {{ request()->routeIs('general-expenses.*') ? 'active' : '' }}" href="{{ route('general-expenses.index') }}">
+                            <i class="bi bi-wallet2"></i> Pengeluaran Umum
                         </a>
                     </div>
                     <div class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('general-expenses.*') ? 'active' : '' }}" href="{{ route('general-expenses.index') }}">
-                            <i class="bi bi-wallet2"></i> Pengeluaran Umum
+                        <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
+                            <i class="bi bi-file-earmark-bar-graph"></i> Laporan
                         </a>
                     </div>
                     @endif
@@ -980,7 +980,7 @@
             </div>
 
             @if(auth()->user()->isAdmin())
-            <div class="sidebar-section open">
+            <div class="sidebar-section">
                 <button type="button" class="sidebar-acc" onclick="toggleAcc(this)">
                     Master data <i class="bi bi-chevron-right chev"></i>
                 </button>

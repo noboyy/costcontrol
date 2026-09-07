@@ -537,7 +537,7 @@ class ProjectController extends Controller
                 'date_end' => $request->date_end,
                 'project_value' => $request->project_value ? $this->normalizeDecimal($request->project_value) : null,
                 'status' => 'active',
-                'opening_balance' => $request->opening_balance ? $this->normalizeDecimal($request->opening_balance) : null,
+                'opening_balance' => $request->opening_balance ? $this->normalizeDecimal($request->opening_balance) : 0,
             ]);
 
             $investorCreds = null;

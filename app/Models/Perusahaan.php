@@ -23,11 +23,22 @@ class Perusahaan extends Model
         'owner',
         'module',
         'opening_balance',
+        'mode_pajak',
+        'tarif_pph_omzet',
+        'tarif_pph_laba',
+        'pajak_aktif',
     ];
 
     protected $casts = [
         'opening_balance' => 'decimal:2',
+        'tarif_pph_omzet' => 'decimal:2',
+        'tarif_pph_laba' => 'decimal:2',
+        'pajak_aktif' => 'boolean',
     ];
+
+    public const PAJAK_FINAL_OMZET = 'final_omzet';
+
+    public const PAJAK_BADAN_LABA = 'badan_laba';
 
     public function module(): string
     {

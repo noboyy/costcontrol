@@ -226,6 +226,12 @@
                                 <td>
                                     <div class="cell-title" style="font-weight:500;">{{ $cost->keterangan ?: '—' }}</div>
                                     @if($cost->catatan)<div class="cell-sub">{{ $cost->catatan }}</div>@endif
+                                    @if($cost->mata_uang !== 'IDR' && $cost->amount_valas)
+                                        <div class="cell-sub" style="color:var(--text-secondary);">
+                                            {{ number_format($cost->amount_valas, 2, ',', '.') }} {{ $cost->mata_uang }} @ {{ number_format($cost->kurs, 2, ',', '.') }}
+                                            ({{ $cost->kurs_sumber === 'bi' ? 'Kurs BI' : 'Manual' }})
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="text-end">{{ number_format($cost->qty, 2, ',', '.') }}</td>
                                 <td>{{ $cost->unit ?? '—' }}</td>
@@ -807,6 +813,37 @@
                     </div>
                     <div class="form-hint">Otomatis dihitung dari Qty × Harga. Bisa diubah manual.</div>
                 </div>
+                <div class="form-row-3" style="align-items:end;border-top:1px dashed var(--border);padding-top:12px;background:var(--primary-light);border-radius:var(--radius-sm);padding:12px;">
+                    <div class="form-group">
+                        <label class="form-label">Mata Uang</label>
+                        <select class="form-select" name="mata_uang" id="costMataUang">
+                            <option value="IDR">IDR — Rupiah</option>
+                            <option value="USD">USD — Dolar AS</option>
+                            <option value="SAR">SAR — Riyal</option>
+                        </select>
+                    </div>
+                    <div class="form-group valas-only" style="display:none;">
+                        <label class="form-label">Jumlah Valas</label>
+                        <input type="text" class="form-input valas-amount" name="amount_valas" data-money placeholder="0">
+                    </div>
+                    <div class="form-group valas-only" style="display:none;">
+                        <label class="form-label">Kurs (Rp/1)</label>
+                        <div class="input-prefix"><span>Rp</span>
+                            <input type="text" class="form-input valas-kurs" name="kurs" data-money placeholder="0"
+                                   data-usd="{{ $kursUsd ?? '' }}" data-sar="{{ $kursSar ?? '' }}">
+                        </div>
+                    </div>
+                    <div class="form-group valas-only" style="display:none;">
+                        <label class="form-label">Sumber Kurs</label>
+                        <select class="form-select" name="kurs_sumber">
+                            <option value="bi" selected>Kurs BI</option>
+                            <option value="manual">Manual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="valas-only" style="display:none;margin:-6px 0 12px;font-size:12px;color:var(--text-secondary);">
+                    Kurs BI terdekat — USD: Rp {{ $kursUsd ? number_format($kursUsd, 2, ',', '.') : '—' }} · SAR: Rp {{ $kursSar ? number_format($kursSar, 2, ',', '.') : '—' }}. Total Rupiah = Jumlah valas × kurs.
+                </div>
                 <div class="form-group">
                     <label class="form-label">Catatan</label>
                     <textarea class="form-textarea" name="catatan" rows="2" placeholder="Opsional"></textarea>
@@ -1234,6 +1271,57 @@ document.querySelectorAll('form').forEach(f => {
         bindCalc(f);
     }
 });
+
+// ---- Valas (USD/SAR) pada form biaya ----
+(function () {
+    const costForm = document.getElementById('costForm');
+    if (!costForm) return;
+    const sel = costForm.querySelector('select[name="mata_uang"]');
+    if (!sel) return;
+    const only = costForm.querySelectorAll('.valas-only');
+    const amount = costForm.querySelector('.valas-amount');
+    const kurs = costForm.querySelector('.valas-kurs');
+    const qty = costForm.querySelector('.calc-qty');
+    const price = costForm.querySelector('.calc-price');
+    const total = costForm.querySelector('.calc-total');
+    const usdRate = Number(kurs?.dataset?.usd || '') || 0;
+    const sarRate = Number(kurs?.dataset?.sar || '') || 0;
+
+    function apply() {
+        const isValas = sel.value !== 'IDR';
+        only.forEach(el => { el.style.display = isValas ? '' : 'none'; });
+        if (!isValas) {
+            if (qty) qty.disabled = false;
+            if (price) price.disabled = false;
+            return;
+        }
+        if (qty) { qty.value = '1'; qty.readOnly = true; }
+        if (price) { price.readOnly = true; }
+        // auto-fill kurs terdekat jika kosong
+        if (kurs && !parseMoney(kurs.value)) {
+            const rate = sel.value === 'USD' ? usdRate : sarRate;
+            if (rate > 0) { kurs.value = Math.round(rate).toLocaleString('id-ID'); }
+        }
+        updateTotal();
+    }
+    function updateTotal() {
+        if (!isActive()) return;
+        const a = parseMoney(amount?.value);
+        const k = parseMoney(kurs?.value);
+        const t = a * k;
+        if (total) {
+            total.value = t ? Math.round(t).toLocaleString('id-ID') : '';
+        }
+    }
+    function isActive() { return sel.value !== 'IDR'; }
+    sel.addEventListener('change', apply);
+    amount?.addEventListener('input', updateTotal);
+    kurs?.addEventListener('input', updateTotal);
+    // saat valas, hindari bindCalc menimpa total via qty/harga
+    if (qty) qty.addEventListener('input', () => { if (isActive()) updateTotal(); });
+    if (price) price.addEventListener('input', () => { if (isActive()) updateTotal(); });
+    apply();
+})();
 
 function filterEntries() {
     const q = (document.getElementById('entrySearch')?.value || '').toLowerCase().trim();

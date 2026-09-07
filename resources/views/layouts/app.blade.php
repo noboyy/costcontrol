@@ -956,6 +956,16 @@
                             <i class="bi bi-wallet2"></i> Pengeluaran Umum
                         </a>
                     </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('pajak.*') ? 'active' : '' }}" href="{{ route('pajak.index') }}">
+                            <i class="bi bi-receipt"></i> Perkiraan Pajak
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('kurs.*') ? 'active' : '' }}" href="{{ route('kurs.index') }}">
+                            <i class="bi bi-currency-exchange"></i> Kurs Mata Uang
+                        </a>
+                    </div>
                     @endif
                     @if(! auth()->user()->isSuperAdmin())
                     <div class="nav-item">
@@ -973,6 +983,16 @@
                     <div class="nav-item">
                         <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
                             <i class="bi bi-file-earmark-bar-graph"></i> Laporan
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('pajak.*') ? 'active' : '' }}" href="{{ route('pajak.index') }}">
+                            <i class="bi bi-receipt"></i> Perkiraan Pajak
+                        </a>
+                    </div>
+                    <div class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('kurs.*') ? 'active' : '' }}" href="{{ route('kurs.index') }}">
+                            <i class="bi bi-currency-exchange"></i> Kurs Mata Uang
                         </a>
                     </div>
                     @endif

@@ -163,6 +163,12 @@ class ProjectController extends Controller
         $cashSeries = $cash->series($project, now()->subDays(29), now());
         $cashForecast = $cash->forecast($project);
 
+        $kursSvc = app(\App\Services\KursService::class);
+        $kursUsd = $kursSvc->nearest(now()->format('Y-m-d'), 'USD', 'bi')
+            ?? $kursSvc->nearest(now()->format('Y-m-d'), 'USD', 'manual');
+        $kursSar = $kursSvc->nearest(now()->format('Y-m-d'), 'SAR', 'bi')
+            ?? $kursSvc->nearest(now()->format('Y-m-d'), 'SAR', 'manual');
+
         return view('projects.show', [
             'title' => 'Detail Keberangkatan',
             'project' => $project,
@@ -190,6 +196,8 @@ class ProjectController extends Controller
             'cashPosition' => $cashPosition,
             'cashSeries' => $cashSeries,
             'cashForecast' => $cashForecast,
+            'kursUsd' => $kursUsd,
+            'kursSar' => $kursSar,
         ]);
     }
 
@@ -687,13 +695,27 @@ class ProjectController extends Controller
             'total' => 'nullable|string',
             'catatan' => 'nullable|string',
             'file_bukti' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:3072',
+            'mata_uang' => 'nullable|in:IDR,USD,SAR',
+            'amount_valas' => 'nullable|string',
+            'kurs' => 'nullable|string',
+            'kurs_sumber' => 'nullable|in:bi,manual',
         ]);
 
+        $mataUang = $request->input('mata_uang', 'IDR');
+        $amountValas = $this->normalizeDecimal($request->amount_valas);
+        $kurs = $this->normalizeDecimal($request->kurs);
 
         try {
             $qty = $this->normalizeDecimal($request->qty);
             $hargaSatuan = $this->normalizeMoney($request->harga_satuan);
             $total = $request->total ? $this->normalizeMoney($request->total) : ($qty * $hargaSatuan);
+
+            // Biaya dalam valas: total = jumlah valas × kurs
+            if ($mataUang !== 'IDR' && $amountValas !== null && $kurs !== null && $kurs > 0) {
+                $total = $amountValas * $kurs;
+                $hargaSatuan = $total;
+                $qty = 1;
+            }
 
             $data = [
                 'id_perusahaan' => $companyId,
@@ -706,6 +728,10 @@ class ProjectController extends Controller
                 'harga_satuan' => $hargaSatuan,
                 'total' => $total,
                 'catatan' => $request->catatan,
+                'mata_uang' => $mataUang,
+                'amount_valas' => $mataUang !== 'IDR' ? $amountValas : null,
+                'kurs' => $mataUang !== 'IDR' ? $kurs : null,
+                'kurs_sumber' => $mataUang !== 'IDR' ? $request->input('kurs_sumber', 'bi') : null,
             ];
 
             if ($request->hasFile('file_bukti')) {

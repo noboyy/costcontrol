@@ -9,7 +9,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GeneralExpenseController;
 use App\Http\Controllers\IncomeCategoryController;
 use App\Http\Controllers\IncomeTypeController;
+use App\Http\Controllers\KursController;
 use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\PajakController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\PerusahaanController;
 use App\Http\Controllers\ProfileController;
@@ -170,6 +172,15 @@ Route::middleware([
         Route::post('/biaya-umum', [GeneralExpenseController::class, 'store'])->name('general-expenses.store');
         Route::post('/biaya-umum/{id}/delete', [GeneralExpenseController::class, 'destroy'])->name('general-expenses.delete');
         Route::get('/biaya-umum/{id}/bukti', [GeneralExpenseController::class, 'bukti'])->name('general-expenses.bukti');
+
+        // Kurs
+        Route::get('/kurs', [KursController::class, 'index'])->name('kurs.index');
+        Route::post('/kurs', [KursController::class, 'store'])->name('kurs.store');
+        Route::post('/kurs/fetch-bi', [KursController::class, 'fetchBi'])->name('kurs.fetch-bi');
+        Route::post('/kurs/{id}/delete', [KursController::class, 'destroy'])->name('kurs.delete');
+
+        // Perkiraan pajak
+        Route::get('/pajak', [PajakController::class, 'index'])->name('pajak.index');
     });
 
     Route::middleware(['role:SUPER ADMIN'])->group(function () {

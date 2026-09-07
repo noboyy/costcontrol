@@ -27,6 +27,10 @@ class CostEntry extends Model
         'total',
         'catatan',
         'file_bukti',
+        'mata_uang',
+        'amount_valas',
+        'kurs',
+        'kurs_sumber',
     ];
 
     protected $casts = [
@@ -34,6 +38,8 @@ class CostEntry extends Model
         'qty' => 'decimal:2',
         'harga_satuan' => 'decimal:2',
         'total' => 'decimal:2',
+        'amount_valas' => 'decimal:2',
+        'kurs' => 'decimal:2',
     ];
 
     protected static function booted(): void

@@ -759,6 +759,12 @@
             box-shadow: var(--shadow-lg);
             animation: modalIn 0.18s ease;
         }
+        .modal > form {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
         .modal.modal-lg { max-width: 640px; }
         .modal.modal-sm { max-width: 400px; }
         @keyframes modalIn {

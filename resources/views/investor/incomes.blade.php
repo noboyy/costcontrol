@@ -1,98 +1,93 @@
-@extends('layouts.app')
+@extends('layouts.investor')
 
-@section('breadcrumb')
-    <a href="{{ route('investor.index') }}">{{ $project->nama_project }}</a>
-    <span class="sep">/</span>
-    <span class="current">Pendapatan</span>
-@endsection
+@section('title', 'Pendapatan — '.$project->nama_project)
 
 @section('content')
-@include('investor._nav')
+@php $rp = fn ($v) => 'Rp '.number_format((float) $v, 0, ',', '.'); @endphp
 
-<div class="page-header">
-    <div>
-        <h2>Pendapatan</h2>
-        <p>Daftar pendapatan keberangkatan (read-only).</p>
+<div class="head">
+    <div class="head-row">
+        <div>
+            <h1 class="h1">Pendapatan</h1>
+            <div class="meta">{{ $project->nama_project }}</div>
+        </div>
     </div>
-    <div class="page-actions">
-        <form method="GET" action="{{ route('investor.incomes') }}" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
-            <div class="form-group" style="margin:0;">
-                <label class="form-label">Dari</label>
-                <input type="date" class="form-input" name="from" value="{{ $from }}">
+    <div style="margin-top:16px;">
+        <form method="GET" action="{{ route('investor.incomes') }}" class="filter">
+            <div class="field">
+                <label for="from">Dari</label>
+                <input type="date" id="from" name="from" class="finput" value="{{ $from }}">
             </div>
-            <div class="form-group" style="margin:0;">
-                <label class="form-label">Sampai</label>
-                <input type="date" class="form-input" name="to" value="{{ $to }}">
+            <div class="field">
+                <label for="to">Sampai</label>
+                <input type="date" id="to" name="to" class="finput" value="{{ $to }}">
             </div>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Terapkan</button>
+            <button type="submit" class="btn btn-pri"><i class="bi bi-funnel"></i> Terapkan</button>
             @if($from || $to)
-            <a href="{{ route('investor.incomes') }}" class="btn btn-outline">Atur Ulang</a>
+            <a href="{{ route('investor.incomes') }}" class="btn btn-ghost">Atur Ulang</a>
             @endif
         </form>
     </div>
 </div>
 
-<div class="toolbar">
-    <div class="toolbar-left"></div>
-    <div class="toolbar-right">
-        <span class="stat-inline"><strong>{{ $entries->count() }}</strong> transaksi ·
-            Total: <strong class="money positive">Rp {{ number_format($total, 0, ',', '.') }}</strong></span>
+@if($entries->isEmpty())
+<div class="card">
+    <div class="empty">
+        <i class="bi bi-inbox"></i>
+        <p>Belum ada pendapatan tercatat.</p>
     </div>
 </div>
-
-<div class="card">
-    <div class="card-body compact">
-        @if($entries->isEmpty())
-        <div class="empty-state">
-            <i class="bi bi-inbox"></i>
-            <p>Belum ada pendapatan tercatat.</p>
-        </div>
-        @else
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th>Keterangan</th>
-                        <th>Kategori</th>
-                        <th class="text-end">Jumlah</th>
-                        <th class="text-end">Harga Satuan</th>
-                        <th class="text-end">Total</th>
-                        <th>Bukti</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($entries as $e)
-                    <tr>
-                        <td class="whitespace-nowrap">{{ $e->tanggal?->format('d M Y') }}</td>
-                        <td>
-                            <div>{{ $e->keterangan ?: '—' }}</div>
-                            @if($e->incomeType?->nama)<div class="cell-sub">{{ $e->incomeType->nama }}</div>@endif
-                            @if($e->catatan)<div class="cell-sub" style="font-style:italic;">{{ $e->catatan }}</div>@endif
-                        </td>
-                        <td class="cell-sub">{{ $e->incomeType?->kategori ?? '—' }}</td>
-                        <td class="text-end">{{ $e->qty }} {{ $e->unit ?? '' }}</td>
-                        <td class="text-end">Rp {{ number_format($e->harga_satuan, 0, ',', '.') }}</td>
-                        <td class="text-end money positive">Rp {{ number_format($e->total, 0, ',', '.') }}</td>
-                        <td>
+@else
+<div class="summary">
+    <span><strong>{{ $entries->count() }}</strong> transaksi</span>
+    <span>Total: <strong class="pos">{{ $rp($total) }}</strong></span>
+</div>
+<div class="card" style="padding:4px 0;">
+    <div style="overflow-x:auto;">
+        <table class="table-min">
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Keterangan</th>
+                    <th>Kategori</th>
+                    <th class="num">Total</th>
+                    <th>Bukti</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($entries as $e)
+                <tr>
+                    <td class="cell-sub" style="white-space:nowrap;padding-top:12px;">{{ $e->tanggal?->format('d M Y') }}</td>
+                    <td>
+                        <div class="cell">{{ $e->keterangan ?: '—' }}</div>
+                        <div class="cell-sub">
+                            @if($e->incomeType?->nama){{ $e->incomeType->nama }} · @endif
+                            {{ (float) $e->qty }} {{ $e->unit ?? '' }} × {{ $rp($e->harga_satuan) }}
+                        </div>
+                        @if($e->catatan)<div class="cell-ital">{{ $e->catatan }}</div>@endif
+                    </td>
+                    <td><span class="chip">{{ $e->incomeType?->kategori ?? '—' }}</span></td>
+                    <td class="num pos">{{ $rp($e->total) }}</td>
+                    <td>
+                        @if($e->gallery->isNotEmpty())
+                        <div class="thumbs">
                             @foreach($e->gallery as $g)
-                            <a href="{{ route('cost-centers.gallery.serve', [$project->id_project, $g->id_gallery]) }}" target="_blank" rel="noopener" title="{{ $g->original_name }}" style="display:inline-block;margin-right:4px;vertical-align:middle;">
+                            <a class="thumb" href="{{ route('cost-centers.gallery.serve', [$project->id_project, $g->id_gallery]) }}" target="_blank" rel="noopener" title="{{ $g->original_name }}">
                                 @if($g->file_type === 'image')
-                                <img src="{{ route('cost-centers.gallery.serve', [$project->id_project, $g->id_gallery]) }}" alt="{{ $g->original_name }}" style="width:34px;height:34px;object-fit:cover;border-radius:6px;border:1px solid var(--border);">
+                                <img src="{{ route('cost-centers.gallery.serve', [$project->id_project, $g->id_gallery]) }}" alt="{{ $g->original_name }}">
                                 @else
-                                <span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:6px;border:1px solid var(--border);background:#f1f5f9;color:var(--text-secondary);">
-                                    <i class="bi bi-{{ $g->file_type === 'video' ? 'film' : 'file-earmark' }}"></i>
-                                </span>
+                                <span class="thumb ic"><i class="bi bi-{{ $g->file_type === 'video' ? 'film' : 'file-earmark' }}"></i></span>
                                 @endif
                             </a>
                             @endforeach
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        @endif
+                        </div>
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
 </div>
+@endif
 @endsection

@@ -22,6 +22,11 @@ class Perusahaan extends Model
         'alamat_lengkap',
         'owner',
         'module',
+        'opening_balance',
+    ];
+
+    protected $casts = [
+        'opening_balance' => 'decimal:2',
     ];
 
     public function module(): string

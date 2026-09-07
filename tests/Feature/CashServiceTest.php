@@ -52,6 +52,18 @@ class CashServiceTest extends TestCase
         $this->assertFalse($pos['is_negative']);
     }
 
+    public function test_company_opening_balance_included_in_company_position(): void
+    {
+        $this->company->update(['opening_balance' => 2500000]);
+
+        $pos = $this->cash->positionCompany($this->company->id_perusahaan);
+
+        // 2.5jt (perusahaan) + 5jt (project opening)
+        $this->assertEquals(2500000.0, $pos['opening_company']);
+        $this->assertEquals(5000000.0, $pos['opening_project']);
+        $this->assertEquals(7500000.0, $pos['balance']);
+    }
+
     public function test_position_with_income_and_cost(): void
     {
         $today = now()->toDateString();

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CostEntry;
 use App\Models\IncomeEntry;
+use App\Models\Perusahaan;
 use App\Models\Project;
 use Carbon\Carbon;
 
@@ -11,7 +12,7 @@ class CashService
 {
     /**
      * Posisi kas perusahaan (semua keberangkatan + biaya umum):
-     * sum(opening_balance) + sum(income) - sum(cost) s/d tanggal.
+     * saldo awal perusahaan + sum(opening_balance) + sum(income) - sum(cost) s/d tanggal.
      */
     public function positionCompany(?int $companyId, Carbon|string|null $date = null): array
     {
@@ -22,7 +23,10 @@ class CashService
         $queryCost = fn ($q) => $q->when($companyId !== null, fn ($b) => $b->where('id_perusahaan', $companyId));
         $queryIncome = fn ($q) => $q->when($companyId !== null, fn ($b) => $b->where('id_perusahaan', $companyId));
 
-        $opening = (float) $queryProject(Project::query())->sum('opening_balance');
+        $companyOpening = (float) (Perusahaan::when($companyId !== null, fn ($q) => $q->where('id_perusahaan', $companyId))
+            ->value('opening_balance') ?? 0);
+        $projectOpening = (float) $queryProject(Project::query())->sum('opening_balance');
+        $opening = $companyOpening + $projectOpening;
         $income = (float) $queryIncome(IncomeEntry::query())->whereDate('tanggal', '<=', $day)->sum('total');
         $cost = (float) $queryCost(CostEntry::query())->whereDate('tanggal', '<=', $day)->sum('total');
 
@@ -31,6 +35,8 @@ class CashService
         return [
             'date' => $day,
             'opening' => $opening,
+            'opening_company' => $companyOpening,
+            'opening_project' => $projectOpening,
             'income_to_date' => $income,
             'cost_to_date' => $cost,
             'cost_general_to_date' => (float) $queryCost(CostEntry::query())

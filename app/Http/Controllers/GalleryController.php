@@ -74,6 +74,19 @@ class GalleryController extends Controller
             ->orderBy('label')
             ->pluck('label');
 
+        $user = auth()->user();
+        $akun = Akun::find($user->id_akun ?? $user->id);
+        $isInvestor = $akun && $akun->role === 'INVESTOR';
+
+        if ($isInvestor) {
+            return view('investor.gallery', [
+                'project'     => $project,
+                'items'       => $items,
+                'labels'      => $labels,
+                'labelFilter' => $labelFilter,
+            ]);
+        }
+
         return view('projects.gallery', [
             'project'     => $project,
             'items'       => $items,

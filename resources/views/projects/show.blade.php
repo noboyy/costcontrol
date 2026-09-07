@@ -615,12 +615,9 @@
             @php $ic = session('investor_created'); @endphp
             <div class="alert alert-success" style="margin-bottom:16px;padding:14px 16px;border-radius:10px;background:var(--success-light,#ecfdf5);border:1px solid var(--success,#10b981);color:var(--success-dark,#065f46);">
                 <strong><i class="bi bi-check-circle"></i> Akun investor berhasil dibuat / direset.</strong><br>
-                @if(!empty($ic['email']))
-                <span>Email: <code>{{ $ic['email'] }}</code></span><br>
-                @endif
                 <span>Username: <code>{{ $ic['username'] }}</code></span><br>
                 <span>Password: <code>{{ $ic['password'] }}</code></span><br>
-                <small>Login memakai email atau username. Simpan password ini sekarang. Tidak bisa ditampilkan lagi.</small>
+                <small>Simpan password ini sekarang. Tidak bisa ditampilkan lagi.</small>
             </div>
             @endif
 

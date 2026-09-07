@@ -7,6 +7,8 @@
 @endsection
 
 @section('content')
+@include('investor._nav')
+
 <div class="page-header">
     <div>
         <h2>Laporan</h2>

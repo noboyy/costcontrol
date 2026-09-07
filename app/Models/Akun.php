@@ -55,6 +55,20 @@ class Akun extends Authenticatable implements MustVerifyEmail
         'profile_photo_url',
     ];
 
+    /**
+     * Akun investor memakai email sintetis {username}@host agar bisa login via
+     * email sekaligus username — berlaku untuk semua jalur pembuatan akun.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Akun $akun) {
+            if ($akun->role === 'INVESTOR' && empty($akun->email) && ! empty($akun->username)) {
+                $host = parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'sahlajourney.com';
+                $akun->email = $akun->username.'@'.$host;
+            }
+        });
+    }
+
     public function getAuthIdentifierName()
     {
         return 'id_akun';
